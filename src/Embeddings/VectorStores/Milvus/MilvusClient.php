@@ -72,9 +72,9 @@ class MilvusClient
     }
 
     /**
-     * @return array{code: int, data: mixed}
+     * @param array<int, array<string, mixed>> $data
      *
-     * @phpstan-ignore-next-line
+     * @return array{code: int, data: mixed}
      */
     public function insertData(string $collectionName, array $data): array
     {
@@ -88,9 +88,10 @@ class MilvusClient
     }
 
     /**
-     * @return array{code: int, data: mixed}
+     * @param string[] $outputFields
+     * @param float[] $vector
      *
-     * @phpstan-ignore-next-line
+     * @return array{code: int, data: mixed}
      */
     public function searchVector(
         string $collectionName,
@@ -152,9 +153,9 @@ class MilvusClient
     }
 
     /**
-     * @return array{code: int, data: mixed}
+     * @param string[]|null $outputFields
      *
-     * @phpstan-ignore-next-line
+     * @return array{code: int, data: mixed}
      */
     public function getEntity(string $collectionName, string $id, ?array $outputFields = null): array
     {
@@ -171,9 +172,9 @@ class MilvusClient
     }
 
     /**
-     * @return array{code: int, data: mixed}
+     * @param array<string, mixed> $body
      *
-     * @phpstan-ignore-next-line
+     * @return array{code: int, data: mixed}
      */
     protected function sendRequest(string $method, string $path, array $body = []): array
     {
