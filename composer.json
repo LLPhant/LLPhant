@@ -1,7 +1,7 @@
 {
-    "name": "theodo-group/llphant",
+    "name": "llphant/llphant",
     "description": "LLPhant is a library to help you build Generative AI applications.",
-    "keywords": ["php", "openai", "GPT-4", "api", "language", "LLM", "vectorstore", "ollama", "anthropic", "mistral"],
+    "keywords": ["php", "openai", "api", "language", "LLM", "vectorstore", "ollama", "anthropic", "mistral"],
     "license": "MIT",
     "authors": [
         {
