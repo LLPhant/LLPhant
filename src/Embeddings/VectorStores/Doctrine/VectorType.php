@@ -4,7 +4,6 @@ namespace LLPhant\Embeddings\VectorStores\Doctrine;
 
 use Doctrine\DBAL\Exception;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
-use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Types\Type;
 
 class VectorType extends Type
@@ -19,7 +18,7 @@ class VectorType extends Type
         // getName is deprecated since doctrine/dbal 2.13 see: https://github.com/doctrine/dbal/issues/4749
         // BUT it is the most stable way to check if the platform is PostgreSQLPlatform in a lot of doctrine versions
         // so we will use it and add a check for the class name in case it is removed in the future
-        if (method_exists($platform, 'getName') && $platform->getName() !== 'postgresql') {
+        if (method_exists($platform, 'getName') && ! \in_array($platform->getName(), SupportedDoctrineVectorStore::values())) {
             throw Exception::notSupported('VECTORs not supported by Platform.');
         }
 
@@ -69,7 +68,21 @@ class VectorType extends Type
             throw Exception::notSupported('VECTORs must be an array.');
         }
 
-        return VectorUtils::getVectorAsString($value);
+        return VectorUtils::getVectorAsString($value, SupportedDoctrineVectorStore::fromPlatform($platform));
+    }
+
+    public function convertToDatabaseValueSQL(mixed $sqlExpr, AbstractPlatform $platform): string
+    {
+        if (SupportedDoctrineVectorStore::fromPlatform($platform) === SupportedDoctrineVectorStore::MariaDB) {
+            return sprintf('Vec_FromText(%s)', $sqlExpr);
+        }
+
+        return $sqlExpr;
+    }
+
+    public function canRequireSQLConversion(): bool
+    {
+        return true;
     }
 
     public function getName(): string

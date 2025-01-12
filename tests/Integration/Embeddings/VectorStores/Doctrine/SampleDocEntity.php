@@ -21,7 +21,9 @@ class SampleDocEntity extends DoctrineEmbeddingEntityBase
         $document->chunkNumber = $chunkNumber;
 
         // Just fake data, we don't need this in tests
-        $document->embedding = [0.1, 0.2];
+        $document->embedding = array_map(function () {
+            return mt_rand() / mt_getrandmax();
+        }, range(0, 1023));
 
         return $document;
     }

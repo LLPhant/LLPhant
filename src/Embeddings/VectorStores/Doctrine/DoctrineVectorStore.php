@@ -15,6 +15,8 @@ use LLPhant\Embeddings\VectorStores\VectorStoreBase;
 
 final class DoctrineVectorStore extends VectorStoreBase implements DocumentStore
 {
+    private readonly SupportedDoctrineVectorStore $doctrineVectorStoreType;
+
     /**
      * @template T of DoctrineEmbeddingEntityBase
      *
@@ -31,10 +33,18 @@ final class DoctrineVectorStore extends VectorStoreBase implements DocumentStore
         }
 
         $conn = $entityManager->getConnection();
+        $this->doctrineVectorStoreType = SupportedDoctrineVectorStore::fromPlatform($conn->getDatabasePlatform());
         $registeredTypes = Type::getTypesMap();
         if (! array_key_exists(VectorType::VECTOR, $registeredTypes)) {
             Type::addType(VectorType::VECTOR, VectorType::class);
             $conn->getDatabasePlatform()->registerDoctrineTypeMapping('vector', VectorType::VECTOR);
+        }
+
+        if ($this->doctrineVectorStoreType === SupportedDoctrineVectorStore::MariaDB) {
+            $this->entityManager->getConfiguration()->addCustomStringFunction('VEC_DISTANCE_EUCLIDEAN', MariaDBL2OperatorDql::class);
+        }
+        if ($this->doctrineVectorStoreType === SupportedDoctrineVectorStore::Postgres) {
+            $this->entityManager->getConfiguration()->addCustomStringFunction('L2_DISTANCE', PgVectorL2OperatorDql::class);
         }
     }
 
@@ -72,14 +82,21 @@ final class DoctrineVectorStore extends VectorStoreBase implements DocumentStore
      */
     public function similaritySearch(array $embedding, int $k = 4, array $additionalArguments = []): array
     {
-        $this->entityManager->getConfiguration()->addCustomStringFunction('L2_DISTANCE', PgVectorL2OperatorDql::class);
-
         $repository = $this->entityManager->getRepository($this->entityClassName);
-        $qb = $repository
-            ->createQueryBuilder('e')
-            ->orderBy('L2_DISTANCE(e.embedding, :embeddingString)', 'ASC')
-            ->setParameter('embeddingString', VectorUtils::getVectorAsString($embedding))
-            ->setMaxResults($k);
+
+        if ($this->doctrineVectorStoreType === SupportedDoctrineVectorStore::MariaDB) {
+            $qb = $repository
+                ->createQueryBuilder('e')
+                ->orderBy('VEC_DISTANCE_EUCLIDEAN(e.embedding, :embeddingString)', 'ASC')
+                ->setParameter('embeddingString', VectorUtils::getVectorAsString($embedding, $this->doctrineVectorStoreType))
+                ->setMaxResults($k);
+        } else {
+            $qb = $repository
+                ->createQueryBuilder('e')
+                ->orderBy('L2_DISTANCE(e.embedding, :embeddingString)', 'ASC')
+                ->setParameter('embeddingString', VectorUtils::getVectorAsString($embedding, $this->doctrineVectorStoreType))
+                ->setMaxResults($k);
+        }
 
         foreach ($additionalArguments as $key => $value) {
             $paramName = 'where_'.$key;
