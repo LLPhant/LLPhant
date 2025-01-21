@@ -47,8 +47,10 @@ class QuestionAnswering
     }
 
     /**
-     * @param  Message[]  $messages
-     * @param  array<string, string|int>|array<mixed[]>  $additionalArguments
+     * @param Message[] $messages
+     * @param int $k
+     * @param array<string, string|int>|array<mixed[]> $additionalArguments
+     * @param bool $stream
      */
     public function answerQuestionFromChat(array $messages, int $k = 4, array $additionalArguments = [], bool $stream = true): string | StreamInterface
     {
