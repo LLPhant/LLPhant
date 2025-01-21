@@ -50,7 +50,7 @@ class QuestionAnswering
      * @param  Message[]  $messages
      * @param  array<string, string|int>|array<mixed[]>  $additionalArguments
      */
-    public function answerQuestionFromChat(array $messages, int $k = 4, array $additionalArguments = []): StreamInterface
+    public function answerQuestionFromChat(array $messages, int $k = 4, array $additionalArguments = [], bool $stream = true): string | StreamInterface
     {
         // First we need to give the context to openAI with the good instructions
         $userQuestion = $messages[count($messages) - 1]->content;
@@ -58,7 +58,12 @@ class QuestionAnswering
         $this->chat->setSystemMessage($systemMessage);
 
         // Then we can just give the conversation
-        return $this->chat->generateChatStream($messages);
+
+        if($stream) {
+            return $this->chat->generateChatStream($messages);
+        }
+
+        return $this->chat->generateChat($messages);
     }
 
     /**
