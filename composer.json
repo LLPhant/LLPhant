@@ -1,7 +1,7 @@
 {
     "name": "theodo-group/llphant",
     "description": "LLPhant is a library to help you build Generative AI applications.",
-    "keywords": ["php", "openai", "GPT-4", "api", "language", "LLM", "vectorstore", "ollama", "anthropic", "mistral"],
+    "keywords": ["php", "openai", "GPT-4", "api", "language", "LLM", "vectorstore", "ollama", "anthropic", "mistral", "gemini"],
     "license": "MIT",
     "authors": [
         {
@@ -24,7 +24,8 @@
         "predis/predis": "This is required for the RedisVectoreStore.",
         "elasticsearch/elasticsearch": "This is required for the ElasticsearchVectoreStore.",
         "codewithkyrian/chromadb-php": "This is required for the ChromaDBVectorStore.",
-        "opensearch-project/opensearch-php": "This is required for the OpenSearchVectorStore."
+        "opensearch-project/opensearch-php": "This is required for the OpenSearchVectorStore.",
+        "google-gemini-php/client": "^1.0"
     },
     "require-dev": {
         "codewithkyrian/chromadb-php": "^0.3.0",
