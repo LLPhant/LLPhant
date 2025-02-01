@@ -94,3 +94,34 @@ it('can read docx preserving new lines', function () {
     expect($documents)->toHaveCount(1)
         ->and($documents[0]->content)->toEqual($text);
 });
+
+it('extracts metadata correctly from content', function () {
+    $content = "**Title:** Test Title\n**Category:** Test Category\nSample content.";
+    $reader = new FileDataReader('path/to/nonexistent/file'); // Pass a dummy path
+    $metadata = $reader->extractMetadata($content);
+
+    expect($metadata)
+        ->toHaveKeys(['title', 'category'])
+        ->and($metadata['title'])->toEqual('Test Title')
+        ->and($metadata['category'])->toEqual('Test Category');
+});
+
+it('includes metadata in the document structure', function () {
+    $content = "**Title:** Test Title\n**Category:** Test Category\nSample content.";
+    $reader = new FileDataReader('path/to/nonexistent/file'); // Pass a dummy path
+
+    // Use Reflection to access the private method
+    $reflection = new ReflectionClass(FileDataReader::class);
+    $method = $reflection->getMethod('getDocument');
+    $method->setAccessible(true);
+    $document = $method->invokeArgs($reader, [$content, 'test.txt']);
+
+    $documentArray = $document->toArray();
+
+    expect($documentArray)
+        ->toHaveKeys(['content', 'metadata'])
+        ->and($documentArray['metadata'])->toBeArray()
+        ->and($documentArray['metadata']['title'])->toEqual('Test Title')
+        ->and($documentArray['metadata']['category'])->toEqual('Test Category');
+});
+
