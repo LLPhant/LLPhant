@@ -10,6 +10,7 @@ use Mockery;
 use OpenAI\Client;
 use OpenAI\Contracts\TransporterContract;
 use Psr\Http\Message\StreamInterface;
+use Psr\Log\AbstractLogger;
 
 it('no error when construct with no model', function () {
     $config = new OpenAIConfig();
@@ -19,6 +20,16 @@ it('no error when construct with no model', function () {
 });
 
 it('returns a stream response using generateStreamOfText()', function () {
+    $logger = new class extends AbstractLogger
+    {
+        public array $logs = [];
+
+        public function log($level, string|\Stringable $message, array $context = []): void
+        {
+            $this->logs[] = ['level' => $level, 'message' => $message, 'context' => $context];
+        }
+    };
+
     $response = new Response(
         200,
         [],
@@ -31,10 +42,13 @@ it('returns a stream response using generateStreamOfText()', function () {
 
     $config = new OpenAIConfig();
     $config->client = new Client($transport);
-    $chat = new MistralAIChat($config);
+    $chat = new MistralAIChat($config, $logger);
 
     $response = $chat->generateStreamOfText('this is the prompt question');
     expect($response)->toBeInstanceof(StreamInterface::class);
+    expect($logger->logs)->toHaveCount(1);
+    expect(array_map(fn ($l) => $l['message'], $logger->logs))->toBe(['Calling Chat::createStreamed']);
+    expect(array_map(fn ($l) => $l['level'], $logger->logs))->toBe(['debug']);
 });
 
 it('returns a stream response using generateChatStream()', function () {

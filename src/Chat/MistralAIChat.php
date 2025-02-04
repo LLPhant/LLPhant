@@ -7,6 +7,7 @@ use LLPhant\Chat\Enums\MistralAIChatModel;
 use LLPhant\OpenAIConfig;
 use OpenAI\Client;
 use OpenAI\Factory;
+use Psr\Log\LoggerInterface;
 
 use function getenv;
 
@@ -14,7 +15,7 @@ class MistralAIChat extends OpenAIChat
 {
     private const BASE_URL = 'api.mistral.ai/v1';
 
-    public function __construct(?OpenAIConfig $config = null)
+    public function __construct(?OpenAIConfig $config = null, ?LoggerInterface $logger = null)
     {
         if (! $config instanceof OpenAIConfig) {
             $config = new OpenAIConfig();
@@ -34,6 +35,6 @@ class MistralAIChat extends OpenAIChat
         }
 
         $config->model ??= MistralAIChatModel::large->value;
-        parent::__construct($config);
+        parent::__construct($config, $logger);
     }
 }

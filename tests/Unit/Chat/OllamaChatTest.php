@@ -14,6 +14,7 @@ use LLPhant\Exception\MissingParameterException;
 use LLPhant\OllamaConfig;
 use LLPhant\Utility;
 use Psr\Http\Message\StreamInterface;
+use Psr\Log\AbstractLogger;
 use Tests\Integration\Chat\WeatherExample;
 
 it('not setting any timeout for HTTP client', function () {
@@ -60,6 +61,16 @@ it('returns a stream response using generateStreamOfText()', function () {
 });
 
 it('returns a stream response using generateChatStream()', function () {
+    $logger = new class extends AbstractLogger
+    {
+        public array $logs = [];
+
+        public function log($level, string|\Stringable $message, array $context = []): void
+        {
+            $this->logs[] = ['level' => $level, 'message' => $message, 'context' => $context];
+        }
+    };
+
     $mock = new MockHandler([
         new Response(200, [], 'This is the response from Ollama'),
     ]);
@@ -68,11 +79,14 @@ it('returns a stream response using generateChatStream()', function () {
 
     $config = new OllamaConfig();
     $config->model = 'test';
-    $chat = new OllamaChat($config);
+    $chat = new OllamaChat($config, $logger);
     $chat->client = $client;
 
     $response = $chat->generateChatStream([Message::user('here the question')]);
     expect($response)->toBeInstanceof(StreamInterface::class);
+    expect($logger->logs)->toHaveCount(1);
+    expect(array_map(fn ($l) => $l['message'], $logger->logs))->toBe(['Calling POST chat']);
+    expect(array_map(fn ($l) => $l['level'], $logger->logs))->toBe(['debug']);
 });
 
 it('sends correct payload for tools', function () {

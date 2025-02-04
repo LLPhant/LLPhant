@@ -16,6 +16,8 @@ use LLPhant\OllamaConfig;
 use LLPhant\Utility;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 /**
  * Ollama chat
@@ -33,13 +35,15 @@ class OllamaChat implements ChatInterface
 
     public Client $client;
 
+    private readonly LoggerInterface $logger;
+
     /** @var FunctionInfo[] */
     private array $tools = [];
 
     /** @var CalledFunction[] */
     public array $functionsCalled = [];
 
-    public function __construct(protected OllamaConfig $config)
+    public function __construct(protected OllamaConfig $config, ?LoggerInterface $logger = null)
     {
         if (! isset($config->model)) {
             throw new MissingParameterException('You need to specify a model for Ollama');
@@ -54,6 +58,7 @@ class OllamaChat implements ChatInterface
 
         $this->formatJson = $config->formatJson;
         $this->modelOptions = $config->modelOptions;
+        $this->logger = $logger ?: new NullLogger();
     }
 
     /**
@@ -252,6 +257,11 @@ class OllamaChat implements ChatInterface
      */
     protected function sendRequest(string $method, string $path, array $json): ResponseInterface
     {
+        $this->logger->debug('Calling '.$method.' '.$path, [
+            'chat' => self::class,
+            'params' => $json,
+        ]);
+
         $response = $this->client->request($method, $path, ['json' => $json]);
         $status = $response->getStatusCode();
         if ($status < 200 || $status >= 300) {

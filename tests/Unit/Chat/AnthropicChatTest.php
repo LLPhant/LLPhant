@@ -10,6 +10,8 @@ use LLPhant\AnthropicConfig;
 use LLPhant\Chat\AnthropicChat;
 use LLPhant\Chat\Message;
 use Psr\Http\Message\StreamInterface;
+use Psr\Log\AbstractLogger;
+use Psr\Log\LoggerInterface;
 
 const ANTHROPIC_FAKE_JSON_ANSWER = <<<'JSON'
 {
@@ -58,7 +60,7 @@ event: message_stop
 data: {"type": "message_stop"}
 TXT;
 
-function anthropicChatWithFakeHttpConnection(string $body): AnthropicChat
+function anthropicChatWithFakeHttpConnection(string $body, ?LoggerInterface $logger = null): AnthropicChat
 {
     $mock = new MockHandler([
         new Response(200, [], $body),
@@ -68,14 +70,27 @@ function anthropicChatWithFakeHttpConnection(string $body): AnthropicChat
 
     $config = new AnthropicConfig(client: $client);
 
-    return new AnthropicChat($config);
+    return new AnthropicChat($config, $logger);
 }
 
 it('generates a text', function () {
-    $anthropicChat = anthropicChatWithFakeHttpConnection(ANTHROPIC_FAKE_JSON_ANSWER);
+    $logger = new class extends AbstractLogger
+    {
+        public array $logs = [];
+
+        public function log($level, string|\Stringable $message, array $context = []): void
+        {
+            $this->logs[] = ['level' => $level, 'message' => $message, 'context' => $context];
+        }
+    };
+
+    $anthropicChat = anthropicChatWithFakeHttpConnection(ANTHROPIC_FAKE_JSON_ANSWER, $logger);
     $response = $anthropicChat->generateText('this is the prompt question');
     expect($response)->toBe('Hi! My name is Claude.');
     expect($anthropicChat->getTotalTokens())->toBe(35);
+    expect($logger->logs)->toHaveCount(1);
+    expect(array_map(fn ($l) => $l['message'], $logger->logs))->toBe(['Calling POST v1/messages']);
+    expect(array_map(fn ($l) => $l['level'], $logger->logs))->toBe(['debug']);
 });
 
 it('generates a chat', function () {

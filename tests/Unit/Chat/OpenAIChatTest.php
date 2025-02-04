@@ -12,6 +12,7 @@ use OpenAI\Contracts\TransporterContract;
 use OpenAI\ValueObjects\Transporter\Response as TransporterResponse;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
+use Psr\Log\AbstractLogger;
 
 it('no error when construct with no model', function () {
     $config = new OpenAIConfig();
@@ -26,7 +27,17 @@ it('can process system, user, assistant and functionResult messages', function (
     $config = new OpenAIConfig();
     $config->client = $client;
 
-    $chat = new OpenAIChat($config);
+    $logger = new class extends AbstractLogger
+    {
+        public array $logs = [];
+
+        public function log($level, string|\Stringable $message, array $context = []): void
+        {
+            $this->logs[] = ['level' => $level, 'message' => $message, 'context' => $context];
+        }
+    };
+
+    $chat = new OpenAIChat($config, $logger);
 
     $messages = [
         Message::system('You are an AI that answers to questions about weather in certain locations by calling external services to get the information'),
@@ -39,6 +50,12 @@ it('can process system, user, assistant and functionResult messages', function (
     $response = $chat->generateChatOrReturnFunctionCalled($messages);
 
     expect($response)->toBeString();
+    expect($logger->logs)->toHaveCount(2);
+    expect(array_map(fn ($l) => $l['message'], $logger->logs))->toBe([
+        'Calling Chat::create',
+        'Received Chat::create answer',
+    ]);
+    expect(array_map(fn ($l) => $l['level'], $logger->logs))->toBe(['debug', 'debug']);
 });
 
 it('returns a stream response using generateStreamOfText()', function () {
