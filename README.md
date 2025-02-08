@@ -461,7 +461,7 @@ To get full example you can have a look at [Doctrine integration tests files](ht
 ##### VectorStores vs DocumentStores
 As we have seen, a `VectorStore` is an engine that can be used to perform similarity searches on documents.
 A `DocumentStore` is an abstraction around a storage for documents that can be queried with more classical methods.
-In many cases can be vector stores can be also document stores and vice versa, but this is not mandatory.
+In many cases vector stores can be also document stores and vice versa, but this is not mandatory.
 There are currently these DocumentStore classes:
 - MemoryVectorStore
 - FileSystemVectorStore
@@ -625,6 +625,16 @@ Then create a new TypesenseDB vector store (`LLPhant\Embeddings\VectorStores\Typ
 // Default connection properties come from env vars TYPESENSE_API_KEY and TYPESENSE_NODE
 $vectorStore = new TypesenseVectorStore('test_collection');
 ````
+
+##### FileSystem VectorStore
+Please note that **this vector store is intended just for small tests**. In a production environment you should consider to use a more effective engine.
+In a recent version (0.8.13) we modified the format of the vector store files. 
+To use those files you have to convert them to the new format:
+convertFromOldFileFormat:
+```php
+$vectorStore = new FileSystemVectorStore('/paht/to/new_format_vector_store.txt');
+$vectorStore->convertFromOldFileFormat('/path/to/old_format_vector_store.json')
+```
 
 ## Question Answering
 

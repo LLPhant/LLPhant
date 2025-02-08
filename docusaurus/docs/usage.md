@@ -568,6 +568,16 @@ Then create a new TypesenseDB vector store (`LLPhant\Embeddings\VectorStores\Typ
 $vectorStore = new TypesenseVectorStore('test_collection');
 ````
 
+##### FileSystem VectorStore
+Please note that **this vector store is intended just for small tests**. In a production environment you should consider to use a more effective engine.
+In a recent version (0.8.13) we modified the format of the vector store files.
+To use those old files you have to convert them to the new format:
+convertFromOldFileFormat:
+```php
+$vectorStore = new FileSystemVectorStore('/paht/to/new_format_vector_store.txt');
+$vectorStore->convertFromOldFileFormat('/path/to/old_format_vector_store.json')
+```
+
 ## Question Answering
 A popular use case of LLM is to create a chatbot that can answer questions over your private data.
 You can build one using LLPhant using the `QuestionAnswering` class.
