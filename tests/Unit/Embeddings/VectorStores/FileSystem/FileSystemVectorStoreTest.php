@@ -67,4 +67,9 @@ describe('FileSystemVectorStore', function () {
             ]
         );
     });
+
+    it('can convert data from previous format', function () {
+        $this->fileSystemVectorStore->convertFromOldFileFormat(__DIR__.'/old_format_vector_store.json');
+        expect($this->fileSystemVectorStore->getNumberOfDocuments())->toBe(11);
+    });
 });

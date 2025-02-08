@@ -182,4 +182,48 @@ class FileSystemVectorStore extends VectorStoreBase implements DocumentStore
             'hash' => $document->hash,
         ];
     }
+
+    public function convertFromOldFileFormat(string $pathOfOldStore): void
+    {
+        $oldStore = new FileSystemVectorStore($pathOfOldStore);
+        $documents = $oldStore->readDocumentsFromOldFileFormat();
+        $this->addDocuments($documents);
+    }
+
+    /**
+     * @return Document[]
+     */
+    private function readDocumentsFromOldFileFormat(): array
+    {
+        // Check if file exists and we can open it
+        if (! is_readable($this->filePath)) {
+            return [];
+        }
+
+        // Get the JSON data from the file
+        $jsonData = file_get_contents($this->filePath);
+        if ($jsonData === false) {
+            return [];
+        }
+
+        // Decode the JSON data into an array
+        $data = json_decode($jsonData, true, 512, JSON_THROW_ON_ERROR);
+        if (! is_array($data)) {
+            return [];
+        }
+
+        // Convert each associative array entry into a Document object
+        return array_map(function (array $entry): Document {
+            $document = new Document();
+            $document->content = $entry['content'] ?? '';
+            $document->formattedContent = $entry['formattedContent'] ?? null;
+            $document->embedding = $entry['embedding'] ?? null;
+            $document->sourceType = $entry['sourceType'] ?? null;
+            $document->sourceName = $entry['sourceName'] ?? null;
+            $document->chunkNumber = $entry['chunkNumber'] ?? 0;
+            $document->hash = $entry['hash'] ?? null;
+
+            return $document;
+        }, $data);
+    }
 }

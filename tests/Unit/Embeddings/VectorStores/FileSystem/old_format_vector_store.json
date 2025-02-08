@@ -1,0 +1,134 @@
+[
+    {
+        "content": "Document 1",
+        "formattedContent": null,
+        "embedding": [
+            0.1,
+            0.2
+        ],
+        "sourceType": "typex",
+        "sourceName": "namey",
+        "chunkNumber": 1,
+        "hash": "f08a4cd1811d38fab7ed7ef8763b8fc1"
+    },
+    {
+        "content": "Document 0",
+        "formattedContent": null,
+        "embedding": [
+            0.1,
+            0.2
+        ],
+        "sourceType": "typex",
+        "sourceName": "namey",
+        "chunkNumber": 0,
+        "hash": "7a06422d46c73956aea04f02453c4408"
+    },
+    {
+        "content": "Document 3",
+        "formattedContent": null,
+        "embedding": [
+            0.1,
+            0.2
+        ],
+        "sourceType": "typex",
+        "sourceName": "namey",
+        "chunkNumber": 3,
+        "hash": "88e594b4da8b0a9405ca28a91a81a47b"
+    },
+    {
+        "content": "Document 2",
+        "formattedContent": null,
+        "embedding": [
+            0.1,
+            0.2
+        ],
+        "sourceType": "typex",
+        "sourceName": "namey",
+        "chunkNumber": 2,
+        "hash": "f41f3325322c6e9cda471e39c16cc748"
+    },
+    {
+        "content": "Document 4",
+        "formattedContent": null,
+        "embedding": [
+            0.1,
+            0.2
+        ],
+        "sourceType": "typex",
+        "sourceName": "namey",
+        "chunkNumber": 4,
+        "hash": "e45f2f0ea4678417fe897206f5d408ab"
+    },
+    {
+        "content": "Document 0",
+        "formattedContent": null,
+        "embedding": [
+            0.1,
+            0.2
+        ],
+        "sourceType": "typex",
+        "sourceName": "namez",
+        "chunkNumber": 0,
+        "hash": "7a06422d46c73956aea04f02453c4408"
+    },
+    {
+        "content": "Document 1",
+        "formattedContent": null,
+        "embedding": [
+            0.1,
+            0.2
+        ],
+        "sourceType": "typex",
+        "sourceName": "namez",
+        "chunkNumber": 1,
+        "hash": "f08a4cd1811d38fab7ed7ef8763b8fc1"
+    },
+    {
+        "content": "Document 2",
+        "formattedContent": null,
+        "embedding": [
+            0.1,
+            0.2
+        ],
+        "sourceType": "typex",
+        "sourceName": "namez",
+        "chunkNumber": 2,
+        "hash": "f41f3325322c6e9cda471e39c16cc748"
+    },
+    {
+        "content": "Document 0",
+        "formattedContent": null,
+        "embedding": [
+            0.1,
+            0.2
+        ],
+        "sourceType": "typez",
+        "sourceName": "namey",
+        "chunkNumber": 0,
+        "hash": "7a06422d46c73956aea04f02453c4408"
+    },
+    {
+        "content": "Document 1",
+        "formattedContent": null,
+        "embedding": [
+            0.1,
+            0.2
+        ],
+        "sourceType": "typez",
+        "sourceName": "namey",
+        "chunkNumber": 1,
+        "hash": "f08a4cd1811d38fab7ed7ef8763b8fc1"
+    },
+    {
+        "content": "Document 2",
+        "formattedContent": null,
+        "embedding": [
+            0.1,
+            0.2
+        ],
+        "sourceType": "typez",
+        "sourceName": "namey",
+        "chunkNumber": 2,
+        "hash": "f41f3325322c6e9cda471e39c16cc748"
+    }
+]
