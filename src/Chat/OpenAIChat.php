@@ -319,6 +319,7 @@ class OpenAIChat implements ChatInterface
         }
 
         $this->argsLog[] = $openAiArgs;
+
         return $openAiArgs;
     }
 
