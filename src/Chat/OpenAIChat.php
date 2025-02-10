@@ -31,6 +31,9 @@ class OpenAIChat implements ChatInterface
 
     public string $model;
 
+    /** @var array<string, mixed>[] Permits to easily debug all the messages sent toward OpenAi lib */
+    public array $argsLog = [];
+
     private ?CreateResponse $lastResponse = null;
 
     private int $totalTokens = 0;
@@ -314,6 +317,8 @@ class OpenAIChat implements ChatInterface
         if ($this->requiredFunction instanceof FunctionInfo) {
             $openAiArgs['tool_choice'] = ToolFormatter::formatToolChoice($this->requiredFunction);
         }
+
+        $this->argsLog[] = $openAiArgs;
 
         return $openAiArgs;
     }
