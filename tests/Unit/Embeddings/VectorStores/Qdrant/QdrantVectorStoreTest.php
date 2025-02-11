@@ -39,5 +39,7 @@ it('can perform similarity search', function () {
     $response = $qdrantStore->similaritySearch($fakeEmbedding, 2);
     expect($response)->toHaveCount(2)
         ->and($response[0]->content)->toStartWith('France')
-        ->and($response[1]->content)->toBe('The house is on fire');
+        ->and($response[0]->id)->toBe('c4ff4e3f62b63f67f34d3e64e7c53ca5f12dba0035bd471eae8f2ef0f5689432')
+        ->and($response[1]->content)->toBe('The house is on fire')
+        ->and($response[1]->id)->toBe('3a2dd7a8d86884ddc79569aaaba2f58d1e1fe2096aa2fbfc0a622008891aba34');
 });

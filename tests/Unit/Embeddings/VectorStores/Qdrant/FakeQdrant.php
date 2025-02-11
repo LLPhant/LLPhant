@@ -70,11 +70,11 @@ class FakeQdrant extends Qdrant
                 }
             },
             {
-                "_id": "3a2dd7a8d86884ddc79569aaaba2f58d1e1fe2096aa2fbfc0a622008891aba34",
+                "id": "3a2dd7a8d86884ddc79569aaaba2f58d1e1fe2096aa2fbfc0a622008891aba34",
                 "version": 0,
                 "score": 0.83347666,
                 "payload": {
-                    "_id": "3a2dd7a8d86884ddc79569aaaba2f58d1e1fe2096aa2fbfc0a622008891aba34",
+                    "id": "3a2dd7a8d86884ddc79569aaaba2f58d1e1fe2096aa2fbfc0a622008891aba34",
                     "content": "The house is on fire",
                     "formattedContent": "The name of the source is: france.txt.The house is on fire",
                     "sourceType": "files",

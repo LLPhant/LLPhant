@@ -11,7 +11,7 @@ class DoctrineEmbeddingEntityBase extends Document
     #[ORM\Id]
     #[ORM\Column(type: 'integer')]
     #[ORM\GeneratedValue(strategy: 'AUTO')]
-    public int $id;
+    public mixed $id;
 
     // The length of the vector is 1536 by default, but you should override this in your own entity.
     #[ORM\Column(type: VectorType::VECTOR, length: 1536)]
