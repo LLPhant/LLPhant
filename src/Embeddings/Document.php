@@ -6,6 +6,8 @@ namespace LLPhant\Embeddings;
 
 class Document
 {
+    public mixed $id;
+
     public string $content;
 
     public ?string $formattedContent = null;

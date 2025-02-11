@@ -159,6 +159,7 @@ class QdrantVectorStore extends VectorStoreBase
         $documents = [];
         foreach ($results as $onePoint) {
             $document = new Document();
+            $document->id = $onePoint['id'];
             $document->content = $onePoint['payload']['content'];
             $document->hash = $onePoint['payload']['hash'];
             $document->sourceType = $onePoint['payload']['sourceType'];
