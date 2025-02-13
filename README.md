@@ -767,8 +767,6 @@ $answer = $qa->answerQuestion('Can I win at cukoo if I have a coral card?');
 You can now make your [AutoGPT](https://github.com/Significant-Gravitas/Auto-GPT) clone in PHP using LLPhant.
 Have a look at the [AutoPHP](https://github.com/LLPhant/AutoPHP) repository.
 
-```
-
 ## FAQ
 *Why use LLPhant and not directly the OpenAI PHP SDK ?*
 
