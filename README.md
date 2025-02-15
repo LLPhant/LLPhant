@@ -351,7 +351,8 @@ The first part of the flow is to read data from a source.
 This can be a database, a csv file, a json file, a text file, a website, a pdf, a word document, an excel file, ...
 The only requirement is that you can read the data and that you can extract the text from it.
 
-For now we only support text files, pdf and docx but we plan to support other data type in the future.
+For now we only support text files, PDF, DOCX and HTML. but we plan to support other data type in the future.
+To only supports HTML files, if you `composer require html2text/html2text`.
 
 You can use the [`FileDataReader`](src/Embeddings/DataReader/FileDataReader.php) class to read a file. It takes a path to a file or a directory as parameter.
 The second optional parameter is the class name of the entity that will be used to store the embedding.
