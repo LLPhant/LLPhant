@@ -381,7 +381,7 @@ The vector store is a database that can store vectors and perform a similarity s
 There are currently these vectorStore classes:
 - MemoryVectorStore stores the embeddings in the memory
 - FileSystemVectorStore stores the embeddings in a file
-- DoctrineVectorStore stores the embeddings in a postgresql database. (require doctrine/orm) 
+- DoctrineVectorStore stores the embeddings in a postgresql or a MariaDB database. (require doctrine/orm) 
 - QdrantVectorStore stores the embeddings in a [Qdrant](https://qdrant.tech/) vectorStore. (require hkulekci/qdrant)
 - RedisVectorStore stores the embeddings in a [Redis](https://redis.io/) database. (require predis/predis)
 - ElasticsearchVectorStore stores the embeddings in a [Elasticsearch](https://www.elastic.co/) database. (require
@@ -462,6 +462,9 @@ class PlaceEntity extends DoctrineEmbeddingEntityBase
   public ?string $type;
 }
 ```
+
+The same `DoctrineVectorStore` now supports also MariaDB, [starting from version 11.7-rc](https://mariadb.org/projects/mariadb-vector/).
+Here you can find the [queries needed to initialize the DB](https://github.com/LLPhant/LLPhant/blob/main/devx/mariadb/scripts/01.sql).
 
 ### Redis VectorStore
 

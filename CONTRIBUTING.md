@@ -71,7 +71,9 @@ You'll need a API key from OPENAI and export it as a env var.
 You also need to have a postgresql database running with the same parameters 
 as in the `docker-compose.yaml` file from `devx` folder.
 
-Then run this sql query to create the table for the tests:
+Then run this sql query to create the table for the tests.
+
+This is the script for PostgreSQL:
 
 ```postgresql
 CREATE EXTENSION vector;
@@ -92,6 +94,34 @@ CREATE TABLE IF NOT EXISTS test_doc (
                                         sourcename text,
                                         embedding vector,
                                         chunknumber int
+);
+```
+
+This is the script for MariaDB:
+
+```mariadb
+CREATE DATABASE IF NOT EXISTS llphant;
+GRANT ALL ON *.* TO 'root'@'%';
+
+CREATE TABLE IF NOT EXISTS test_place (
+                                          id SERIAL PRIMARY KEY,
+                                          content text,
+                                          type text,
+                                          sourcetype text,
+                                          sourcename text,
+                                          embedding vector(3072) not null,
+                                          chunknumber int,
+                                          VECTOR INDEX (embedding)
+);
+CREATE TABLE IF NOT EXISTS test_doc (
+                                        id SERIAL PRIMARY KEY,
+                                        content text,
+                                        type text,
+                                        sourcetype text,
+                                        sourcename text,
+                                        embedding vector(1024) not null,
+                                        chunknumber int,
+                                        VECTOR INDEX (embedding)
 );
 ```
 
@@ -118,5 +148,6 @@ LAKERA_ENDPOINT
 LAKERA_API_KEY
 TYPESENSE_API_KEY
 TYPESENSE_NODE
+MARIADB_HOST
 ```
 
