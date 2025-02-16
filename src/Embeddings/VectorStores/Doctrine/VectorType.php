@@ -68,16 +68,16 @@ class VectorType extends Type
             throw Exception::notSupported('VECTORs must be an array.');
         }
 
-        return VectorUtils::getVectorAsString($value, SupportedDoctrineVectorStore::fromPlatform($platform));
+        $vectorStoreType = SupportedDoctrineVectorStore::fromPlatform($platform);
+
+        return $vectorStoreType->getVectorAsString($value);
     }
 
     public function convertToDatabaseValueSQL(mixed $sqlExpr, AbstractPlatform $platform): string
     {
-        if (SupportedDoctrineVectorStore::fromPlatform($platform) === SupportedDoctrineVectorStore::MariaDB) {
-            return sprintf('Vec_FromText(%s)', $sqlExpr);
-        }
+        $vectorStoreType = SupportedDoctrineVectorStore::fromPlatform($platform);
 
-        return $sqlExpr;
+        return $vectorStoreType->convertToDatabaseValueSQL($sqlExpr);
     }
 
     public function canRequireSQLConversion(): bool

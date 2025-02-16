@@ -40,12 +40,7 @@ final class DoctrineVectorStore extends VectorStoreBase implements DocumentStore
             $conn->getDatabasePlatform()->registerDoctrineTypeMapping('vector', VectorType::VECTOR);
         }
 
-        if ($this->doctrineVectorStoreType === SupportedDoctrineVectorStore::MariaDB) {
-            $this->entityManager->getConfiguration()->addCustomStringFunction('VEC_DISTANCE_EUCLIDEAN', MariaDBL2OperatorDql::class);
-        }
-        if ($this->doctrineVectorStoreType === SupportedDoctrineVectorStore::Postgres) {
-            $this->entityManager->getConfiguration()->addCustomStringFunction('L2_DISTANCE', PgVectorL2OperatorDql::class);
-        }
+        $this->doctrineVectorStoreType->addCustomisationsTo($this->entityManager);
     }
 
     /**
@@ -84,19 +79,11 @@ final class DoctrineVectorStore extends VectorStoreBase implements DocumentStore
     {
         $repository = $this->entityManager->getRepository($this->entityClassName);
 
-        if ($this->doctrineVectorStoreType === SupportedDoctrineVectorStore::MariaDB) {
-            $qb = $repository
-                ->createQueryBuilder('e')
-                ->orderBy('VEC_DISTANCE_EUCLIDEAN(e.embedding, :embeddingString)', 'ASC')
-                ->setParameter('embeddingString', VectorUtils::getVectorAsString($embedding, $this->doctrineVectorStoreType))
-                ->setMaxResults($k);
-        } else {
-            $qb = $repository
-                ->createQueryBuilder('e')
-                ->orderBy('L2_DISTANCE(e.embedding, :embeddingString)', 'ASC')
-                ->setParameter('embeddingString', VectorUtils::getVectorAsString($embedding, $this->doctrineVectorStoreType))
-                ->setMaxResults($k);
-        }
+        $qb = $repository
+            ->createQueryBuilder('e')
+            ->orderBy($this->doctrineVectorStoreType->l2DistanceName().'(e.embedding, :embeddingString)', 'ASC')
+            ->setParameter('embeddingString', $this->doctrineVectorStoreType->getVectorAsString($embedding))
+            ->setMaxResults($k);
 
         foreach ($additionalArguments as $key => $value) {
             $paramName = 'where_'.$key;

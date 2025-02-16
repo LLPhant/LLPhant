@@ -3,22 +3,46 @@
 namespace LLPhant\Embeddings\VectorStores\Doctrine;
 
 use Doctrine\DBAL\Platforms\AbstractPlatform;
+use Doctrine\ORM\EntityManagerInterface;
 
-enum SupportedDoctrineVectorStore: string
+abstract class SupportedDoctrineVectorStore
 {
-    case Postgres = 'postgresql';
-    case MariaDB = 'mysql';
+    /**
+     * @param  float[]  $vector
+     */
+    abstract public function getVectorAsString(array $vector): string;
+
+    abstract public function convertToDatabaseValueSQL(string $sqlExpr): string;
+
+    abstract public function addCustomisationsTo(EntityManagerInterface $entityManager): void;
+
+    abstract public function l2DistanceName(): string;
+
+    /**
+     * @param  float[]  $vector
+     */
+    protected function stringListOf(array $vector): string
+    {
+        return \implode(',', $vector);
+    }
 
     /**
      * @return string[]
      */
     public static function values(): array
     {
-        return \array_map(fn (SupportedDoctrineVectorStore $v): string => $v->value, self::cases());
+        return [
+            'postgresql',
+            'mysql',
+        ];
     }
 
     public static function fromPlatform(AbstractPlatform $platform): self
     {
-        return self::from($platform->getName());
+        return match ($platform->getName()) {
+            'postgresql' => new PostgresqlVectorStoreType(),
+            'mysql' => new MariaDBVectorStoreType(),
+            default => throw new \RuntimeException('Unsupported DoctrineVectorStore type'),
+        };
     }
 }
