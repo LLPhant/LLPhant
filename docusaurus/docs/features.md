@@ -16,6 +16,7 @@
 | PostgreSQL (via Doctrine) |
 | ElasticSearch             |
 | Local File System         |
+| MariaDB (via Doctrine)    |
 | Memory                    |
 | Milvus                    |
 | Qdrant                    |

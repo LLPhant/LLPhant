@@ -1,0 +1,14 @@
+version: '3.5'
+
+services:
+  mariadb:
+    image: mariadb:11.7-rc
+    container_name: ${COMPOSE_PROJECT_NAME}-mariadb
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mariadb/scripts:/docker-entrypoint-initdb.d
+    environment:
+      MARIADB_ROOT_PASSWORD: example
+      MARIADB_DATABASE: llphant
+

@@ -15,6 +15,8 @@ use LLPhant\Embeddings\VectorStores\VectorStoreBase;
 
 final class DoctrineVectorStore extends VectorStoreBase implements DocumentStore
 {
+    private readonly SupportedDoctrineVectorStore $doctrineVectorStoreType;
+
     /**
      * @template T of DoctrineEmbeddingEntityBase
      *
@@ -31,11 +33,14 @@ final class DoctrineVectorStore extends VectorStoreBase implements DocumentStore
         }
 
         $conn = $entityManager->getConnection();
+        $this->doctrineVectorStoreType = SupportedDoctrineVectorStore::fromPlatform($conn->getDatabasePlatform());
         $registeredTypes = Type::getTypesMap();
         if (! array_key_exists(VectorType::VECTOR, $registeredTypes)) {
             Type::addType(VectorType::VECTOR, VectorType::class);
             $conn->getDatabasePlatform()->registerDoctrineTypeMapping('vector', VectorType::VECTOR);
         }
+
+        $this->doctrineVectorStoreType->addCustomisationsTo($this->entityManager);
     }
 
     /**
@@ -72,13 +77,12 @@ final class DoctrineVectorStore extends VectorStoreBase implements DocumentStore
      */
     public function similaritySearch(array $embedding, int $k = 4, array $additionalArguments = []): array
     {
-        $this->entityManager->getConfiguration()->addCustomStringFunction('L2_DISTANCE', PgVectorL2OperatorDql::class);
-
         $repository = $this->entityManager->getRepository($this->entityClassName);
+
         $qb = $repository
             ->createQueryBuilder('e')
-            ->orderBy('L2_DISTANCE(e.embedding, :embeddingString)', 'ASC')
-            ->setParameter('embeddingString', VectorUtils::getVectorAsString($embedding))
+            ->orderBy($this->doctrineVectorStoreType->l2DistanceName().'(e.embedding, :embeddingString)', 'ASC')
+            ->setParameter('embeddingString', $this->doctrineVectorStoreType->getVectorAsString($embedding))
             ->setMaxResults($k);
 
         foreach ($additionalArguments as $key => $value) {

@@ -5,15 +5,17 @@ namespace LLPhant\Embeddings\VectorStores\Doctrine;
 use Doctrine\ORM\Query\SqlWalker;
 
 /**
- * L2DistanceFunction ::= "L2_DISTANCE" "(" VectorPrimary "," VectorPrimary ")"
+ * L2DistanceFunction ::= "VEC_DISTANCE_EUCLIDEAN" "(" VectorPrimary "," VectorPrimary ")"
  */
-final class PgVectorL2OperatorDql extends AbstractDBL2OperatorDql
+final class MariaDBL2OperatorDql extends AbstractDBL2OperatorDql
 {
     public function getSql(SqlWalker $sqlWalker): string
     {
-        return 'L2_DISTANCE('.
+        return 'VEC_DISTANCE_EUCLIDEAN('.
             $this->vectorOne->dispatch($sqlWalker).', '.
+            'VEC_FROMTEXT('.
             $this->vectorTwo->dispatch($sqlWalker).
+            ')'.
             ')';
     }
 }
