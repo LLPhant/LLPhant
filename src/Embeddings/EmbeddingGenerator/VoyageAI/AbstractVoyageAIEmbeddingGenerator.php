@@ -49,17 +49,17 @@ abstract class AbstractVoyageAIEmbeddingGenerator implements EmbeddingGeneratorI
         if ($config instanceof VoyageAIConfig && $config->client instanceof ClientContract) {
             $this->client = $config->client;
         } else {
-            $apiKey = $config->apiKey ?? getenv('VOYAGE_API_KEY');
+            $apiKey = $config->apiKey ?? getenv('VOYAGE_AI_API_KEY');
             if (! $apiKey) {
                 throw new Exception('You have to provide a VOYAGE_API_KEY env var to request VoyageAI.');
             }
-            $url = $config->url ?? (getenv('VOYAGE_BASE_URL') ?: 'https://api.voyageai.com/v1');
+            $url = $config->url ?? (getenv('VOYAGE_AI_BASE_URL') ?: 'https://api.voyageai.com/v1');
 
             $this->client = OpenAI::factory()
                 ->withApiKey($apiKey)
                 ->withBaseUri($url)
                 ->make();
-            $this->uri = $url . '/embeddings';
+            $this->uri = $url.'/embeddings';
             $this->apiKey = $apiKey;
         }
     }
@@ -174,7 +174,7 @@ abstract class AbstractVoyageAIEmbeddingGenerator implements EmbeddingGeneratorI
 
         return new GuzzleClient([
             'headers' => [
-                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Authorization' => 'Bearer '.$this->apiKey,
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
             ],

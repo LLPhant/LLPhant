@@ -414,7 +414,7 @@ This is the step where we generate the embedding for each chunk of text by calli
 
 **21 february 2024** : Adding VoyageAI embeddings
 You need to have a VoyageAI account to use this API. More information on the [VoyageAI website](https://voyage.ai/).
-And you need to set up the VOYAGE_API_KEY environment variable or pass it to the constructor of the `Voyage3LargeEmbeddingGenerator` class.
+And you need to set up the VOYAGE_AI_API_KEY environment variable or pass it to the constructor of the `Voyage3LargeEmbeddingGenerator` class.
 
 This is an example how to use it, just for the vector transformation:
 
