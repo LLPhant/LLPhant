@@ -30,16 +30,12 @@ abstract class AbstractVoyageAIEmbeddingGenerator implements EmbeddingGeneratorI
     /**
      * Whether to use the retrieval-optimized embedding.
      * Can be "query" or "document".
-     *
-     * @var string|null
      */
     public ?string $retrievalOption = null;
 
     /**
      * Whether to truncate the text automatically by the API
      * to fit the model's maximum input length.
-     *
-     * @var bool
      */
     public bool $truncation = true;
 
@@ -63,7 +59,7 @@ abstract class AbstractVoyageAIEmbeddingGenerator implements EmbeddingGeneratorI
                 ->withApiKey($apiKey)
                 ->withBaseUri($url)
                 ->make();
-            $this->uri = $url . '/embeddings';
+            $this->uri = $url.'/embeddings';
             $this->apiKey = $apiKey;
         }
     }
@@ -181,7 +177,7 @@ abstract class AbstractVoyageAIEmbeddingGenerator implements EmbeddingGeneratorI
 
         return new GuzzleClient([
             'headers' => [
-                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Authorization' => 'Bearer '.$this->apiKey,
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
             ],
