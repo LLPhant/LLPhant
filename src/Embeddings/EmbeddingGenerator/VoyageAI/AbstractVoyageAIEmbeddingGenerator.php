@@ -37,7 +37,7 @@ abstract class AbstractVoyageAIEmbeddingGenerator implements EmbeddingGeneratorI
      * Whether to truncate the text automatically by the API
      * to fit the model's maximum input length.
      */
-    public bool $truncation = true;
+    public bool $truncate = true;
 
     protected string $uri = 'https://api.voyageai.com/v1/embeddings';
 
@@ -59,7 +59,7 @@ abstract class AbstractVoyageAIEmbeddingGenerator implements EmbeddingGeneratorI
                 ->withApiKey($apiKey)
                 ->withBaseUri($url)
                 ->make();
-            $this->uri = $url.'/embeddings';
+            $this->uri = $url . '/embeddings';
             $this->apiKey = $apiKey;
         }
     }
@@ -98,7 +98,7 @@ abstract class AbstractVoyageAIEmbeddingGenerator implements EmbeddingGeneratorI
      * Mark the embedding as optimized for retrieval.
      * Use this on your documents before inserting them into the vector database.
      */
-    public function forEmbedding(): self
+    public function forStorage(): self
     {
         $this->retrievalOption = 'document';
 
@@ -138,14 +138,11 @@ abstract class AbstractVoyageAIEmbeddingGenerator implements EmbeddingGeneratorI
             $body = [
                 'model' => $this->getModelName(),
                 'input' => $chunk,
+                'truncate' => $this->truncate,
             ];
 
             if ($this->retrievalOption !== null) {
                 $body['input_type'] = $this->retrievalOption;
-            }
-
-            if ($this->truncation !== null) {
-                $body['truncate'] = $this->truncation;
             }
 
             $options = [
@@ -177,7 +174,7 @@ abstract class AbstractVoyageAIEmbeddingGenerator implements EmbeddingGeneratorI
 
         return new GuzzleClient([
             'headers' => [
-                'Authorization' => 'Bearer '.$this->apiKey,
+                'Authorization' => 'Bearer ' . $this->apiKey,
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
             ],
