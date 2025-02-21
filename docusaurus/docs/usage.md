@@ -1,4 +1,5 @@
 # Usage
+
 You can use OpenAI, Mistral, Ollama or Anthropic as LLM engines.
 
 ## OpenAI
@@ -58,6 +59,7 @@ $chat = new AnthropicChat();
 ```
 
 ## Chat
+
 > 💡 This class can be used to generate content, to create a chatbot or to create a text summarizer.
 
 The API to generate text using OpenAI will only be from the chat API.
@@ -66,12 +68,14 @@ This is why this class is called OpenAIChat.
 We can use it to simply generate text from a prompt.
 
 This will ask directly an answer from the LLM.
+
 ```php
 $chat = new OpenAIChat();
 $response = $chat->generateText('what is one + one ?'); // will return something like "Two"
 ```
 
 If you want to display in your frontend a stream of text like in ChatGPT you can use the following method.
+
 ```php
 $chat = new OpenAIChat();
 return $chat->generateStreamOfText('can you write me a poem of 10 lines about life ?');
@@ -86,6 +90,7 @@ $response = $chat->generateText('what is one + one ?'); // will return "ok"
 ```
 
 You can also provide an entire conversation to the LLM.
+
 ```php
 $messages = [
     Message::system('You are an experienced PHP developer.'),
@@ -96,6 +101,7 @@ $messages = [
 
 $response = $chat->generateChat($messages);
 ```
+
 ## Get the token usage
 
 When using OpenAI is important to know how many token are you using
@@ -103,6 +109,7 @@ since the [model pricing](https://openai.com/api/pricing/) is token based.
 
 You can retrieve the total token usage using the `OpenAIChat::getTotalTokens()`
 function, as follows:
+
 ```php
 $chat = new OpenAIChat();
 
@@ -196,6 +203,7 @@ $response = $chat->generateChat($messages);
 ```
 
 #### Generating images
+
 You can use the `OpenAIImage` to generate image.
 
 We can use it to simply generate image from a prompt.
@@ -260,7 +268,7 @@ $chat = new OpenAIChat();
 // This helper will automatically gather information to describe the tools
 $tool = FunctionBuilder::buildFunctionInfo(new MailerExample(), 'sendMail');
 $chat->addTool($tool);
-$chat->setSystemMessage('You are an AI that deliver information using the email system. 
+$chat->setSystemMessage('You are an AI that deliver information using the email system.
 When you have enough information to answer the question of the user you send a mail');
 $chat->generateText('Who is Marie Curie in one line? My email is student@foo.com');
 ```
@@ -310,19 +318,22 @@ $answer = $chat->generateText('What is the weather in Venice?');
 ```
 
 ## Embeddings
+
 LLPhant support OpenAI and Mistral.
 
 > 💡 Embeddings are used to compare two texts and see how similar they are. This is the base of semantic search.
-An embedding is a vector representation of a text that captures the meaning of the text.
-It is a float array of 1536 elements for OpenAI.
+> An embedding is a vector representation of a text that captures the meaning of the text.
+> It is a float array of 1536 elements for OpenAI.
 
 To manipulate embeddings we use the `Document` class that contains the text and some metadata useful for the vector store.
 The creation of an embedding follow the following flow:
+
 <div align="center">
     <img src="/assets/embeddings-flow.png" alt="Embeddings flow" style={{paddingBottom:20}} />
 </div>
 
 ## Read data
+
 The first part of the flow is to read data from a source.
 This can be a database, a csv file, a json file, a text file, a website, a pdf, a word document, an excel file, ...
 The only requirement is that you can read the data and that you can extract the text from it.
@@ -330,8 +341,8 @@ The only requirement is that you can read the data and that you can extract the 
 For now we only support text files, pdf and docx but we plan to support other data type in the future.
 
 You can use the `FileDataReader` class to read a file. It takes a path to a file or a directory as parameter.
-The second parameter is the class name of the entity that will be used to store the embedding. 
-The class needs to extend the `Document` class 
+The second parameter is the class name of the entity that will be used to store the embedding.
+The class needs to extend the `Document` class
 and even the `DoctrineEmbeddingEntityBase` class (that extends the `Document` class) if you want to use the Doctrine vector store.
 
 ```php
@@ -343,6 +354,7 @@ $documents = $reader->getDocuments();
 To create your own data reader you need to create a class that implements the `DataReader` interface.
 
 ## Document Splitter
+
 The embeddings models have a limit of string size that they can process.
 To avoid this problem we split the document into smaller chunks.
 The `DocumentSplitter` class is used to split the document into smaller chunks.
@@ -352,6 +364,7 @@ $splittedDocuments = DocumentSplitter::splitDocuments($documents, 800);
 ```
 
 ## Embedding Formatter
+
 The `EmbeddingFormatter` is an optional step to format each chunk of text into a format with the most context.
 Adding a header and links to other documents can help the LLM to understand the context of the text.
 
@@ -360,15 +373,18 @@ $formattedDocuments = EmbeddingFormatter::formatEmbeddings($splittedDocuments);
 ```
 
 ## Embedding Generator
+
 This is the step where we generate the embedding for each chunk of text by calling the LLM.
 
 You can embed the documents using the following code:
+
 ```php
 $embeddingGenerator = new OpenAI3SmallEmbeddingGenerator();
 $embededDocuments = $embeddingGenerator->embedDocuments($formattedDocuments);
 ```
 
 You can also create a embedding from a text using the following code:
+
 ```php
 $llm = new OpenAI3SmallEmbeddingGenerator();
 $embedding = $llm->embedText('I love food');
@@ -376,21 +392,23 @@ $embedding = $llm->embedText('I love food');
 ```
 
 ## VectorStores
+
 Once you have embeddings you need to store them in a vector store.
 The vector store is a database that can store vectors and perform a similarity search.
 There are currently these vectorStore classes:
-- MemoryVectorStore stores the embeddings in the memory
-- FileSystemVectorStore stores the embeddings in a file
-- DoctrineVectorStore stores the embeddings in a postgresql or a MariaDB database. (require doctrine/orm) 
-- QdrantVectorStore stores the embeddings in a [Qdrant](https://qdrant.tech/) vectorStore. (require hkulekci/qdrant)
-- RedisVectorStore stores the embeddings in a [Redis](https://redis.io/) database. (require predis/predis)
-- ElasticsearchVectorStore stores the embeddings in a [Elasticsearch](https://www.elastic.co/) database. (require
-  elasticsearch/elasticsearch)
-- MilvusVectorStore stores the embeddings in a [Milvus](https://milvus.io/) database.
-- ChromaDBVectorStore stores the embeddings in a [ChromaDB](https://www.trychroma.com/) database.
-- AstraDBVectorStore stores the embeddings in an [AstraDB](https://www.datastax.com/products/datastax-astra) database.
-- OpenSearchVectorStore stores the embeddings in a [OpenSearch](https://opensearch.org/) database, which is a fork of Elasticsearch.
-- TypesenseVectorStore stores the embeddings in a [Typesense](https://typesense.org/) database.
+
+-   MemoryVectorStore stores the embeddings in the memory
+-   FileSystemVectorStore stores the embeddings in a file
+-   DoctrineVectorStore stores the embeddings in a postgresql or a MariaDB database. (require doctrine/orm)
+-   QdrantVectorStore stores the embeddings in a [Qdrant](https://qdrant.tech/) vectorStore. (require hkulekci/qdrant)
+-   RedisVectorStore stores the embeddings in a [Redis](https://redis.io/) database. (require predis/predis)
+-   ElasticsearchVectorStore stores the embeddings in a [Elasticsearch](https://www.elastic.co/) database. (require
+    elasticsearch/elasticsearch)
+-   MilvusVectorStore stores the embeddings in a [Milvus](https://milvus.io/) database.
+-   ChromaDBVectorStore stores the embeddings in a [ChromaDB](https://www.trychroma.com/) database.
+-   AstraDBVectorStore stores the embeddings in an [AstraDB](https://www.datastax.com/products/datastax-astra) database.
+-   OpenSearchVectorStore stores the embeddings in a [OpenSearch](https://opensearch.org/) database, which is a fork of Elasticsearch.
+-   TypesenseVectorStore stores the embeddings in a [Typesense](https://typesense.org/) database.
 
 Example of usage with the `DoctrineVectorStore` class to store the embeddings in a database:
 
@@ -411,14 +429,16 @@ $result = $vectorStore->similaritySearch($embedding, 2);
 To get full example you can have a look at [Doctrine integration tests files](https://github.com/theodo-group/LLPhant/blob/main/tests/Integration/Embeddings/VectorStores/Doctrine/DoctrineVectorStoreTest.php).
 
 ### VectorStores vs DocumentStores
-As we have seen, a `VectorStore` is an engine that can be used to perform similarity searches on documents. 
-A `DocumentStore` is an abstraction around a storage for documents that can be queried with more classical methods. 
+
+As we have seen, a `VectorStore` is an engine that can be used to perform similarity searches on documents.
+A `DocumentStore` is an abstraction around a storage for documents that can be queried with more classical methods.
 In many cases can be vector stores can be also document stores and vice versa, but this is not mandatory.
 There are currently these DocumentStore classes:
-- MemoryVectorStore 
-- FileSystemVectorStore 
-- DoctrineVectorStore 
-- MilvusVectorStore 
+
+-   MemoryVectorStore
+-   FileSystemVectorStore
+-   DoctrineVectorStore
+-   MilvusVectorStore
 
 Those implementations are both vector stores and document stores.
 
@@ -430,17 +450,20 @@ One simple solution for web developers is to use a postgresql database as a vect
 You can find all the information on the pgvector extension on its [github repository](https://github.com/pgvector/pgvector).
 
 We suggest you 3 simple solutions to get a postgresql database with the extension enabled:
-- use docker with the [docker-compose-pgvector.yml](https://github.com/theodo-group/LLPhant/blob/main/devx/docker-compose-pgvector.yml) file
-- use [Supabase](https://supabase.com/)
-- use [Neon](https://neon.tech/)
+
+-   use docker with the [docker-compose-pgvector.yml](https://github.com/theodo-group/LLPhant/blob/main/devx/docker-compose-pgvector.yml) file
+-   use [Supabase](https://supabase.com/)
+-   use [Neon](https://neon.tech/)
 
 In any case you will need to activate the extension:
+
 ```sql
 CREATE EXTENSION IF NOT EXISTS vector;
 ```
 
 Then you can create a table and store vectors.
 This sql query will create the table corresponding to PlaceEntity in the test folder.
+
 ```sql
 CREATE TABLE IF NOT EXISTS test_place (
    id SERIAL PRIMARY KEY,
@@ -453,6 +476,7 @@ CREATE TABLE IF NOT EXISTS test_place (
 ```
 
 The PlaceEntity
+
 ```php
 #[Entity]
 #[Table(name: 'test_place')]
@@ -470,8 +494,8 @@ Here you can find the [queries needed to initialize the DB](https://github.com/L
 
 Prerequisites :
 
-- Redis server running (see [Redis quickstart](https://redis.io/topics/quickstart))
-- Predis composer package installed (see [Predis](https://github.com/predis/predis))
+-   Redis server running (see [Redis quickstart](https://redis.io/topics/quickstart))
+-   Predis composer package installed (see [Predis](https://github.com/predis/predis))
 
 Then create a new Redis Client with your server credentials, and pass it to the RedisVectorStore constructor :
 
@@ -492,10 +516,10 @@ You can now use the RedisVectorStore as any other VectorStore.
 
 Prerequisites :
 
-- Elasticsearch server running (
-  see [Elasticsearch quickstart](https://www.elastic.co/guide/en/elasticsearch/reference/current/getting-started-install.html))
-- Elasticsearch PHP client installed (
-  see [Elasticsearch PHP client](https://www.elastic.co/guide/en/elasticsearch/client/php-api/current/index.html))
+-   Elasticsearch server running (
+    see [Elasticsearch quickstart](https://www.elastic.co/guide/en/elasticsearch/reference/current/getting-started-install.html))
+-   Elasticsearch PHP client installed (
+    see [Elasticsearch PHP client](https://www.elastic.co/guide/en/elasticsearch/client/php-api/current/index.html))
 
 Then create a new Elasticsearch Client with your server credentials, and pass it to the ElasticsearchVectorStore
 constructor :
@@ -507,7 +531,7 @@ $client = (new ClientBuilder())::create()
     ->setHosts(['http://localhost:9200'])
     ->build();
 $vectorStore = new ElasticsearchVectorStore($client, 'llphant_custom_index'); // The default index is llphant
-````
+```
 
 You can now use the ElasticsearchVectorStore as any other VectorStore.
 
@@ -521,23 +545,24 @@ and pass it to the MilvusVectorStore constructor :
 ```php
 $client = new MilvusClient('localhost', '19530', 'root', 'milvus');
 $vectorStore = new MilvusVectorStore($client);
-````
+```
+
 ### ChromaDB VectorStore
 
-Prerequisites : Chroma server running (see [Chroma docs](https://docs.trychroma.com/)). 
+Prerequisites : Chroma server running (see [Chroma docs](https://docs.trychroma.com/)).
 You can run it locally using this [docker compose file](https://github.com/theodo-group/LLPhant/blob/main/devx/docker-compose-chromadb.yml).
 
 Then create a new ChromaDB vector store (`LLPhant\Embeddings\VectorStores\ChromaDB\ChromaDBVectorStore`), for example:
 
 ```php
 $vectorStore = new ChromaDBVectorStore(host: 'my_host', authToken: 'my_optional_auth_token');
-````
+```
 
 You can now use this vector store as any other VectorStore.
 
 ### AstraDB VectorStore
 
-Prerequisites : an [AstraDB account](https://accounts.datastax.com/session-service/v1/login) where you can create and delete databases (see [AstraDB docs](https://docs.datastax.com/en/astra-db-serverless/index.html)). 
+Prerequisites : an [AstraDB account](https://accounts.datastax.com/session-service/v1/login) where you can create and delete databases (see [AstraDB docs](https://docs.datastax.com/en/astra-db-serverless/index.html)).
 At the moment you can not run this DB it locally. You have to set `ASTRADB_ENDPOINT` and `ASTRADB_TOKEN` environment variables with data needed to connect to your instance.
 
 Then create a new AstraDB vector store (`LLPhant\Embeddings\VectorStores\AstraDB\AstraDBVectorStore`), for example:
@@ -555,7 +580,7 @@ if ($currentEmbeddingLength === 0) {
     $vectorStore->deleteCollection();
     $vectorStore->createCollection($embeddingGenerator->getEmbeddingLength());
 }
-````
+```
 
 You can now use this vector store as any other VectorStore.
 
@@ -569,28 +594,32 @@ Then create a new TypesenseDB vector store (`LLPhant\Embeddings\VectorStores\Typ
 ```php
 // Default connection properties come from env vars TYPESENSE_API_KEY and TYPESENSE_NODE
 $vectorStore = new TypesenseVectorStore('test_collection');
-````
+```
 
 ##### FileSystem VectorStore
+
 Please note that **this vector store is intended just for small tests**. In a production environment you should consider to use a more effective engine.
 In a recent version (0.8.13) we modified the format of the vector store files.
 To use those old files you have to convert them to the new format:
 convertFromOldFileFormat:
+
 ```php
 $vectorStore = new FileSystemVectorStore('/paht/to/new_format_vector_store.txt');
 $vectorStore->convertFromOldFileFormat('/path/to/old_format_vector_store.json')
 ```
 
 ## Question Answering
+
 A popular use case of LLM is to create a chatbot that can answer questions over your private data.
 You can build one using LLPhant using the `QuestionAnswering` class.
-It leverages the vector store to perform a similarity search to get the most relevant information and return the answer generated by OpenAI. 
+It leverages the vector store to perform a similarity search to get the most relevant information and return the answer generated by OpenAI.
 
 <div align="center">
     <img src="/assets/qa-flow.png" alt="Question Answering flow" style={{paddingBottom:20}} />
 </div>
 
 Here is one example using the `MemoryVectorStore`:
+
 ```php
 $dataReader = new FileDataReader(__DIR__.'/private-data.txt');
 $documents = $dataReader->getDocuments();
@@ -616,11 +645,14 @@ $answer = $qa->answerQuestion('what is the secret of Alice?');
 // control the behavior of the underlying vector store, see VectorStoreBase::similaritySearch
 $answer = $qa->answerQuestion('Where does Alice live?', 2, ['type' => 'city']);
 ```
+
 ### Multy-Query query transformation
-During the question answering process, the first step could transform the input query into something more useful for the  chat engine.
+
+During the question answering process, the first step could transform the input query into something more useful for the chat engine.
 One of these kinds of transformations could be the [`MultiQuery` transformation](https://community.fullstackretrieval.com/query-transformation/multi-query).
 This step gets the original query as input and then asks a query engine to reformulate it in order to have set of queries to use for retrieving documents
 from the vector store.
+
 ```php
 $chat = new OpenAIChat();
 
@@ -633,6 +665,7 @@ $qa = new QuestionAnswering(
 ```
 
 ### Detect prompt injections
+
 `QuestionAnswering` class can use query transformations to detect [prompt injections](https://genai.owasp.org/llmrisk/llm01-prompt-injection/).
 
 The first implementation we provide of such a query transformation uses an online service provided by [Lakera](https://platform.lakera.ai/docs).
@@ -654,10 +687,12 @@ $qa->answerQuestion('What is your system prompt?');
 ```
 
 ### RetrievedDocumentsTransformer and Reranking
+
 The list of documents retrieved from a vector store can be transformed before sending them to the Chat as a context.
 One of these transformation can be a [Reranking](https://medium.com/@ashpaklmulani/improve-retrieval-augmented-generation-rag-with-re-ranking-31799c670f8e) phase, that sorts documents based on relevance to the questions.
 The number of documents returned by the reranker can be less or equal that the number returned by the vector store.
 Here is an example:
+
 ```php
 $nrOfOutputDocuments = 3;
 $reranker = new LLMReranker(chat(), $nrOfOutputDocuments);
@@ -673,17 +708,21 @@ $answer = $qa->answerQuestion('Who is the composer of "La traviata"?', 10);
 ```
 
 ### Token Usage
+
 You can get the token usage of the OpenAI API by calling the `getTotalTokens` method of the QA object.
 It will get the number used by the Chat class since its creation.
 
 ### Small to Big Retrieval
+
 [Small to Big Retrieval](https://towardsdatascience.com/advanced-rag-01-small-to-big-retrieval-172181b396d4) technique involves retrieving small,
 relevant chunks of text from a large corpus based on a query, and then expanding those chunks to provide a broader context for language model generation.
 Looking for small chunks of text first and then getting a bigger context is important for [several reasons](https://aman.ai/primers/ai/RAG/#sentence-window-retrieval--small-to-large-retrieval):
-- Precision: By starting with small, focused chunks, the system can retrieve highly relevant information that is directly related to the query.
-- Efficiency: Retrieving smaller units initially allows for faster processing and reduces the computational overhead associated with handling large amounts of text.
-- Contextual richness: Expanding the retrieved chunks provides the language model with a broader understanding of the topic, enabling it to generate more comprehensive and accurate responses.
-  Here is an example:
+
+-   Precision: By starting with small, focused chunks, the system can retrieve highly relevant information that is directly related to the query.
+-   Efficiency: Retrieving smaller units initially allows for faster processing and reduces the computational overhead associated with handling large amounts of text.
+-   Contextual richness: Expanding the retrieved chunks provides the language model with a broader understanding of the topic, enabling it to generate more comprehensive and accurate responses.
+    Here is an example:
+
 ```php
 $reader = new FileDataReader($filePath);
 $documents = $reader->getDocuments();
