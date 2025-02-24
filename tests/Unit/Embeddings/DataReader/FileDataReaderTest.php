@@ -111,7 +111,7 @@ it('includes metadata in the document structure', function () {
     $reader = new FileDataReader('path/to/nonexistent/file'); // Pass a dummy path
 
     // Use Reflection to access the private method
-    $reflection = new ReflectionClass(FileDataReader::class);
+    $reflection = new \ReflectionClass(FileDataReader::class);
     $method = $reflection->getMethod('getDocument');
     $method->setAccessible(true);
     $document = $method->invokeArgs($reader, [$content, 'test.txt']);
