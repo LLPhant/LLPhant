@@ -11,7 +11,7 @@ class ToolCall
 
     public readonly string $type;
 
-    public function __construct(public readonly string $id, string $name, public readonly string $jsonArgs)
+    public function __construct(public readonly string $id, string $name, string $jsonArgs)
     {
         $this->type = 'function';
         $this->function = ['name' => $name, 'arguments' => $jsonArgs];
