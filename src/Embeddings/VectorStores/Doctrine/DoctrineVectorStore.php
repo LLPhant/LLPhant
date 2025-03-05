@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace LLPhant\Embeddings\VectorStores\Doctrine;
 
-use Doctrine\ORM\QueryBuilder;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Exception\ORMException;
 use Doctrine\ORM\OptimisticLockException;
+use Doctrine\ORM\QueryBuilder;
 use Exception;
 use LLPhant\Embeddings\Document;
 use LLPhant\Embeddings\DocumentStore\DocumentStore;
