@@ -29,7 +29,10 @@ class QuestionAnswering
      */
     public function answerQuestion(string $question, int $k = 4, array $additionalArguments = []): string
     {
-        $systemMessage = $this->searchDocumentAndCreateSystemMessage($question, $k, $additionalArguments);
+        $contextIsExpected = str_contains($this->systemMessageTemplate, '{context}');
+        $systemMessage = $contextIsExpected
+            ? $this->searchDocumentAndCreateSystemMessage($question, $k, $additionalArguments)
+            : $this->systemMessageTemplate;
         $this->chat->setSystemMessage($systemMessage);
 
         return $this->chat->generateText($question);
