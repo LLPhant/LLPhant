@@ -12,7 +12,7 @@ use Psr\Http\Message\StreamInterface;
 class QuestionAnswering
 {
     /** @var Document[] */
-    protected array $retrievedDocs;
+    protected array $retrievedDocs = [];
 
     public string $systemMessageTemplate = "Use the following pieces of context to answer the question of the user. If you don't know the answer, just say that you don't know, don't try to make up an answer.\n\n{context}.";
 
