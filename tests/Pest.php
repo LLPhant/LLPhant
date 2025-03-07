@@ -12,3 +12,8 @@ function fixture(string $name): array
 
     return json_decode($content, true);
 }
+
+expect()->extend('toMatchJson', function (string $actual) {
+    return expect(json_decode($this->value, true))
+        ->toEqual(json_decode($actual, true));
+});

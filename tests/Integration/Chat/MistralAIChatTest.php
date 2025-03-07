@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Chat;
 
+use LLPhant\Chat\FunctionInfo\FunctionBuilder;
+use LLPhant\Chat\Message;
 use LLPhant\Chat\MistralAIChat;
 use LLPhant\OpenAIConfig;
 
@@ -26,4 +28,25 @@ it('can load any existing model', function () {
     $chat = new MistralAIChat($config);
     $response = $chat->generateText('one + one ?');
     expect($response)->toBeString();
+});
+
+it('calls tool functions during a chat', function () {
+    $config = new OpenAIConfig();
+    $config->model = 'mistral-small-latest';
+    $chat = new MistralAIChat($config);
+
+    $notifier = new NotificationExample();
+
+    $functionSendNotification = FunctionBuilder::buildFunctionInfo($notifier, 'sendNotificationToSlack');
+
+    $chat->addTool($functionSendNotification);
+    $messages = [
+        Message::system('You need to call the function to send a confirmation notification to slack'),
+        Message::user('the confirmation should be called'),
+    ];
+
+    $answer = $chat->generateChat($messages);
+
+    expect($notifier->nrOfCalls)->toBe(1);
+    expect($answer)->toBeString();
 });

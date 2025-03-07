@@ -1,11 +1,11 @@
 # Comparison Table of all supported Language Models
 
 | Model     | Text | Streaming |    Tools    | Images input | Images output | Speech to text |
-| --------- | :--: | :-------: | :---------: | :----------: | :-----------: | :------------: |
-| Anthropic |  ✅  |    ✅     |     ✅      |              |               |                |
-| Mistral   |  ✅  |    ✅     |             |              |               |                |
+| --------- | :--: | :-------: |:-----------:| :----------: | :-----------: | :------------: |
+| Anthropic |  ✅  |    ✅     |      ✅      |              |               |                |
+| Mistral   |  ✅  |    ✅     |      ✅      |              |               |                |
 | Ollama    |  ✅  |    ✅     | Some models | Some models  |               |                |
-| OpenAI    |  ✅  |    ✅     |     ✅      |      ✅      |      ✅       |       ✅       |
+| OpenAI    |  ✅  |    ✅     |      ✅      |      ✅      |      ✅       |       ✅       |
 
 # Supported Vector Stores
 
