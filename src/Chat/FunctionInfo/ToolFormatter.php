@@ -41,6 +41,7 @@ class ToolFormatter
                 'function' => [
                     'name' => $functionInfo->name,
                     'description' => $functionInfo->description,
+                    'parameters' => new \stdClass(),
                 ],
             ];
         }
