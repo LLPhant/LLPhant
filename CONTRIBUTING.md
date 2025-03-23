@@ -15,6 +15,9 @@ You can use the `devx/docker-compose.yml` file to run a local postgresql databas
 docker-compose up -d
 ```
 
+## Integration tests environment
+In the [docker](/docker) folder you can find a complete environment for running integration tests.
+
 ## Process
 
 1. Fork the project

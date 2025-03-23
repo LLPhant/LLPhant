@@ -1,0 +1,135 @@
+services:
+    php:
+        container_name: ${COMPOSE_PROJECT_NAME}-php
+        stdin_open: true
+        tty: true
+        build:
+            context: php
+            args:
+                PHP_VERSION: ${PHP_VERSION}
+                COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+        volumes:
+            - ${APP_PATH}:/var/${COMPOSE_PROJECT_NAME}
+        environment:
+            PHP_IDE_CONFIG: serverName=PHPSTORM
+            OPENAI_API_KEY: ${OPENAI_API_KEY}
+            MISTRAL_API_KEY: ${MISTRAL_API_KEY}
+            ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+            ASTRADB_ENDPOINT: ${ASTRADB_ENDPOINT}
+            ASTRADB_TOKEN: ${ASTRADB_TOKEN}
+            ELASTIC_URL: ${ELASTIC_URL}
+            PGVECTOR_HOST: pgvector
+            REDIS_HOST: redis
+            MILVUS_HOST: ${MILVUS_HOST}
+            QDRANT_HOST: qdrant
+            CHROMADB_HOST: chromadb
+            OLLAMA_URL: ${OLLAMA_URL}
+            LAKERA_ENDPOINT: ${LAKERA_ENDPOINT}
+            LAKERA_API_KEY: ${LAKERA_API_KEY}
+            OPENSEARCH_HOSTS: ${OPENSEARCH_HOSTS}
+            TYPESENSE_API_KEY: ${TYPESENSE_API_KEY}
+            TYPESENSE_NODE: ${TYPESENSE_NODE}
+            MARIADB_HOST: mariadb
+
+    opensearch:
+      image: opensearchproject/opensearch:2.17.1
+      container_name: ${COMPOSE_PROJECT_NAME}-opensearch
+      environment:
+        discovery.type: single-node
+        node.name: opensearch
+        OPENSEARCH_JAVA_OPTS: "-Xms512m -Xmx512m"
+        OPENSEARCH_INITIAL_ADMIN_PASSWORD: "OpenSearch2.17"
+      ports:
+        - 9201:9200
+      volumes:
+        - osdata:/usr/share/opensearch/data
+
+    elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+        container_name: ${COMPOSE_PROJECT_NAME}-elasticsearch
+        environment:
+            - discovery.type=single-node
+            - xpack.security.enabled=false
+            - node.name=${COMPOSE_PROJECT_NAME}-elasticsearch
+            - cluster.name=es-cluster
+            - cluster.routing.allocation.disk.threshold_enabled=false
+            - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+        ports:
+            - "9200:9200"
+        volumes:
+            - esdata:/usr/share/elasticsearch/data
+
+    pgvector:
+      # In production, you may want to use a managed database service
+      image: ankane/pgvector
+      container_name: ${COMPOSE_PROJECT_NAME}-pgvector
+      environment:
+        - POSTGRES_DB=postgres
+        - POSTGRES_USER=myuser
+        # You should definitely change the password in production
+        - POSTGRES_PASSWORD=!ChangeMe!
+      volumes:
+        - ./pgvector/scripts:/docker-entrypoint-initdb.d
+        - db-data:/var/lib/postgresql/data:rw
+        # You may use a bind-mounted host directory instead, so that it is harder to accidentally remove the volume and lose all your data!
+        # - ./docker/db/data:/var/lib/postgresql/data:rw
+      ports:
+        - '5432:5432'
+
+    redis:
+      image: redis/redis-stack:latest
+      ports:
+        - 6379:6379
+        - 8001:8001
+
+    chromadb:
+      image: 'chromadb/chroma'
+      ports:
+        - '8000:8000'
+      volumes:
+        - chroma-data:/chroma/chroma
+
+    qdrant:
+      container_name: qdrant_demo_qdrant
+      image: qdrant/qdrant
+      ports:
+        - "6333:6333"
+        - "6334:6334"
+      volumes:
+        - qdrant-data:/qdrant/storage
+
+    typesense:
+      container_name: typesense_llphant
+      image: typesense/typesense:27.1
+      ports:
+        - "8108:8108"
+      environment:
+        TYPESENSE_API_KEY: ${TYPESENSE_API_KEY}
+        TYPESENSE_DATA_DIR: /data
+      volumes:
+        - typesense-data:/data
+
+    mariadb:
+      image: mariadb:11.7-rc
+      container_name: ${COMPOSE_PROJECT_NAME}-mariadb
+      ports:
+        - "3306:3306"
+      volumes:
+        - ./mariadb/scripts:/docker-entrypoint-initdb.d
+      environment:
+        MARIADB_ROOT_PASSWORD: example
+        MARIADB_DATABASE: llphant
+
+volumes:
+    typesense-data:
+    esdata:
+    osdata:
+    db-data: { }
+    chroma-data:
+      driver: local
+    qdrant-data:
+      driver: local
+
+

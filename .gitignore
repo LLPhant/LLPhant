@@ -13,3 +13,4 @@ script.php
 /docusaurus/yarn.lock
 /docusaurus/.pnp.cjs
 /docusaurus/.pnp.loader.mjs
+/docker/.env
