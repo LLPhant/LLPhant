@@ -34,6 +34,18 @@ it('can generate some stuff with a system prompt', function () {
     expect(strtolower($response))->toContain('ok');
 });
 
+it('can generate chat with a system prompt', function () {
+    $chat = ollamaChat();
+
+    $chat->setSystemMessage('Whatever we ask you, you MUST answer "ok"');
+    $messages = [
+        Message::user('what is one + one?'),
+    ];
+
+    $response = $chat->generateChat($messages);
+    expect(strtolower($response))->toContain('ok');
+});
+
 it('can generate some stuff using a stream', function () {
     $chat = ollamaChat();
     $response = $chat->generateStreamOfText('Can you describe the recipe for making carbonara in 5 steps');
