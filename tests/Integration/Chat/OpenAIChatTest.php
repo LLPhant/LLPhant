@@ -157,3 +157,35 @@ it('can call a tool and provide the result to the assistant', function () {
         ->and($response)->toContain('sunny')
         ->and($chat->getTotalTokens())->toBeGreaterThan($firstRequestTokenUsage);
 });
+
+it('can generate a chat stream', function () {
+    $config = new OpenAIConfig();
+    $config->model = 'gpt-4o-mini';
+    $chat = new OpenAIChat($config);
+
+    $messages[] = Message::user('Tell me the names of the first 5 roman emperors');
+
+    $chatStreamOutput = $chat->generateChatStream($messages);
+
+    expect($chatStreamOutput->getContents())->toContain('Caligula');
+});
+
+it('can call a function with streaming', function () {
+    $config = new OpenAIConfig();
+    //Tools are needed with newer models
+    $config->model = OpenAIChatModel::Gpt35Turbo->value;
+    $chat = new OpenAIChat($config);
+
+    $testFunction = new TestFunctionLLPhant();
+    $tool = new FunctionInfo('getFavouritePetName', $testFunction, 'This function returns the name of the favourite pet of the user', []);
+    $chat->addTool($tool);
+
+    $messages[] = Message::user('What is the name of my favourite pet?');
+    $chatOutput = $chat->generateChat($messages);
+
+    expect($chatOutput)->toContain($testFunction->getFavouritePetName());
+
+    $chatStreamOutput = $chat->generateChatStream($messages);
+
+    expect($chatStreamOutput->getContents())->toContain($testFunction->getFavouritePetName());
+});

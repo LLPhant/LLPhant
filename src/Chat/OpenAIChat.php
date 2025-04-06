@@ -126,19 +126,10 @@ class OpenAIChat implements ChatInterface
         $answer = $this->generateResponseFromMessages($messages);
         $this->handleTools($answer);
 
-        $toolsCalls = [];
-        $toolsOutput = [];
         if ($this->functionsCalled) {
-            /** @var CalledFunction $functionCalled */
-            foreach ($this->functionsCalled as $functionCalled) {
-                $toolsOutput[] = Message::toolResult($functionCalled->return, $functionCalled->tool_call_id);
-                if ($functionCalled->tool_call_id) {
-                    $toolsCalls[] = new ToolCall($functionCalled->tool_call_id, $functionCalled->definition->name, json_encode($functionCalled->arguments, JSON_THROW_ON_ERROR));
-                }
-            }
+            $newMessages = $this->getNewMessagesFromTools($messages);
 
-            $messages[] = Message::assistantAskingTools($toolsCalls);
-            $answer = $this->generateResponseFromMessages(array_merge($messages, $toolsOutput));
+            $answer = $this->generateResponseFromMessages($newMessages);
         }
 
         return $this->responseToString($answer);
@@ -251,26 +242,31 @@ class OpenAIChat implements ChatInterface
         ]);
 
         $stream = $this->client->chat()->createStreamed($openAiArgs);
-        $generator = function (StreamResponse $stream) {
+        $generator = function (StreamResponse $stream) use ($messages) {
+            $toolsToCall = [];
             foreach ($stream as $partialResponse) {
                 $toolCalls = $partialResponse->choices[0]->delta->toolCalls ?? [];
-                $toolsCalled = [];
                 /** @var CreateStreamedResponseToolCall $toolCall */
                 foreach ($toolCalls as $toolCall) {
-                    $toolsCalled[] = [
-                        'function' => $toolCall->function->name,
-                        'arguments' => $toolCall->function->arguments,
-                        'id' => $toolCall->id,
-                    ];
+                    if ($toolCall->function->name) {
+                        $toolsToCall[] = [
+                            'function' => $toolCall->function->name,
+                            'arguments' => $toolCall->function->arguments,
+                            'id' => $toolCall->id,
+                        ];
+                    }
                 }
 
                 // $functionName should be always set if finishReason is function_call
-                if ($partialResponse->choices[0]->finishReason === 'function_call' && $toolsCalled !== []) {
-                    foreach ($toolsCalled as $toolCalled) {
-                        if (is_string($toolCalled['function']) && is_string($toolCalled['arguments']) && is_string($toolCalled['id'])) {
-                            $this->callFunction($toolCalled['function'], $toolCalled['arguments'], $toolCalled['id']);
+                if ($this->shouldCallTool($partialResponse->choices[0]->finishReason) && $toolsToCall !== []) {
+                    foreach ($toolsToCall as $tool) {
+                        if (is_string($tool['function']) && is_string($tool['id'])) {
+                            $this->callFunction($tool['function'], $tool['arguments'], $tool['id']);
                         }
                     }
+                    $newMessages = $this->getNewMessagesFromTools($messages);
+                    // We move to a non streamed answer here. Maybe it could be improved
+                    yield $this->generateChat($newMessages);
                 }
 
                 if (! is_null($partialResponse->choices[0]->finishReason)) {
@@ -351,9 +347,9 @@ class OpenAIChat implements ChatInterface
         throw new Exception("OpenAI tried to call $functionName which doesn't exist");
     }
 
-    private function callFunction(string $functionName, string $arguments, string $toolCallId): void
+    private function callFunction(string $functionName, string $argumentsString, string $toolCallId): void
     {
-        $arguments = json_decode($arguments, true, 512, JSON_THROW_ON_ERROR);
+        $arguments = $argumentsString !== '' && $argumentsString !== '0' ? json_decode($argumentsString, true, 512, JSON_THROW_ON_ERROR) : [];
         $functionToCall = $this->getFunctionInfoFromName($functionName, $toolCallId);
         $return = $functionToCall->instance->{$functionToCall->name}(...$arguments);
         $this->functionsCalled[] = new CalledFunction($functionToCall, $arguments, $return, $toolCallId);
@@ -410,5 +406,33 @@ class OpenAIChat implements ChatInterface
         }
 
         return $functionInfos;
+    }
+
+    private function shouldCallTool(?string $finishReason): bool
+    {
+        return $finishReason === 'function_call' || $finishReason === 'tool_calls';
+    }
+
+    /**
+     * @param  Message[]  $messages
+     * @return Message[]
+     *
+     * @throws \JsonException
+     */
+    public function getNewMessagesFromTools(array $messages): array
+    {
+        $toolsCalls = [];
+        $toolsOutput = [];
+        /** @var CalledFunction $functionCalled */
+        foreach ($this->functionsCalled as $functionCalled) {
+            $toolsOutput[] = Message::toolResult($functionCalled->return, $functionCalled->tool_call_id);
+            if ($functionCalled->tool_call_id) {
+                $toolsCalls[] = new ToolCall($functionCalled->tool_call_id, $functionCalled->definition->name, json_encode($functionCalled->arguments, JSON_THROW_ON_ERROR));
+            }
+        }
+
+        $messages[] = Message::assistantAskingTools($toolsCalls);
+
+        return array_merge($messages, $toolsOutput);
     }
 }
