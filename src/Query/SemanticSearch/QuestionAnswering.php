@@ -12,7 +12,7 @@ use Psr\Http\Message\StreamInterface;
 class QuestionAnswering
 {
     /** @var Document[] */
-    protected array $retrievedDocs;
+    protected array $retrievedDocs = [];
 
     public string $systemMessageTemplate = "Use the following pieces of context to answer the question of the user. If you don't know the answer, just say that you don't know, don't try to make up an answer.\n\n{context}.";
 
@@ -29,7 +29,10 @@ class QuestionAnswering
      */
     public function answerQuestion(string $question, int $k = 4, array $additionalArguments = []): string
     {
-        $systemMessage = $this->searchDocumentAndCreateSystemMessage($question, $k, $additionalArguments);
+        $contextIsExpected = str_contains($this->systemMessageTemplate, '{context}');
+        $systemMessage = $contextIsExpected
+            ? $this->searchDocumentAndCreateSystemMessage($question, $k, $additionalArguments)
+            : $this->systemMessageTemplate;
         $this->chat->setSystemMessage($systemMessage);
 
         return $this->chat->generateText($question);
