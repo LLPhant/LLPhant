@@ -835,6 +835,31 @@ $qa = new QuestionAnswering(
 $answer = $qa->answerQuestion('Can I win at cukoo if I have a coral card?');
 ```
 
+### Using tools with QuestionAnswering
+
+If you need to use tools with `QuestionAnswering`, having their results considered in the process of generating the answer, you need to use `answerQuestionFromChat` method:
+```php
+    $location = new Parameter('location', 'string', 'the name of the city, the state or province and the nation');
+    $weatherExample = new WeatherExample();
+
+    $function = new FunctionInfo(
+        'currentWeatherForLocation',
+        $weatherExample,
+        'returns the current weather in the given location. The result contains the description of the weather plus the current temperature in Celsius',
+        [$location]
+    );
+
+    $chat->addTool($function);
+
+    $qa = new QuestionAnswering(
+        new MemoryVectorStore(),
+        new OpenAI3SmallEmbeddingGenerator(),
+        $chat
+    );
+
+    $answer = $qa->answerQuestionFromChat(messages: [Message::user('What is the weather in Venice?')], stream: false);
+```
+
 ## AutoPHP
 
 You can now make your [AutoGPT](https://github.com/Significant-Gravitas/Auto-GPT) clone in PHP using LLPhant.
