@@ -8,6 +8,7 @@ use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Exception\ORMException;
 use Doctrine\ORM\OptimisticLockException;
+use Doctrine\ORM\QueryBuilder;
 use Exception;
 use LLPhant\Embeddings\Document;
 use LLPhant\Embeddings\DocumentStore\DocumentStore;
@@ -72,18 +73,26 @@ final class DoctrineVectorStore extends VectorStoreBase implements DocumentStore
 
     /**
      * @param  float[]  $embedding  The embedding used to search closest neighbors
+     */
+    public function prepareSimilaritySearchQueryBuilder(array $embedding, int $k): QueryBuilder
+    {
+        $repository = $this->entityManager->getRepository($this->entityClassName);
+
+        return $repository
+            ->createQueryBuilder('e')
+            ->orderBy($this->doctrineVectorStoreType->l2DistanceName().'(e.embedding, :embeddingString)', 'ASC')
+            ->setParameter('embeddingString', $this->doctrineVectorStoreType->getVectorAsString($embedding))
+            ->setMaxResults($k);
+    }
+
+    /**
+     * @param  float[]  $embedding  The embedding used to search closest neighbors
      * @param  array<string, string|int>  $additionalArguments
      * @return DoctrineEmbeddingEntityBase[]
      */
     public function similaritySearch(array $embedding, int $k = 4, array $additionalArguments = []): array
     {
-        $repository = $this->entityManager->getRepository($this->entityClassName);
-
-        $qb = $repository
-            ->createQueryBuilder('e')
-            ->orderBy($this->doctrineVectorStoreType->l2DistanceName().'(e.embedding, :embeddingString)', 'ASC')
-            ->setParameter('embeddingString', $this->doctrineVectorStoreType->getVectorAsString($embedding))
-            ->setMaxResults($k);
+        $qb = $this->prepareSimilaritySearchQueryBuilder($embedding, $k);
 
         foreach ($additionalArguments as $key => $value) {
             $paramName = 'where_'.$key;
