@@ -24,16 +24,23 @@ class QuestionAnswering
     {
     }
 
+    private function setChatSystemMessage(string $question, int $k , array $additionalArguments ): void
+    {
+        $contextIsExpected = str_contains($this->systemMessageTemplate, '{context}');
+        if ($contextIsExpected) {
+            $systemMessage = $this->searchDocumentAndCreateSystemMessage($question, $k, $additionalArguments);
+        } else {
+            $systemMessage = $this->systemMessageTemplate;
+        }
+
+        $this->chat->setSystemMessage($systemMessage);
+    }
     /**
      * @param  array<string, string|int>|array<mixed[]>  $additionalArguments
      */
     public function answerQuestion(string $question, int $k = 4, array $additionalArguments = []): string
     {
-        $contextIsExpected = str_contains($this->systemMessageTemplate, '{context}');
-        $systemMessage = $contextIsExpected
-            ? $this->searchDocumentAndCreateSystemMessage($question, $k, $additionalArguments)
-            : $this->systemMessageTemplate;
-        $this->chat->setSystemMessage($systemMessage);
+        $this->setChatSystemMessage($question, $k, $additionalArguments);
 
         return $this->chat->generateText($question);
     }
@@ -43,8 +50,7 @@ class QuestionAnswering
      */
     public function answerQuestionStream(string $question, int $k = 4, array $additionalArguments = []): StreamInterface
     {
-        $systemMessage = $this->searchDocumentAndCreateSystemMessage($question, $k, $additionalArguments);
-        $this->chat->setSystemMessage($systemMessage);
+        $this->setChatSystemMessage($question, $k, $additionalArguments);
 
         return $this->chat->generateStreamOfText($question);
     }
@@ -57,8 +63,7 @@ class QuestionAnswering
     {
         // First we need to give the context to openAI with the good instructions
         $userQuestion = $messages[count($messages) - 1]->content;
-        $systemMessage = $this->searchDocumentAndCreateSystemMessage($userQuestion, $k, $additionalArguments);
-        $this->chat->setSystemMessage($systemMessage);
+        $this->setChatSystemMessage($userQuestion, $k, $additionalArguments);
 
         // Then we can just give the conversation
 
