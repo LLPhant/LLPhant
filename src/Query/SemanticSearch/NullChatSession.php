@@ -3,7 +3,7 @@
 namespace LLPhant\Query\SemanticSearch;
 
 use LLPhant\Chat\Message;
-use LLPhant\Query\SemanticSearch\ChatSessionInterface;
+use Psr\Http\Message\StreamInterface;
 
 class NullChatSession implements ChatSessionInterface
 {
@@ -17,10 +17,15 @@ class NullChatSession implements ChatSessionInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function getHistory(): array
     {
         return [];
+    }
+
+    public function wrapAnswerStream(StreamInterface $stream): StreamInterface
+    {
+        return $stream;
     }
 }

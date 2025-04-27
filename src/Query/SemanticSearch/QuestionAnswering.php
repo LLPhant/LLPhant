@@ -22,8 +22,7 @@ class QuestionAnswering
         private readonly QueryTransformer $queryTransformer = new IdentityTransformer(),
         private readonly RetrievedDocumentsTransformer $retrievedDocumentsTransformer = new IdentityDocumentsTransformer(),
         private readonly ChatSessionInterface $session = new NullChatSession()
-    )
-    {
+    ) {
     }
 
     /**
@@ -33,7 +32,7 @@ class QuestionAnswering
     {
         $systemMessage = $this->searchDocumentAndCreateSystemMessage($question, $k, $additionalArguments);
         $history = $this->session->getHistoryAsString();
-        if ($history) {
+        if ($history !== '' && $history !== '0') {
             $systemMessage .= "\nUse also the conversation history to answer the question:\n".$history;
         }
         $this->chat->setSystemMessage($systemMessage);
@@ -52,13 +51,15 @@ class QuestionAnswering
     {
         $systemMessage = $this->searchDocumentAndCreateSystemMessage($question, $k, $additionalArguments);
         $history = $this->session->getHistoryAsString();
-        if ($history) {
+        if ($history !== '' && $history !== '0') {
             $systemMessage .= "\nUse also the conversation history to answer the question:\n".$history;
         }
         $this->chat->setSystemMessage($systemMessage);
         $this->session->addMessage(Message::user($question));
-        
-        return $this->chat->generateStreamOfText($question);
+
+        $stream = $this->chat->generateStreamOfText($question);
+
+        return $this->session->wrapAnswerStream($stream);
     }
 
     /**

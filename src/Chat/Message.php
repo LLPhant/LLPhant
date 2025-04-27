@@ -5,7 +5,7 @@ namespace LLPhant\Chat;
 use LLPhant\Chat\Enums\ChatRole;
 use LLPhant\Chat\FunctionInfo\ToolCall;
 
-class Message
+class Message implements \Stringable
 {
     public ChatRole $role;
 
@@ -22,7 +22,7 @@ class Message
 
     public function __toString(): string
     {
-        return "{$this->role->value}: {$this->content}";
+        return (string) "{$this->role->value}: {$this->content}";
     }
 
     public static function system(string $content): self

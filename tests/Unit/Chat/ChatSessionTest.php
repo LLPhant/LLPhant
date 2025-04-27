@@ -23,10 +23,10 @@ test('it remembers chat history as an array', function () {
     $session->addMessage($secondAnswer);
 
     expect($session->getHistory())->toBe([
-            $firstQuestion,
-            $firstAnswer,
-            $secondQuestion,
-            $secondAnswer,
+        $firstQuestion,
+        $firstAnswer,
+        $secondQuestion,
+        $secondAnswer,
     ]);
 });
 
@@ -49,7 +49,7 @@ test('it remembers chat history as string', function () {
 
     expect($session->getHistoryAsString())
         ->toBe(
-<<<END
+            <<<'END'
 user: What is the name of the first Roman Emperor?
 assistant: Augustus was the first Roman Emperor
 user: And who was the third one?

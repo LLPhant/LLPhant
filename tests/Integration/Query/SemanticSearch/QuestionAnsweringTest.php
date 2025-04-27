@@ -57,12 +57,35 @@ it('can remember chat history using answerQuestion method', function () {
         session: new ChatSession()
     );
 
-    $answer = $qa->answerQuestion( 'What is the name of the first official Roman Emperor?');
+    $answer = $qa->answerQuestion('What is the name of the first official Roman Emperor?');
     expect($answer)->toContain('Augustus');
 
-    $answer = $qa->answerQuestion( 'And who was the third one?');
+    $answer = $qa->answerQuestion('And who was the third one?');
     expect($answer)->toContain('Caligula');
 
-    $answer = $qa->answerQuestion( 'Who was his successor?');
+    $answer = $qa->answerQuestion('Who was his successor?');
+    expect($answer)->toContain('Claudius');
+});
+
+it('can remember chat history using answerQuestionStream method', function () {
+    $config = new OpenAIConfig();
+    //Functions work only with older models. Tools are needed with newer models
+    $config->model = OpenAIChatModel::Gpt4Omni->value;
+    $chat = new OpenAIChat($config);
+
+    $qa = new QuestionAnswering(
+        new MemoryVectorStore(),
+        new OpenAI3SmallEmbeddingGenerator(),
+        $chat,
+        session: new ChatSession()
+    );
+
+    $answer = $qa->answerQuestionStream('What is the name of the first official Roman Emperor?')->getContents();
+    expect($answer)->toContain('Augustus');
+
+    $answer = $qa->answerQuestionStream('And who was the third one?')->getContents();
+    expect($answer)->toContain('Caligula');
+
+    $answer = $qa->answerQuestionStream('Who was his successor?')->getContents();
     expect($answer)->toContain('Claudius');
 });
