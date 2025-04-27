@@ -12,6 +12,7 @@ use LLPhant\Chat\OpenAIChat;
 use LLPhant\Embeddings\EmbeddingGenerator\OpenAI\OpenAI3SmallEmbeddingGenerator;
 use LLPhant\Embeddings\VectorStores\Memory\MemoryVectorStore;
 use LLPhant\OpenAIConfig;
+use LLPhant\Query\SemanticSearch\ChatSession;
 use LLPhant\Query\SemanticSearch\QuestionAnswering;
 use Tests\Integration\Chat\WeatherExample;
 
@@ -41,4 +42,27 @@ it('can call a function and provide the result to the assistant', function () {
     $answer = $qa->answerQuestionFromChat(messages: [Message::user('What is the weather in Venice?')], stream: false);
 
     expect($answer)->toContain('sunny');
+});
+
+it('can remember chat history using answerQuestion method', function () {
+    $config = new OpenAIConfig();
+    //Functions work only with older models. Tools are needed with newer models
+    $config->model = OpenAIChatModel::Gpt4Omni->value;
+    $chat = new OpenAIChat($config);
+
+    $qa = new QuestionAnswering(
+        new MemoryVectorStore(),
+        new OpenAI3SmallEmbeddingGenerator(),
+        $chat,
+        session: new ChatSession()
+    );
+
+    $answer = $qa->answerQuestion( 'What is the name of the first official Roman Emperor?');
+    expect($answer)->toContain('Augustus');
+
+    $answer = $qa->answerQuestion( 'And who was the third one?');
+    expect($answer)->toContain('Caligula');
+
+    $answer = $qa->answerQuestion( 'Who was his successor?');
+    expect($answer)->toContain('Claudius');
 });

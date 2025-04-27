@@ -20,6 +20,11 @@ class Message
      */
     public array $tool_calls;
 
+    public function __toString(): string
+    {
+        return "{$this->role->value}: {$this->content}";
+    }
+
     public static function system(string $content): self
     {
         $message = new self();
