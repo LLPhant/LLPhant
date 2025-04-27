@@ -31,12 +31,12 @@ class VisionMessage extends Message implements JsonSerializable
     /**
      * @phpstan-ignore-next-line
      *
-     * @return array{role: \LLPhant\Chat\Enums\ChatRole, content: array{type: string, text: string}[]|\LLPhant\Chat\Vision\ImageSource[]&mixed[]}
+     * @return array{role: string, content: array{type: string, text: string}[]|\LLPhant\Chat\Vision\ImageSource[]&mixed[]}
      */
     public function jsonSerialize(): array
     {
         return [
-            'role' => $this->role,
+            'role' => $this->role->value,
             'content' => array_merge(
                 [['type' => 'text', 'text' => $this->content]],
                 $this->images

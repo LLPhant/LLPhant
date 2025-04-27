@@ -2,10 +2,11 @@
 
 namespace LLPhant\Query\SemanticSearch;
 
+use JsonSerializable;
 use LLPhant\Chat\Message;
 use Psr\Http\Message\StreamInterface;
 
-class ChatSession implements ChatSessionInterface
+class ChatSession implements ChatSessionInterface, JsonSerializable
 {
     /**
      * @var Message[]
@@ -46,5 +47,22 @@ class ChatSession implements ChatSessionInterface
         $this->chatSessionStream = new ChatSessionStream($stream);
 
         return $this->chatSessionStream;
+    }
+
+    public function jsonSerialize(): mixed
+    {
+        return \array_map(fn (Message $message) => $message->jsonSerialize(), $this->messages);
+    }
+
+    public static function fromJson(string $jsonString): ChatSession
+    {
+        $result = new ChatSession();
+
+        $messages = \json_decode($jsonString, true, 512, JSON_THROW_ON_ERROR);
+        foreach ($messages as $message) {
+            $result->addMessage(Message::fromJson($message));
+        }
+
+        return $result;
     }
 }

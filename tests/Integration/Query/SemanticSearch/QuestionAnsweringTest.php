@@ -60,9 +60,11 @@ it('can remember chat history using answerQuestion method', function () {
     $answer = $qa->answerQuestion('What is the name of the first official Roman Emperor?');
     expect($answer)->toContain('Augustus');
 
+    // Answer should take in account previous question to properly understand the word "third" here
     $answer = $qa->answerQuestion('And who was the third one?');
     expect($answer)->toContain('Caligula');
 
+    // "his" refers here to the previous answer
     $answer = $qa->answerQuestion('Who was his successor?');
     expect($answer)->toContain('Claudius');
 });

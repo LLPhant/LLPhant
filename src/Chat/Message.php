@@ -5,7 +5,7 @@ namespace LLPhant\Chat;
 use LLPhant\Chat\Enums\ChatRole;
 use LLPhant\Chat\FunctionInfo\ToolCall;
 
-class Message implements \Stringable
+class Message implements \JsonSerializable, \Stringable
 {
     public ChatRole $role;
 
@@ -85,5 +85,29 @@ class Message implements \Stringable
         }
 
         return $message;
+    }
+
+    /**
+     * @return array{role: string, content: mixed}
+     */
+    public function jsonSerialize(): mixed
+    {
+        return [
+            'role' => $this->role->value,
+            'content' => $this->content,
+            // TODO: handle tools
+        ];
+    }
+
+    /**
+     * @param  array<string, string>  $message
+     */
+    public static function fromJson(array $message): self
+    {
+        $result = new self();
+        $result->role = ChatRole::from($message['role']);
+        $result->content = $message['content'] ?? '';
+
+        return $result;
     }
 }

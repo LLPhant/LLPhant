@@ -860,6 +860,29 @@ If you need to use tools with `QuestionAnswering`, having their results consider
     $answer = $qa->answerQuestionFromChat(messages: [Message::user('What is the weather in Venice?')], stream: false);
 ```
 
+### Chat session (aka chat memory)
+
+To automatically remember the chat session you can pass a `ChatSession` object to your `QuestionAnswering`. Here is an example:
+```php
+    $qa = new QuestionAnswering(
+        new MemoryVectorStore(),
+        new OpenAI3SmallEmbeddingGenerator(),
+        $chat,
+        session: new ChatSession()
+    );
+
+    $answer = $qa->answerQuestion('What is the name of the first official Roman Emperor?');
+    // Answer should contain 'Augustus'
+
+    $answer = $qa->answerQuestion('And who was the third one?');
+    // Answer should take in account previous question to properly understand the word "third" here 
+
+    $answer = $qa->answerQuestion('Who was his successor?');
+    // "his" refers here to the previous answer    
+```
+
+`ChatSession` objects can also be serialized to JSON, so that you can put them into some kind of cache system between invocations.
+
 ## AutoPHP
 
 You can now make your [AutoGPT](https://github.com/Significant-Gravitas/Auto-GPT) clone in PHP using LLPhant.

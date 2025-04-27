@@ -45,12 +45,12 @@ class AnthropicMessage extends Message implements \JsonSerializable
     }
 
     /**
-     * @return array{role: \LLPhant\Chat\Enums\ChatRole, content: mixed[]}
+     * @return array{role: string, content: mixed[]}
      */
     public function jsonSerialize(): array
     {
         return [
-            'role' => $this->role,
+            'role' => $this->role->value,
             'content' => $this->contentsArray,
         ];
     }

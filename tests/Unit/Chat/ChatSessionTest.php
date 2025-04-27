@@ -56,3 +56,27 @@ user: And who was the third one?
 assistant: Caligula was the third Roman Emperor
 END);
 });
+
+test('it can be saved and restored from JSON format', function () {
+    $session = new ChatSession();
+
+    $firstQuestion = Message::user('What is the name of the first Roman Emperor?');
+    $session->addMessage($firstQuestion);
+
+    $firstAnswer = Message::assistant('Augustus was the first Roman Emperor');
+    $session->addMessage($firstAnswer);
+
+    $secondQuestion = Message::user('And who was the third one?');
+    $session->addMessage($secondQuestion);
+
+    $secondAnswer = Message::assistant('Caligula was the third Roman Emperor');
+    $session->addMessage($secondAnswer);
+
+    $jsonString = \json_encode($session);
+
+    expect($jsonString)->toBeString();
+
+    $restored = ChatSession::fromJson($jsonString);
+
+    expect($restored->getHistoryAsString())->toEqual($session->getHistoryAsString());
+});
