@@ -51,7 +51,7 @@ class ChatSession implements ChatSessionInterface, JsonSerializable
 
     public function jsonSerialize(): mixed
     {
-        return \array_map(fn (Message $message) => $message->jsonSerialize(), $this->messages);
+        return \array_map(fn (Message $message): array => $message->jsonSerialize(), $this->messages);
     }
 
     public static function fromJson(string $jsonString): ChatSession
