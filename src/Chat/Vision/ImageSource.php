@@ -45,7 +45,7 @@ class ImageSource implements JsonSerializable
     }
 
     /**
-     * @return array{type: string, image_url: array{url: string, details: string}}
+     * @return array{type: string, image_url: array{url: string, detail: string}}
      */
     public function jsonSerialize(): array
     {
@@ -53,7 +53,7 @@ class ImageSource implements JsonSerializable
             'type' => 'image_url',
             'image_url' => [
                 'url' => $this->url,
-                'details' => $this->detail->value,
+                'detail' => $this->detail->value,
             ],
         ];
     }
