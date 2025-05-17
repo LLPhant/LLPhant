@@ -16,6 +16,7 @@ use OpenAI\Contracts\Resources\FineTuningContract;
 use OpenAI\Contracts\Resources\ImagesContract;
 use OpenAI\Contracts\Resources\ModelsContract;
 use OpenAI\Contracts\Resources\ModerationsContract;
+use OpenAI\Contracts\Resources\ResponsesContract;
 use OpenAI\Contracts\Resources\ThreadsContract;
 use OpenAI\Contracts\Resources\VectorStoresContract;
 
@@ -29,6 +30,11 @@ class MockOpenAIClient implements ClientContract
     public function chat(): ChatContract
     {
         return new MockOpenAIChat();
+    }
+
+    public function responses(): ResponsesContract
+    {
+        // TODO: Implement responses() method.
     }
 
     public function embeddings(): EmbeddingsContract
