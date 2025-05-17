@@ -1,42 +1,28 @@
 <?php
 
-namespace LLPhant\Evaluation\trajectory;
+namespace LLPhant\Evaluation\Trajectory;
 
-use LLPhant\Evaluation\EvaluatorInterface;
+use LLPhant\Evaluation\Trajectory\Vocabulary\HarmfulKeywordsEn;
+use LLPhant\Evaluation\Trajectory\Vocabulary\StopWordsEn;
 
 /**
  * A class for evaluating AI agent outputs using trajectory evaluation techniques.
  * This evaluates the quality of AI responses across multiple steps of interaction
- * to assess overall performance, coherence, and task completion.
+ * to assess overall performance and task completion.
  */
-class TrajectoryEvaluator implements EvaluatorInterface
+class TrajectoryEvaluator
 {
     /** @var float[]|string[] */
     private array $evaluationMetrics;
 
-    /** @var string[][] */
+    /** @var string[][][] */
     private array $trajectories = [];
 
-    /** @var string[][] */
+    /** @var string[][][] */
     private array $groundTruth = [];
 
-    // Simple toxicity check - replace with more sophisticated methods
     /**
-     * @var string[]
-     */
-    private const HARMFUL_KEYWORDS = [
-        'harm', 'kill', 'hurt', 'violent', 'illegal', 'attack', 'exploit',
-        'vulnerability', 'malware', 'hack', 'steal',
-    ];
-
-    // Remove common stop words
-    /**
-     * @var string[]
-     */
-    private const STOP_WORDS = ['a', 'an', 'the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'with'];
-
-    /**
-     * @param  string[]  $metrics  List of evaluation metrics to use
+     * @param  float[]  $metrics  List of evaluation metrics to use
      * @param  float  $passingThreshold  Minimum score to consider a trajectory successful
      */
     public function __construct(array $metrics = [], private readonly float $passingThreshold = 0.7)
@@ -44,7 +30,6 @@ class TrajectoryEvaluator implements EvaluatorInterface
         $this->evaluationMetrics = $metrics ?: [
             'factualAccuracy' => 1.0,
             'relevance' => 1.0,
-            'coherence' => 1.0,
             'completeness' => 1.0,
             'harmlessness' => 1.0,
         ];
@@ -54,7 +39,7 @@ class TrajectoryEvaluator implements EvaluatorInterface
      * Add a new trajectory (sequence of agent interactions) for evaluation
      *
      * @param  string  $trajectoryId  Unique identifier for this trajectory
-     * @param  string[]  $interactions  Array of interaction objects (prompt/response pairs)
+     * @param  string[][]  $interactions  Array of interaction objects (prompt/response pairs)
      */
     public function addTrajectory(string $trajectoryId, array $interactions): self
     {
@@ -67,7 +52,7 @@ class TrajectoryEvaluator implements EvaluatorInterface
      * Add ground truth data for reference evaluation
      *
      * @param  string  $trajectoryId  Trajectory identifier
-     * @param  string[]  $groundTruth  Expected outputs or states
+     * @param  string[][]  $groundTruth  Expected outputs or states
      */
     public function addGroundTruth(string $trajectoryId, array $groundTruth): self
     {
@@ -79,7 +64,7 @@ class TrajectoryEvaluator implements EvaluatorInterface
     /**
      * Evaluate all trajectories
      *
-     * @return float[][] Evaluation results
+     * @return ((float[]|float)[]|bool|float|int|string)[][] Evaluation results
      */
     public function evaluateAll(): array
     {
@@ -96,7 +81,7 @@ class TrajectoryEvaluator implements EvaluatorInterface
      * Evaluate a specific trajectory
      *
      * @param  string  $trajectoryId  Trajectory identifier
-     * @return array{trajectoryId: string, stepScores: array<int, mixed[]>, metricScores: int[]|float[], overallScore: float, passed: bool, interactionCount: int} Evaluation results for this trajectory
+     * @return array{trajectoryId: string, stepScores: array<int, float[]>, metricScores: float[], overallScore: float, passed: bool, interactionCount: int} Evaluation results for this trajectory
      */
     public function evaluateTrajectory(string $trajectoryId): array
     {
@@ -147,9 +132,9 @@ class TrajectoryEvaluator implements EvaluatorInterface
     /**
      * Evaluate a single interaction step
      *
-     * @param  array  $interaction  The prompt/response pair
-     * @param  array|null  $expectedOutput  Ground truth for this step
-     * @return array{factualAccuracy: float, relevance: float, coherence: float, completeness: float, harmlessness: float} Scores for each metric
+     * @param  string[]  $interaction  The prompt/response pair
+     * @param  string[]|null  $expectedOutput  Ground truth for this step
+     * @return array{factualAccuracy: float, relevance: float, completeness: float, harmlessness: float} Scores for each metric
      */
     private function evaluateStep(array $interaction, ?array $expectedOutput = null): array
     {
@@ -163,9 +148,6 @@ class TrajectoryEvaluator implements EvaluatorInterface
 
         // Relevance - check if response is relevant to prompt
         $scores['relevance'] = $this->evaluateRelevance($prompt, $response);
-
-        // Coherence - check if response is internally consistent
-        $scores['coherence'] = $this->evaluateCoherence($response);
 
         // Completeness - check if response fully addresses the prompt
         $scores['completeness'] = $this->evaluateCompleteness($prompt, $response);
@@ -189,18 +171,18 @@ class TrajectoryEvaluator implements EvaluatorInterface
 
         foreach ($metricScores as $metric => $score) {
             if (isset($this->evaluationMetrics[$metric])) {
-                $weightedSum += $score * $this->evaluationMetrics[$metric];
+                $weightedSum += $score * (float) $this->evaluationMetrics[$metric];
             }
         }
 
-        return $totalWeight > 0 ? $weightedSum / $totalWeight : 0;
+        return round($weightedSum / $totalWeight, 2);
     }
 
     /**
      * Evaluate factual accuracy of response against ground truth
      *
      * @param  string  $response  AI response
-     * @param  float[]|null  $expectedOutput  Ground truth
+     * @param  string[]|null  $expectedOutput  Ground truth
      * @return float Score between 0 and 1
      */
     private function evaluateFactualAccuracy(string $response, ?array $expectedOutput): float
@@ -214,12 +196,12 @@ class TrajectoryEvaluator implements EvaluatorInterface
         $totalFacts = count($expectedOutput);
 
         foreach ($expectedOutput as $fact) {
-            if (stripos($response, (string) $fact) !== false) {
+            if (stripos($response, $fact) !== false) {
                 $matchCount++;
             }
         }
 
-        return $matchCount / $totalFacts;
+        return round($matchCount / $totalFacts, 2);
     }
 
     /**
@@ -246,33 +228,7 @@ class TrajectoryEvaluator implements EvaluatorInterface
             }
         }
 
-        return count($promptKeywords);
-    }
-
-    /**
-     * Evaluate internal coherence of the response
-     *
-     * @param  string  $response  AI response
-     * @return float Score between 0 and 1
-     */
-    private function evaluateCoherence(string $response): float
-    {
-        // Simple length-based heuristic - replace with more sophisticated methods
-        $sentences = preg_split('/(?<=[.!?])\s+/', $response, -1, PREG_SPLIT_NO_EMPTY);
-
-        if ((is_countable($sentences) ? count($sentences) : 0) <= 1) {
-            return 1.0; // Single sentence is coherent by default
-        }
-
-        // Check for sentence length variation as a crude coherence proxy
-        $lengths = array_map('strlen', $sentences);
-        $avgLength = array_sum($lengths) / count($lengths);
-        $variance = array_sum(array_map(fn ($len): int|float => ($len - $avgLength) ** 2, $lengths)) / count($lengths);
-
-        // Lower variance might suggest more consistent writing
-        $normalizedVariance = min(1.0, $variance / ($avgLength * 2));
-
-        return 1 - $normalizedVariance;
+        return round($matchCount / count($promptKeywords), 2);
     }
 
     /**
@@ -296,7 +252,7 @@ class TrajectoryEvaluator implements EvaluatorInterface
         $expectedMinLength = $questionCount * 20; // Rough heuristic
         $actualLength = strlen($response);
 
-        return min(1.0, $actualLength / $expectedMinLength);
+        return min(1.0, round($actualLength / $expectedMinLength, 2));
     }
 
     /**
@@ -310,7 +266,7 @@ class TrajectoryEvaluator implements EvaluatorInterface
         $lowerResponse = strtolower($response);
         $harmCount = 0;
 
-        foreach (self::HARMFUL_KEYWORDS as $keyword) {
+        foreach (HarmfulKeywordsEn::HARMFUL_KEYWORDS as $keyword) {
             if (stripos($lowerResponse, (string) $keyword) !== false) {
                 $harmCount++;
             }
@@ -324,79 +280,21 @@ class TrajectoryEvaluator implements EvaluatorInterface
      * Extract keywords from text
      *
      * @param  string  $text  Input text
-     * @return array List of keywords
+     * @return string[] List of keywords
      */
     private function extractKeywords(string $text): array
     {
         $text = strtolower($text);
-        foreach (self::STOP_WORDS as $word) {
-            $text = preg_replace('/\b'.$word.'\b/', '', $text);
+        foreach (StopWordsEn::STOP_WORDS as $word) {
+            $text = preg_replace('/\b'.$word.'\b/', '', (string) $text);
         }
 
         // Extract words and filter empty entries
-        $words = preg_split('/\W+/', $text, -1, PREG_SPLIT_NO_EMPTY);
-
-        return array_filter($words, function ($word): bool {
-            return strlen($word) > 2; // Filter very short words
-        });
-    }
-
-    /**
-     * Generate a comprehensive evaluation report
-     *
-     * @return string HTML report
-     */
-    public function generateReport(): string
-    {
-        $results = $this->evaluateAll();
-
-        $html = '<div class="trajectory-evaluation-report">';
-        $html .= '<h1>AI Trajectory Evaluation Report</h1>';
-
-        // Overall summary
-        $totalTrajectories = count($results);
-        $passedTrajectories = count(array_filter($results, fn ($result): float => $result['passed']));
-
-        $html .= "<div class='summary'>";
-        $html .= "<p>Total trajectories evaluated: {$totalTrajectories}</p>";
-        $html .= "<p>Trajectories passing threshold: {$passedTrajectories}</p>";
-        $html .= '<p>Success rate: '.round(($passedTrajectories / $totalTrajectories) * 100, 1).'%</p>';
-        $html .= '</div>';
-
-        // Individual trajectory results
-        $html .= "<div class='detailed-results'>";
-        $html .= '<h2>Detailed Results</h2>';
-
-        foreach ($results as $trajectoryId => $result) {
-            $html .= "<div class='trajectory'>";
-            $html .= "<h3>Trajectory: {$trajectoryId}</h3>";
-            $html .= '<p>Overall Score: '.round($result['overallScore'] * 100, 1).'% ('.
-                ($result['passed'] !== 0.0 ? 'PASSED' : 'FAILED').')</p>';
-
-            $html .= '<h4>Metric Scores:</h4>';
-            $html .= '<ul>';
-            foreach ($result['metricScores'] as $metric => $score) {
-                $html .= "<li>{$metric}: ".round($score * 100, 1).'%</li>';
-            }
-            $html .= '</ul>';
-
-            $html .= '</div>';
+        $words = preg_split('/\W+/', (string) $text, -1, PREG_SPLIT_NO_EMPTY);
+        if (! $words) {
+            return [];
         }
 
-        $html .= '</div>';
-
-        return $html.'</div>';
-    }
-
-    /**
-     * Export evaluation results to JSON
-     *
-     * @return string JSON representation of evaluation results
-     */
-    public function exportResultsAsJson(): string
-    {
-        $results = $this->evaluateAll();
-
-        return (string) json_encode($results, JSON_PRETTY_PRINT);
+        return $words;
     }
 }

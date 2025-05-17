@@ -1,6 +1,6 @@
 <?php
 
-namespace LLPhant\Evaluation\stringComparison\metric;
+namespace LLPhant\Evaluation\StringComparison\Metric;
 
 use LLPhant\Evaluation\EvaluationResults;
 
@@ -20,11 +20,6 @@ class METEOR extends AbstractStringComparisonMetric
          */
         private readonly float $gamma = 0.5
     ) {
-    }
-
-    public function getMetricName(): string
-    {
-        return 'METEOR';
     }
 
     /**
@@ -166,5 +161,10 @@ class METEOR extends AbstractStringComparisonMetric
         }
 
         return ($precision * $recall) / (($this->alpha * $precision) + ((1.0 - $this->alpha) * $recall));
+    }
+
+    private function getMetricName(): string
+    {
+        return 'METEOR';
     }
 }

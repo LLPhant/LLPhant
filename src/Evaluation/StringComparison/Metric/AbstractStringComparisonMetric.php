@@ -1,6 +1,6 @@
 <?php
 
-namespace LLPhant\Evaluation\stringComparison\metric;
+namespace LLPhant\Evaluation\StringComparison\Metric;
 
 use LLPhant\Evaluation\EvaluationResults;
 
@@ -10,8 +10,6 @@ abstract class AbstractStringComparisonMetric
      * @param  int  $n  "N" for N-Gram
      */
     abstract public function calculate(string $reference, string $candidate, int $n = 1): EvaluationResults;
-
-    abstract public function getMetricName(): string;
 
     /**
      * @param  string[]  $words

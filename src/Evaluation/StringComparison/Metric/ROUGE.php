@@ -1,6 +1,6 @@
 <?php
 
-namespace LLPhant\Evaluation\stringComparison\metric;
+namespace LLPhant\Evaluation\StringComparison\Metric;
 
 use LLPhant\Evaluation\EvaluationResults;
 

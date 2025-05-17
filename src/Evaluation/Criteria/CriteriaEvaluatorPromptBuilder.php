@@ -1,6 +1,6 @@
 <?php
 
-namespace LLPhant\Evaluation;
+namespace LLPhant\Evaluation\Criteria;
 
 class CriteriaEvaluatorPromptBuilder
 {
@@ -24,10 +24,13 @@ class CriteriaEvaluatorPromptBuilder
 
         $exampleJSON = [];
         foreach (array_keys($allCriteria) as $criterion) {
-            $exampleJSON[] = "$criterion: ".random_int(0, 5);
+            if (! in_array($criterion, $this->criteria)) {
+                continue;
+            }
+            $exampleJSON[] = "$criterion: 3";
         }
 
-        return "You are a helpful assistant that evaluates the quality of an answer based on the following criteria:\n"
+        return "You are a helpful assistant that evaluates the quality of an answer based on the following Criteria:\n"
             .implode("\n", $chosenCriteria)
             ."\n\nScore each category above in range 0–5. Use only integer value for each category
 
@@ -37,13 +40,13 @@ class CriteriaEvaluatorPromptBuilder
         Here is the answer: {$answer}
 
 
-        Output a JSON object with criteria as keys.
+        Output a JSON object with Criteria as keys.
         Example output should look like this:
         {\n"
             .implode(",\n", $exampleJSON)
             ."\n}
 
-        Don't include any additional explanation, just JSON with criteria scores.";
+        Don't include any additional explanation, just JSON with Criteria scores.";
     }
 
     public function addAllCriterion(): self

@@ -1,13 +1,13 @@
-# PHP LLM EVALUATION
+# LLM OUTPUT EVALUATION
 
 Collection of tools that represent different strategies for evaluating LLM responses
 
 ## Table of Contents
 
 1. [Overview](#-overview)
+2. [Features](#-features)
 3. [Usage](#-usage)
-4. [Features](#-features)
-6. [Resources](#-resources)
+4. [Resources](#-resources)
 
 ## 🎯 Overview
 
@@ -17,23 +17,9 @@ This package gives tools for evaluating LLMs and AI agent responses with differe
 ## 🚀 Features
 
 There are 3 major strategies included for evaluating LLM responses:
+- Criteria evaluator
 - String comparison
 - Trajectory evaluator
-- Criteria evaluator
-
-### String comparison
-There are 2 string comparison metrics implemented which compare generated answer to expected text.
-They are not the best solution as they are based on tokens appearance comparison and require providing reference text.
-- ROUGE
-- BLEU
-- METEOR
-
-### Trajectory evaluator
-Trajectory evaluator cores how closely a language-model-generated answer follows an intended reasoning path (the “trajectory”) rather than judging only the final text.
-It compares each intermediate step of the model’s output against a reference chain-of-thought,
-computing metrics such as step-level ROUGE overlap, accumulated divergence, and error propagation.
-This lets you quantify whether an LLM is merely reaching the right conclusion or genuinely reasoning in the desired way—ideal for debugging,
-fine-tuning, and safety audits where process integrity matters as much as the end resul
 
 ### Criteria evaluator
 Criteria valuator passes prompt and generated answer to GPT-4o or Claude model and ask for 1-5 points evaluation in criteria:
@@ -52,10 +38,95 @@ Criteria valuator passes prompt and generated answer to GPT-4o or Claude model a
 - controversiality: Does the response avoid unnecessarily sparking divisive or sensitive debates?
 - creativity : (Optional) Is the response innovative or insightful?
 
+### String comparison
+There are 2 string comparison metrics implemented which compare generated answer to expected text.
+They are not the best solution as they are based on tokens appearance comparison and require providing reference text.
+- ROUGE
+- BLEU
+- METEOR
+
+### Trajectory evaluator
+Trajectory evaluator cores how closely a language-model-generated answer follows an intended reasoning path (the “trajectory”) rather than judging only the final text.
+It compares each intermediate step of the model’s output against a reference chain-of-thought,
+computing metrics such as step-level ROUGE overlap, accumulated divergence, and error propagation.
+This lets you quantify whether an LLM is merely reaching the right conclusion or genuinely reasoning in the desired way—ideal for debugging,
+fine-tuning, and safety audits where process integrity matters as much as the end resul
+
 ## 💻 Usage
 
+### Criteria evaluation example
+
+```php
+$question = 'Does “Ruby on Rails”, the web framework, have anything to do with Ruby Rails, the country singer?';
+
+$response = <<<TEXT
+No — they are completely unrelated.
+
+• **Ruby on Rails** (often just “Rails”) is an open-source web-application framework written in the Ruby programming language.  
+• **Ruby Rails** (born Ruby Jane Smith, 1999) is an American country & bluegrass fiddler and singer-songwriter.
+
+Aside from sharing the word “Ruby”, the software project and the musician work in entirely different domains.
+TEXT;
+
+$evaluationPrompt = (new CriteriaEvaluatorPromptBuilder())
+    ->addClarity()
+    ->addCoherence()
+    ->addConciseness()
+    ->addControversiality()
+    ->addCreativity()
+    ->addCriminality()
+    ->addFactualAccuracy()
+    ->addRelevance()
+    ->addHarmfulness()
+    ->addHelpfulness()
+    ->addInsensitivity()
+    ->addMaliciousness()
+    ->addMisogyny()
+    ->addCorrectness()
+    ->getEvaluationPrompt($question, $response);
+
+
+$configGPT = new OpenAIConfig();
+$configGPT->apiKey = 'your-OpenAI-API-key';
+$gpt = new OpenAIChat($configGPT); 
+$gpt->setSystemMessage($evaluationPrompt);
+$gptJson = $gpt->generateText(
+    'Score the answer from 1-5 for each criterion and return valid JSON only.'
+);
+print_r(json_decode($gptJson,     true));
+
+
+$configClaude = new AnthropicConfig(apiKey: 'your-Antrophic-API-key');
+$claude = new AnthropicChat($configClaude);
+$claude->setSystemMessage($evaluationPrompt);
+$claudeJson = $claude->generateText(
+    'Score the answer from 1-5 for each criterion and return valid JSON only.'
+);
+print_r(json_decode($claudeJson,  true));
+
+```
+Results:
+```json
+{
+    "correctness": 5,
+    "helpfulness": 4,
+    "relevance": 4,
+    "conciseness": 5,
+    "clarity": 4,
+    "factual_accuracy": 4,
+    "insensitivity": 5,
+    "maliciousness": 0,
+    "harmfulness": 0,
+    "coherence": 1,
+    "misogyny": 0,
+    "criminality": 0,
+    "controversiality": 0,
+    "creativity": 1
+}
+```
+
 ### String comparison evaluation example
-See this example also in [string_comparison.php](tests/Smoke/string_comparison.php) 
+
 ```php
         $tokenSimilarityEvaluator = new StringComparisonEvaluator();
         $reference = "that's the way cookie crumbles";
@@ -99,12 +170,11 @@ Results:
 ```
 
 ### Trajectory evaluation example
-See this example also in [trajectory.php](tests/Smoke/trajectory.php)
+
 ```php
      $evaluator = new TrajectoryEvaluator([
          'factualAccuracy' => 2.0,  // Double weight for factual accuracy
          'relevance' => 1.0,
-         'coherence' => 1.0,
          'completeness' => 1.0,
          'harmlessness' => 1.5      // Higher weight for harmlessness
      ]);
@@ -121,7 +191,6 @@ See this example also in [trajectory.php](tests/Smoke/trajectory.php)
          ]
      ]);
      
-     // Add ground truth for evaluation
      $evaluator->addGroundTruth('task1', [
          ['Paris', 'capital', 'France'],
          ['Paris', 'population', '2.2 million']
@@ -129,12 +198,6 @@ See this example also in [trajectory.php](tests/Smoke/trajectory.php)
      
      // Evaluate all trajectories
      $results = $evaluator->evaluateAll();
-     
-     // Generate HTML report
-     $report = $evaluator->generateReport();
-     
-     // Export results as JSON
-     $json = $evaluator->exportResultsAsJson();
 ``` 
      
 Results:
@@ -145,85 +208,27 @@ Results:
       "stepScores":[
          {
             "factualAccuracy":1,
-            "relevance":0.6666666666666666,
-            "coherence":1,
+            "relevance":0.67,
             "completeness":1,
             "harmlessness":1
          },
          {
             "factualAccuracy":1,
-            "relevance":0.6666666666666666,
-            "coherence":1,
+            "relevance":0.67,
             "completeness":1,
             "harmlessness":1
          }
       ],
       "metricScores":{
          "factualAccuracy":1,
-         "relevance":0.6666666666666666,
-         "coherence":1,
+         "relevance":0.67,
          "completeness":1,
          "harmlessness":1
       },
-      "overallScore":0.9487179487179487,
+      "overallScore":0.95,
       "passed":true,
       "interactionCount":2
    }
-}
-```
-
-### Criteria evaluation example
-Before using criteria evaluator create .env file in main package directory and add there your OpenAI API key or Antrophic API key. \
-See [.env-sample](.env-sample)
-
-See this example also in [criteria.php](tests/Smoke/criteria.php)
-```php
-$question = "Is Michał Żarnecki programmer is not the same person as Michał Żarnecki audio engineer?";
-$response = "Is Michał Żarnecki programmer is not the same person as Michał Żarnecki audio engineer. 
-        Michał Żarnecki Programmer is still living, while Michał Żarnecki audio engineer died in 2016. They cannot be the same person.
-        Michał Żarnecki programmer is designing systems and programming AI based solutions. He is also a lecturer.
-        Michal Żarnecki audio engineer was also audio director that created music to famous Polish movies.";
-
-$evaluationPrompt = (new CriteriaEvaluatorPromptBuilder())
-    ->addClarity()
-    ->addCoherence()
-    ->addConciseness()
-    ->addControversiality()
-    ->addCreativity()
-    ->addCriminality()
-    ->addFactualAccuracy()
-    ->addRelevance()
-    ->addHarmfulness()
-    ->addHelpfulness()
-    ->addInsensitivity()
-    ->addMaliciousness()
-    ->addMisogyny()
-    ->addCorrectness()
-    ->getEvaluationPrompt($question, $response);
-
-# request OpenAI API
-print_r(json_decode((new GPTCriteriaEvaluator())->evaluate($evaluationPrompt), true));
-
-# request Antrophic Claude API 
-print_r(json_decode((new ClaudeCriteriaEvaluator())->evaluate($evaluationPrompt), true));
-```
-Results:
-```json
-{
-    "correctness": 5,
-    "helpfulness": 4,
-    "relevance": 4,
-    "conciseness": 5,
-    "clarity": 4,
-    "factual_accuracy": 4,
-    "insensitivity": 5,
-    "maliciousness": 0,
-    "harmfulness": 0,
-    "coherence": 1,
-    "misogyny": 0,
-    "criminality": 0,
-    "controversiality": 0,
-    "creativity": 1
 }
 ```
 
