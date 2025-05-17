@@ -2,8 +2,9 @@
 
 namespace LLPhant\Chat\Vision;
 
-use GuzzleHttp\Client;
 use JsonSerializable;
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestFactoryInterface;
 
 class ImageSource implements JsonSerializable
 {
@@ -33,10 +34,10 @@ class ImageSource implements JsonSerializable
         return \preg_match('/^[a-zA-Z0-9\/\r\n+]*={0,2}$/', $image) === 1;
     }
 
-    public function getBase64(Client $client): string
+    public function getBase64(ClientInterface $client, RequestFactoryInterface $requestFactory): string
     {
         if (is_null($this->base64)) {
-            $response = $client->request('GET', $this->url);
+            $response = $client->sendRequest($requestFactory->createRequest('GET', $this->url));
             $imageData = (string) $response->getBody();
             $this->base64 = base64_encode($imageData);
         }

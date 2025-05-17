@@ -20,15 +20,16 @@ use Tests\Integration\Chat\WeatherExample;
 it('not setting any timeout for HTTP client', function () {
     $config = new OllamaConfig();
     $config->model = 'test';
-    $chat = new OllamaChat($config);
+    $client = new Client();
+    $chat = new OllamaChat($config, client: $client);
     expect($chat->client->getConfig('timeout'))->toBeNull();
 });
 
 it('is setting a timeout for HTTP client', function () {
     $config = new OllamaConfig();
     $config->model = 'test';
-    $config->timeout = 60;
-    $chat = new OllamaChat($config);
+    $client = new Client(['timeout' => 60]);
+    $chat = new OllamaChat($config, client: $client);
     expect($chat->client->getConfig('timeout'))->toBe(60);
 });
 
@@ -46,7 +47,7 @@ it('no error when construct with model', function () {
 
 it('returns a stream response using generateStreamOfText()', function () {
     $mock = new MockHandler([
-        new Response(200, [], 'This is the response from Ollama'),
+        new Response(200, [], '{"done": false, "response": "This is the response from Ollama"}'),
     ]);
     $handlerStack = HandlerStack::create($mock);
     $client = new Client(['handler' => $handlerStack]);
@@ -72,7 +73,7 @@ it('returns a stream response using generateChatStream()', function () {
     };
 
     $mock = new MockHandler([
-        new Response(200, [], 'This is the response from Ollama'),
+        new Response(200, [], '{"done": false, "response": "This is the response from Ollama"}'),
     ]);
     $handlerStack = HandlerStack::create($mock);
     $client = new Client(['handler' => $handlerStack]);
@@ -147,8 +148,7 @@ it('sends correct payload for tools', function () {
 
     $config = new OllamaConfig();
     $config->model = 'test';
-    $chat = new OllamaChat($config);
-    $chat->client = $client;
+    $chat = new OllamaChat($config, client: $client);
 
     $location = new Parameter('location', 'string', 'the location i.e. the name of the city, the state or province and the nation');
 

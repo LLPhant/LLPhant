@@ -15,8 +15,10 @@ use Psr\Log\NullLogger;
 
 class MistralAIChat extends OpenAIChat
 {
-    public function __construct(MistralAIConfig $config = new MistralAIConfig(), LoggerInterface $logger = new NullLogger())
-    {
+    public function __construct(
+        MistralAIConfig $config = new MistralAIConfig(),
+        LoggerInterface $logger = new NullLogger(),
+    ) {
         $config->model ??= MistralAIChatModel::large->value;
         if (! $config->client instanceof Client) {
             if (! $config->apiKey) {
