@@ -211,13 +211,13 @@ it('does not throw away "0" strings when creating streamed response', function (
     $response->allows([
         'getBody' => $stream,
     ]);
-    $response->shouldReceive('getStatusCode')->andReturn(200);
+    $response->shouldReceive('getHeaders');
 
     $transport = Mockery::mock(TransporterContract::class);
     $transport->allows([
         'requestStream' => $response,
     ]);
-    $transport->shouldReceive('requestObject')->andReturn($response);
+    $transport->shouldReceive('requestObject');
 
     $config = new OpenAIConfig();
     $config->client = new Client($transport);
