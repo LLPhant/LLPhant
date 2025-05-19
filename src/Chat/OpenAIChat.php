@@ -52,8 +52,8 @@ use Psr\Log\NullLogger;
     public ?FunctionInfo $requiredFunction = null;
 
     public function __construct(
-        ?OpenAIConfig $config = new OpenAIConfig(),
-        private readonly ?LoggerInterface $logger = new NullLogger(),
+        OpenAIConfig $config = new OpenAIConfig(),
+        private readonly LoggerInterface $logger = new NullLogger(),
         private readonly StreamFactoryInterface $factory = new Psr17Factory(),
     ) {
         if ($config instanceof OpenAIConfig && $config->client instanceof ClientContract) {

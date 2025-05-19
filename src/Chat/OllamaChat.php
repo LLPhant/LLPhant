@@ -51,7 +51,7 @@ class OllamaChat implements ChatInterface
 
     public function __construct(
         protected OllamaConfig $config,
-        private readonly ?LoggerInterface $logger = new NullLogger(),
+        private readonly LoggerInterface $logger = new NullLogger(),
         ?ClientInterface $client = null,
         ?RequestFactoryInterface $requestFactory = null,
         ?StreamFactoryInterface $streamFactory = null,

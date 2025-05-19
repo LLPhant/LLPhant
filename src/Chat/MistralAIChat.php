@@ -2,8 +2,8 @@
 
 namespace LLPhant\Chat;
 
-use GuzzleHttp\Client as GuzzleClient;
-use GuzzleHttp\HandlerStack;
+use Http\Discovery\Psr17Factory;
+use Http\Discovery\Psr18ClientDiscovery;
 use LLPhant\Chat\Enums\MistralAIChatModel;
 use LLPhant\Exception\MissingParameterException;
 use LLPhant\MistralAIConfig;
@@ -39,11 +39,9 @@ class MistralAIChat extends OpenAIChat
 
     private function createMistralClient(): ClientInterface
     {
-        $stack = HandlerStack::create();
-        $stack->push(MistralJsonResponseModifier::createResponseModifier());
+        $httpClient = Psr18ClientDiscovery::find();
+        $factory = new Psr17Factory();
 
-        return new GuzzleClient([
-            'handler' => $stack,
-        ]);
+        return new MistralJsonResponseModifier($httpClient, $factory);
     }
 }
