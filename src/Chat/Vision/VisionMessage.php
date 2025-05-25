@@ -12,14 +12,14 @@ class VisionMessage extends Message implements JsonSerializable
     public array $images = [];
 
     /**
-     * @param ImageSource[] $images
+     * @param  ImageSource[]  $images
      */
     public static function fromImages(array $images, ?string $message = null): self
     {
         $instance = new self;
         $instance->role = ChatRole::User;
         if ($message === null) {
-            $instance->content = 'Describe the image' . (\count($images) > 1 ? 's' : '') . '; Output must contain no other URL than the input image url';
+            $instance->content = 'Describe the image'.(\count($images) > 1 ? 's' : '').'; Output must contain no other URL than the input image url';
         } else {
             $instance->content = $message;
         }
