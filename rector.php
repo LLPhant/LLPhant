@@ -41,6 +41,6 @@ return static function (RectorConfig $rectorConfig): void {
     ]);
 
     $rectorConfig->skip([
-        SimplifyEmptyCheckOnEmptyArrayRector::class
+        SimplifyEmptyCheckOnEmptyArrayRector::class,
     ]);
 };
