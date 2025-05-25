@@ -93,7 +93,7 @@ class Message implements \JsonSerializable, \Stringable
     }
 
     /**
-     * @return array{role: string, content?: string, tool_call_id?: string, name?: string, tool_calls?: \LLPhant\Chat\FunctionInfo\ToolCall[]&mixed[]}
+     * @return array<string, mixed>
      */
     public function jsonSerialize(): mixed
     {

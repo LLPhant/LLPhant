@@ -14,6 +14,7 @@ use Rector\Privatization\Rector\Property\ChangeReadOnlyPropertyWithDefaultValueT
 use Rector\Privatization\Rector\Property\PrivatizeFinalClassPropertyRector;
 use Rector\Set\ValueObject\LevelSetList;
 use Rector\Set\ValueObject\SetList;
+use Rector\TypeDeclaration\Rector\ClassMethod\ArrayShapeFromConstantArrayReturnRector;
 
 return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->paths([
@@ -42,5 +43,6 @@ return static function (RectorConfig $rectorConfig): void {
 
     $rectorConfig->skip([
         SimplifyEmptyCheckOnEmptyArrayRector::class,
+        ArrayShapeFromConstantArrayReturnRector::class,
     ]);
 };

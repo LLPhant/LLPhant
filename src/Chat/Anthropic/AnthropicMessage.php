@@ -45,7 +45,7 @@ class AnthropicMessage extends Message implements \JsonSerializable
     }
 
     /**
-     * @return array{role: string, content: mixed[]}
+     * @return array<string, mixed>
      */
     public function jsonSerialize(): array
     {
