@@ -417,4 +417,13 @@ class OllamaChat implements ChatInterface
 
         throw new \Exception("AI tried to call $functionName which doesn't exist");
     }
+
+    public function lastFunctionCalled(): ?CalledFunction
+    {
+        if ($this->functionsCalled === []) {
+            return null;
+        }
+
+        return $this->functionsCalled[count($this->functionsCalled) - 1];
+    }
 }

@@ -11,7 +11,7 @@ use LLPhant\Embeddings\DocumentUtils;
 use LLPhant\OpenAIConfig;
 use LLPhant\Query\SemanticSearch\LLMReranker;
 
-function chat(): ChatInterface
+function chatForTest(): ChatInterface
 {
     $config = new OpenAIConfig();
     $config->model = OpenAIChatModel::Gpt4Omini->value;
@@ -21,7 +21,7 @@ function chat(): ChatInterface
 
 it('Returns an array whose first line is the best document', function () {
     $nrOfOutputDocuments = 3;
-    $reranker = new LLMReranker(chat(), $nrOfOutputDocuments);
+    $reranker = new LLMReranker(chatForTest(), $nrOfOutputDocuments);
 
     $queries = [
         'Who wrote the music of "La traviata"?',

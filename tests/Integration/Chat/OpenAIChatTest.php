@@ -23,7 +23,7 @@ it('can generate some stuff with a system prompt', function () {
     $chat = new OpenAIChat();
     $chat->setSystemMessage('Whatever we ask you, you MUST answer "ok"');
     $response = $chat->generateText('what is one + one ?');
-    // Sometimes final a dot is added to the answer
+    // Sometimes a final dot is added to the answer
     expect(strtolower($response))->toStartWith('ok');
 });
 

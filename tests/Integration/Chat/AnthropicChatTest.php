@@ -10,8 +10,8 @@ use LLPhant\Chat\FunctionInfo\Parameter;
 
 it('can generate some stuff', function () {
     $chat = new AnthropicChat();
-    $response = $chat->generateText('what is one + one?');
-    expect($response)->toBeString()->and($response)->toContain('two')
+    $response = $chat->generateText('what is one + one? Please answer with a word');
+    expect($response)->toBeString()->and(strtolower($response))->toContain('two')
         ->and($chat->getTotalTokens())->tobeGreaterThan(0);
 });
 

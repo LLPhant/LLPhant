@@ -128,8 +128,9 @@ class OpenAIChat implements ChatInterface
 
         if ($this->functionsCalled) {
             $newMessages = $this->getNewMessagesFromTools($messages);
-
-            $answer = $this->generateResponseFromMessages($newMessages);
+            if ($newMessages !== []) {
+                $answer = $this->generateResponseFromMessages($newMessages);
+            }
         }
 
         return $this->responseToString($answer);
@@ -265,7 +266,10 @@ class OpenAIChat implements ChatInterface
                         }
                     }
                     $newMessages = $this->getNewMessagesFromTools($messages);
-                    // We move to a non streamed answer here. Maybe it could be improved
+                    if ($newMessages === []) {
+                        break;
+                    }
+                    // We move to a non-streamed answer here. Maybe it could be improved
                     yield $this->generateChat($newMessages);
                 }
 
@@ -425,10 +429,16 @@ class OpenAIChat implements ChatInterface
         $toolsOutput = [];
         /** @var CalledFunction $functionCalled */
         foreach ($this->functionsCalled as $functionCalled) {
-            $toolsOutput[] = Message::toolResult($functionCalled->return, $functionCalled->tool_call_id);
+            if ($functionCalled->return) {
+                $toolsOutput[] = Message::toolResult($functionCalled->return, $functionCalled->tool_call_id);
+            }
             if ($functionCalled->tool_call_id) {
                 $toolsCalls[] = new ToolCall($functionCalled->tool_call_id, $functionCalled->definition->name, json_encode($functionCalled->arguments, JSON_THROW_ON_ERROR));
             }
+        }
+
+        if ($toolsOutput === []) {
+            return [];
         }
 
         $messages[] = Message::assistantAskingTools($toolsCalls);

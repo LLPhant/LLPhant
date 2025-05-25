@@ -39,13 +39,13 @@ abstract class SupportedDoctrineVectorStore
 
     public static function fromPlatform(AbstractPlatform $platform): self
     {
-        if (str_starts_with($platform::class, 'Doctrine\DBAL\Platforms\MariaDB')) {
+        if (str_starts_with(strtolower($platform::class), 'doctrine\dbal\platforms\mariadb')) {
             return new MariaDBVectorStoreType();
         }
-        if (str_starts_with($platform::class, 'Doctrine\DBAL\Platforms\PostgreSQL')) {
+        if (str_starts_with(strtolower($platform::class), 'doctrine\dbal\platforms\postgresql')) {
             return new PostgresqlVectorStoreType();
         }
 
-        throw new \RuntimeException('Unsupported DoctrineVectorStore type');
+        throw new \RuntimeException('Unsupported DoctrineVectorStore type: '.$platform::class);
     }
 }

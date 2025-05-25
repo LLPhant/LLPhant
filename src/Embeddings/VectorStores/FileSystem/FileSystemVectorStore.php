@@ -58,7 +58,7 @@ class FileSystemVectorStore extends VectorStoreBase implements DocumentStore
     {
         $file = fopen($this->filePath, 'r');
         if (! $file) {
-            throw new Exception('Unable to open file for reading.');
+            throw new Exception("Unable to open file {$this->filePath} qfor reading.");
         }
 
         $distanceList = new DistanceList($k);

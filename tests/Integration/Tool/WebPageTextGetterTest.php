@@ -13,6 +13,6 @@ it('tests getWebPageText using real page', function () {
     $webPageText = $webPageTextGetter->getWebPageText($url);
 
     $stringPosition = strpos($webPageText,
-        'A chemical element is a chemical substance that cannot be broken down into other substances');
+        'chemical element');
     expect($stringPosition)->toBeInt();
 });

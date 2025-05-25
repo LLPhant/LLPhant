@@ -9,7 +9,7 @@ use LLPhant\Chat\OpenAIChat;
 use LLPhant\OpenAIConfig;
 use LLPhant\Query\SemanticSearch\MultiQuery;
 
-function chat(): ChatInterface
+function chatForSemanticSearchTest(): ChatInterface
 {
     $config = new OpenAIConfig();
     $config->model = 'gpt-3.5-turbo-16k';
@@ -18,7 +18,7 @@ function chat(): ChatInterface
 }
 
 it('Returns an array whose first line is the original query', function () {
-    $multiQuery = new MultiQuery(chat());
+    $multiQuery = new MultiQuery(chatForSemanticSearchTest());
 
     $originalQuery = 'Who wrote the music of "La traviata"?';
     $queries = $multiQuery->transformQuery($originalQuery);

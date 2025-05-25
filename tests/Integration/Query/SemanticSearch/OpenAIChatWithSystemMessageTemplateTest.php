@@ -4,27 +4,23 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Query\SemanticSearch;
 
-use LLPhant\Chat\ChatInterface;
 use LLPhant\Chat\OpenAIChat;
 use LLPhant\Embeddings\EmbeddingGenerator\OpenAI\OpenAI3SmallEmbeddingGenerator;
-use LLPhant\Embeddings\VectorStores\FileSystem\FileSystemVectorStore;
+use LLPhant\Embeddings\VectorStores\Memory\MemoryVectorStore;
 use LLPhant\OpenAIConfig;
 use LLPhant\Query\SemanticSearch\QuestionAnswering;
 
-function chat(): ChatInterface
-{
+it('can generate some stuff', function () {
+
     $config = new OpenAIConfig();
 
-    return new OpenAIChat($config);
-}
+    $chat = new OpenAIChat($config);
 
-it('can generate some stuff', function () {
-    $filesVectorStore = new FileSystemVectorStore();
     $embeddingGenerator = new OpenAI3SmallEmbeddingGenerator();
     $qa = new QuestionAnswering(
-        $filesVectorStore,
+        new MemoryVectorStore(),
         $embeddingGenerator,
-        chat()
+        $chat
     );
 
     $qa->systemMessageTemplate = 'your name is Ciro. \\n\\n{context}.';

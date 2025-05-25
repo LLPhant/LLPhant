@@ -7,6 +7,8 @@ use LLPhant\Chat\FunctionInfo\ToolCall;
 
 class Message implements \JsonSerializable, \Stringable
 {
+    public string $tool_calls_id;
+
     public ChatRole $role;
 
     public string $content;
@@ -50,7 +52,10 @@ class Message implements \JsonSerializable, \Stringable
     {
         $message = new self();
         $message->role = ChatRole::Assistant;
+        $toolCall = $toolCalls[0];
+        $message->content = 'Please call the following tool '.$toolCall->function['name'];
         $message->tool_calls = $toolCalls;
+        $message->tool_calls_id = $toolCall->id;
 
         return $message;
     }
@@ -88,15 +93,31 @@ class Message implements \JsonSerializable, \Stringable
     }
 
     /**
-     * @return array{role: string, content: mixed}
+     * @return array{role: string, content?: string, tool_call_id?: string, name?: string, tool_calls?: \LLPhant\Chat\FunctionInfo\ToolCall[]&mixed[]}
      */
     public function jsonSerialize(): mixed
     {
-        return [
+        $result = [
             'role' => $this->role->value,
-            'content' => $this->content,
-            // TODO: handle tools
         ];
+
+        if (! empty($this->content)) {
+            $result['content'] = $this->content;
+        }
+
+        if (! empty($this->tool_call_id)) {
+            $result['tool_call_id'] = $this->tool_call_id;
+        }
+
+        if (! empty($this->name)) {
+            $result['name'] = $this->name;
+        }
+
+        if ($this->tool_calls !== []) {
+            $result['tool_calls'] = $this->tool_calls;
+        }
+
+        return $result;
     }
 
     /**
