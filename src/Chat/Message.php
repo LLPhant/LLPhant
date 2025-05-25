@@ -113,7 +113,7 @@ class Message implements \JsonSerializable, \Stringable
             $result['name'] = $this->name;
         }
 
-        if ($this->tool_calls !== []) {
+        if (! empty($this->tool_calls)) {
             $result['tool_calls'] = $this->tool_calls;
         }
 
