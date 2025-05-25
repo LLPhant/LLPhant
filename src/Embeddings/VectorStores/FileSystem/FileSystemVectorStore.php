@@ -58,14 +58,14 @@ class FileSystemVectorStore extends VectorStoreBase implements DocumentStore
     {
         $file = fopen($this->filePath, 'r');
         if (! $file) {
-            throw new Exception("Unable to open file {$this->filePath} qfor reading.");
+            throw new \Exception("Unable to open file {$this->filePath} for reading.");
         }
 
         $distanceList = new DistanceList($k);
 
         foreach ($this->yieldJsonObjectsFromFile($file) as $document) {
             if ($document->embedding === null) {
-                throw new Exception("Document with the following content has no embedding: {$document->content}");
+                throw new \Exception("Document with the following content has no embedding: {$document->content}");
             }
             $dist = $this->distance->measure($embedding, $document->embedding);
             $distanceList->addDistance($dist, $document);
