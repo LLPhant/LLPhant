@@ -1,7 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace LLPhant\Evaluation\Trajectory;
 
+use LLPhant\Chat\Message;
+use LLPhant\Evaluation\AbstractEvaluator;
+use LLPhant\Evaluation\EvaluationResults;
 use LLPhant\Evaluation\Trajectory\Vocabulary\HarmfulKeywordsEn;
 use LLPhant\Evaluation\Trajectory\Vocabulary\StopWordsEn;
 
@@ -10,7 +15,7 @@ use LLPhant\Evaluation\Trajectory\Vocabulary\StopWordsEn;
  * This evaluates the quality of AI responses across multiple steps of interaction
  * to assess overall performance and task completion.
  */
-class TrajectoryEvaluator
+final class TrajectoryEvaluator extends AbstractEvaluator
 {
     /** @var float[]|string[] */
     private array $evaluationMetrics;
@@ -59,6 +64,50 @@ class TrajectoryEvaluator
         $this->groundTruth[$trajectoryId] = $groundTruth;
 
         return $this;
+    }
+
+    public function evaluateText(string $candidate, string $reference = '', int $n = 1): EvaluationResults
+    {
+        $this->addTrajectory('task1', [
+            [
+                'prompt' => $reference,
+                'response' => $candidate,
+            ],
+        ]);
+        $results = $this->evaluateAll();
+
+        return new EvaluationResults(
+            'Trajectory evaluation result',
+            $this->flattenResults($results)
+        );
+    }
+
+    public function evaluateMessages(array $messages, array $references = [], int $n = 1): EvaluationResults
+    {
+        $assistantMessages = array_filter(array_map(
+            fn (Message $message): ?string => $message->role->value === 'assistant' ? $message->content : null,
+            $messages,
+        ));
+
+        $userMessages = array_filter(array_map(
+            fn (Message $message): ?string => $message->role->value === 'user' ? $message->content : null,
+            $messages,
+        ));
+        $trajectory = [];
+        foreach ($userMessages as $idx => $userMessage) {
+            $trajectory[] = [
+                'prompt' => $userMessage,
+                'response' => $assistantMessages[$idx],
+            ];
+        }
+
+        $this->addTrajectory('task1', $trajectory);
+        $results = $this->evaluateAll();
+
+        return new EvaluationResults(
+            'Trajectory evaluation result',
+            $this->flattenResults($results)
+        );
     }
 
     /**
@@ -127,6 +176,27 @@ class TrajectoryEvaluator
             'passed' => $passed,
             'interactionCount' => count($interactions),
         ];
+    }
+
+    /**
+     * @param  mixed[]  $array
+     * @return string[]
+     */
+    private function flattenResults(array $array, string $prefix = ''): array
+    {
+        $flat = [];
+
+        foreach ($array as $key => $value) {
+            $path = $prefix === '' ? (string) $key : $prefix.'_'.$key;
+
+            if (is_array($value)) {
+                $flat += $this->flattenResults($value, $path);
+            } else {
+                $flat[$path] = $value;
+            }
+        }
+
+        return $flat;
     }
 
     /**

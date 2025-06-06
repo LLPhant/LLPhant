@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace LLPhant\Evaluation\StringComparison\Metric;
 
 use LLPhant\Evaluation\EvaluationResults;

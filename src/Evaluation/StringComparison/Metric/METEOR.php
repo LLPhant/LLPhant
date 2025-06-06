@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace LLPhant\Evaluation\StringComparison\Metric;
 
 use LLPhant\Evaluation\EvaluationResults;
 
-class METEOR extends AbstractStringComparisonMetric
+final class METEOR extends AbstractStringComparisonMetric
 {
     public function __construct(
         /**
@@ -83,7 +85,7 @@ class METEOR extends AbstractStringComparisonMetric
      *
      * @return string[]
      */
-    protected function tokenize(string $text): array
+    private function tokenize(string $text): array
     {
         // Normalise line breaks, trim, convert to lower‑case.
         $text = \mb_strtolower(\preg_replace('/\R/u', ' ', $text) ?? '');

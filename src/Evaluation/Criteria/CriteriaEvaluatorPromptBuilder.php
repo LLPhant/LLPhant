@@ -1,52 +1,33 @@
 <?php
 
+declare(strict_types=1);
+
 namespace LLPhant\Evaluation\Criteria;
 
-class CriteriaEvaluatorPromptBuilder
+final class CriteriaEvaluatorPromptBuilder
 {
     /** @var string[] */
     private array $criteria = [];
 
-    public function getEvaluationPrompt(string $question, string $answer): string
+    public function getEvaluationPromptForQuestion(string $question, string $answer): string
     {
-        if (! $this->criteria) {
-            throw new \LogicException('You must add at least 1 criterion');
-        }
-        $allCriteria = $this->getAllCriteria();
+        return $this->getEvaluationPrompt("Here is the question: {$question}\n\nHere is the answer: {$answer}");
+    }
 
-        $chosenCriteria = [];
-        foreach ($allCriteria as $criterion => $description) {
-            if (! in_array($criterion, $this->criteria)) {
-                continue;
-            }
-            $chosenCriteria[] = "$criterion: $description";
-        }
-
-        $exampleJSON = [];
-        foreach (array_keys($allCriteria) as $criterion) {
-            if (! in_array($criterion, $this->criteria)) {
-                continue;
-            }
-            $exampleJSON[] = "$criterion: 3";
+    /**
+     * @param  string[]  $questions
+     * @param  string[]  $answers
+     */
+    public function getEvaluationPromptForConversation(array $questions, array $answers): string
+    {
+        $conversation = '';
+        while ($question = array_shift($questions)) {
+            $conversation .= "User:\n{$question}\n";
+            $answer = array_shift($answers);
+            $conversation .= "Assistant:\n{$answer}\n";
         }
 
-        return "You are a helpful assistant that evaluates the quality of an answer based on the following Criteria:\n"
-            .implode("\n", $chosenCriteria)
-            ."\n\nScore each category above in range 0–5. Use only integer value for each category
-
-        Here is the question: {$question}
-
-
-        Here is the answer: {$answer}
-
-
-        Output a JSON object with Criteria as keys.
-        Example output should look like this:
-        {\n"
-            .implode(",\n", $exampleJSON)
-            ."\n}
-
-        Don't include any additional explanation, just JSON with Criteria scores.";
+        return $this->getEvaluationPrompt("Here is the conversation {$conversation}");
     }
 
     public function addAllCriterion(): self
@@ -152,6 +133,44 @@ class CriteriaEvaluatorPromptBuilder
         $this->criteria[] = 'creativity';
 
         return $this;
+    }
+
+    private function getEvaluationPrompt(string $questionAndAnswers): string
+    {
+        if (! $this->criteria) {
+            throw new \LogicException('You must add at least 1 criterion');
+        }
+        $allCriteria = $this->getAllCriteria();
+
+        $chosenCriteria = [];
+        foreach ($allCriteria as $criterion => $description) {
+            if (! in_array($criterion, $this->criteria)) {
+                continue;
+            }
+            $chosenCriteria[] = "$criterion: $description";
+        }
+
+        $exampleJSON = [];
+        foreach (array_keys($allCriteria) as $criterion) {
+            if (! in_array($criterion, $this->criteria)) {
+                continue;
+            }
+            $exampleJSON[] = "$criterion: 3";
+        }
+
+        return "You are a helpful assistant that evaluates the quality of an answer based on the following Criteria:\n"
+            .implode("\n", $chosenCriteria)
+            ."\n\nScore each category above in range 0–5. Use only integer value for each category
+
+        {$questionAndAnswers}
+
+        Output a JSON object with Criteria as keys.
+        Example output should look like this:
+        {\n"
+            .implode(",\n", $exampleJSON)
+            ."\n}
+
+        Don't include any additional explanation, just JSON with Criteria scores.";
     }
 
     /**
