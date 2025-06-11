@@ -61,6 +61,13 @@ First, install LLPhant via the [Composer](https://getcomposer.org/) package mana
 composer require theodo-group/llphant
 ```
 
+In case you have not installed the GD extension, and you do not want to add it to your PHP setup, 
+you can use the `--ignore-platform-req=ext-gd` option
+
+```bash
+composer require theodo-group/llphant --ignore-platform-req=ext-gd
+```
+
 If you want to try the latest features of this library, you can use:
 
 ```bash
