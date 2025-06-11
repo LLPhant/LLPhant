@@ -13,7 +13,7 @@
         "guzzlehttp/guzzle": "^7.4.5",
         "guzzlehttp/psr7": "^2.7",
         "openai-php/client": "^v0.13.0",
-        "phpoffice/phpword": "^1.3.0",
+        "phpoffice/phpword": "^1.4.0",
         "psr/http-message": "^2.0",
         "psr/log": "^3.0",
         "smalot/pdfparser": "^2.11"
