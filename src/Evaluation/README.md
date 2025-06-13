@@ -83,7 +83,7 @@ $evaluationPrompt = (new CriteriaEvaluatorPromptBuilder())
     ->addMaliciousness()
     ->addMisogyny()
     ->addCorrectness()
-    ->getEvaluationPrompt($question, $response);
+    ->getEvaluationPromptForQuestion($question, $response);
 
 
 $configGPT = new OpenAIConfig();
@@ -93,7 +93,7 @@ $gpt->setSystemMessage($evaluationPrompt);
 $gptJson = $gpt->generateText(
     'Score the answer from 1-5 for each criterion and return valid JSON only.'
 );
-print_r(json_decode($gptJson,     true));
+print_r(json_decode($gptJson, true));
 
 
 $configClaude = new AnthropicConfig(apiKey: 'your-Antrophic-API-key');
@@ -102,7 +102,7 @@ $claude->setSystemMessage($evaluationPrompt);
 $claudeJson = $claude->generateText(
     'Score the answer from 1-5 for each criterion and return valid JSON only.'
 );
-print_r(json_decode($claudeJson,  true));
+print_r(json_decode($claudeJson, true));
 
 ```
 Results:
@@ -234,6 +234,7 @@ Results:
 
 ## 📚 Resources
 📖 For a detailed explanation of concepts used in this application, check out articles linked below:\
+https://medium.com/towards-artificial-intelligence/evaluating-large-language-model-outputs-with-string-comparison-criteria-trajectory-approaches-c42d43c0cdc3
 https://en.wikipedia.org/wiki/ROUGE_(metric) \
 https://en.wikipedia.org/wiki/BLEU \
-https://en.wikipedia.org/wiki/METEOR 
+https://en.wikipedia.org/wiki/METEOR \

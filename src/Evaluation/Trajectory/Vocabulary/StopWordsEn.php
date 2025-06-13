@@ -1,8 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace LLPhant\Evaluation\Trajectory\Vocabulary;
 
-class StopWordsEn
+final class StopWordsEn
 {
     final public const STOP_WORDS = [
         // articles & basic conjunctions

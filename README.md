@@ -20,6 +20,7 @@ We can find great external resource on LLPhant (ping us to add yours):
 -   🇫🇷 [Construire un RAG en PHP avec la doc de Symfony, LLPhant et OpenAI : Tutoriel Complet](https://www.youtube.com/watch?v=zFJgRd05Noo)
 -   🇫🇷 [Retour d'expérience sur la création d'un agent autonome](https://www.youtube.com/watch?v=ZnYUxTtS6IU)
 -   🇬🇧 [Exploring AI riding an LLPhant](https://www.slideshare.net/slideshow/exploring-ai-riding-an-llphant-an-open-source-library-to-use-llms-and-vector-dbs-in-php/272059145)
+-   🇬🇧 [Evaluating LLM and AI agents Outputs with String Comparison, Criteria & Trajectory Approaches](https://medium.com/towards-artificial-intelligence/evaluating-large-language-model-outputs-with-string-comparison-criteria-trajectory-approaches-c42d43c0cdc3)
 
 ## Sponsor
 
@@ -890,6 +891,144 @@ To automatically remember the chat session you can pass a `ChatSession` object t
 
 `ChatSession` objects can also be serialized to JSON, so that you can put them into some kind of cache system between invocations.
 
+### Evaluating results
+
+Evaluating output of LLM is a challenging task due to lack of structure in text and multiple possible correct answers.  
+LLPhant framework delivers also tools for evaluating LLMs and AI agent responses with different strategies.
+
+Strategies for evaluating LLM responses include:
+- Criteria evaluator
+- String comparison
+- Trajectory evaluator
+
+Choose most relevant evaluation strategy for your use case and run one of methods listed below. 
+Input can be text, list of Message objects or ChatSession object.
+```
+    /** @var string $candidate */
+    /** @var string $reference */
+    $evaluator->evaluateText($candidate, $reference);
+
+    /** @var Message[] $messages */
+    /** @var string[] $references */
+    $evaluator->evaluateMessages($messages, $references);
+
+    /** @var ChatSession $chatSession */
+    /** @var string[] $references */
+    $evaluator->evaluateChatSession($chatSession, $references);
+```
+
+Find usage examples below and for more details see:
+[README.md](src/Evaluation/README.md)
+
+#### Criteria evaluator
+```php
+    $evaluationPromptBuilder = (new CriteriaEvaluatorPromptBuilder())
+        ->addCorrectness()
+        ->addHelpfulness()
+        ->addRelevance();
+
+    $evaluator = new CriteriaEvaluator();
+    $evaluator->setChat(getChatMock());
+    $evaluator->setCriteriaPromptBuilder($evaluationPromptBuilder);
+    $results = $evaluator->evaluateMessages([Message::user('some text')], ['some question']);
+    $scores = $results->getResults();
+```
+scores:
+```
+[
+    'correctness' => 5,
+    'helpfulness' => 4,
+    'relevance' => 4,
+    'conciseness' => 5,
+    'clarity' => 4,
+    'factual_accuracy' => 4,
+    'insensitivity' => 5,
+    'maliciousness' => 0,
+    'harmfulness' => 0,
+    'coherence' => 1,
+    'misogyny' => 0,
+    'criminality' => 0,
+    'controversiality' => 0,
+    'creativity' => 1,
+]
+```
+
+#### String comparison
+```php
+    $reference = 'The quick brown fox jumps over the lazy dog';
+    $candidate = 'The quick brown dog jumps over the lazy fox';
+    $candidateMessage = new Message();
+    $candidateMessage->role = ChatRole::User;
+    $candidateMessage->content = $candidate;
+
+    $results = (new StringComparisonEvaluator())->evaluateMessages([$candidateMessage], [$reference]);
+    $scores = $results->getResults();
+```
+scores:
+```
+[
+    '0_ROUGE_recall' => 1.0,
+    '0_ROUGE_precision' => 1.0,
+    '0_ROUGE_f1' => 1.0,
+    '0_BLEU_score' => 1.0,
+    '0_METEOR_score' => 0.96,
+    '0_METEOR_precision' => 1,
+    '0_METEOR_recall' => 1,
+    '0_METEOR_chunks' => 4,
+    '0_METEOR_penalty' => 0.04389574759945129,
+    '0_METEOR_fMean' => 1.0,
+]
+```
+
+#### Trajectory evaluator
+```php
+    $evaluator = new TrajectoryEvaluator([
+        'factualAccuracy' => 2.0,
+        'relevance' => 1.0,
+        'completeness' => 1.0,
+        'harmlessness' => 1.5,
+    ]);
+
+    $evaluator->addGroundTruth('task1', [
+        ['Paris', 'capital', 'France'],
+        ['Paris', 'population', '2.2 million'],
+    ]);
+
+    $message1 = Message::user('What is the capital of France?');
+    $response1 = Message::assistant('The capital of France is Paris.');
+
+    $message2 = Message::user('What is the population of Paris?');
+    $response2 = Message::assistant('Paris has a population of approximately 2.2 million people in the city proper.');
+
+    $results = $evaluator->evaluateMessages([
+        $message1,
+        $response1,
+        $message2,
+        $response2,
+    ]);
+    $scores = $results->getResults();
+```
+scores:
+```
+[
+    'task1_trajectoryId' => 'task1',
+    'task1_stepScores_0_factualAccuracy' => 0.0,
+    'task1_stepScores_0_relevance' => 0.0,
+    'task1_stepScores_0_completeness' => 0.0,
+    'task1_stepScores_0_harmlessness' => 1.0,
+    'task1_stepScores_1_factualAccuracy' => 0.0,
+    'task1_stepScores_1_relevance' => 0.0,
+    'task1_stepScores_1_completeness' => 0.0,
+    'task1_stepScores_1_harmlessness' => 1.0,
+    'task1_metricScores_factualAccuracy' => 0.0,
+    'task1_metricScores_relevance' => 0.0,
+    'task1_metricScores_completeness' => 0.0,
+    'task1_metricScores_harmlessness' => 1.0,
+    'task1_overallScore' => 0.27,
+    'task1_passed' => false,
+    'task1_interactionCount' => 2,
+]
+```
 ## AutoPHP
 
 You can now make your [AutoGPT](https://github.com/Significant-Gravitas/Auto-GPT) clone in PHP using LLPhant.
