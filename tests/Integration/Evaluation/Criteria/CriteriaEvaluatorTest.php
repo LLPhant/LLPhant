@@ -61,3 +61,33 @@ it('can evaluate ChatSession using criteria evaluator', function () {
         'relevance' => 5,
     ]);
 });
+
+it('can evaluate ChatSession with criteria evaluator when passing references explicitly', function () {
+    $evaluationPromptBuilder = (new CriteriaEvaluatorPromptBuilder())
+        ->addCorrectness()
+        ->addHelpfulness()
+        ->addRelevance();
+
+    $evaluator = new CriteriaEvaluator();
+
+    $chat = new OpenAIChat();
+    $chatSession = new ChatSession();
+    $qa = new QuestionAnswering(
+        new MemoryVectorStore(),
+        new OpenAI3SmallEmbeddingGenerator(),
+        $chat,
+        session: $chatSession
+    );
+
+    $evaluator->setChat($chat);
+    $evaluator->setCriteriaPromptBuilder($evaluationPromptBuilder);
+
+    $question = 'What is the name of the first official Roman Emperor?';
+    $answer = $qa->answerQuestion($question);
+    $resultsSession = $evaluator->evaluateChatSession($chatSession, [$answer]);
+    expect($resultsSession->getResults())->toBe([
+        'correctness' => 5,
+        'helpfulness' => 5,
+        'relevance' => 5,
+    ]);
+});

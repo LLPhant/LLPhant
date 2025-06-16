@@ -82,12 +82,22 @@ final class TrajectoryEvaluator extends AbstractEvaluator
         );
     }
 
+    /**
+     * @param  Message[]  $messages
+     * @param  string[]  $references  when empty array is passed, assistant messages are extracted from $messages param
+     * @param  int  $n  not supported for trajectory evaluator
+     */
     public function evaluateMessages(array $messages, array $references = [], int $n = 1): EvaluationResults
     {
-        $assistantMessages = array_filter(array_map(
-            fn (Message $message): ?string => $message->role->value === 'assistant' ? $message->content : null,
-            $messages,
-        ));
+        if ($n !== 1) {
+            throw new \LogicException("Trajectory evaluator doesn't support N-grams. Keep default param value.");
+        }
+        if ($references === []) {
+            $references = array_filter(array_map(
+                fn (Message $message): ?string => $message->role->value === 'assistant' ? $message->content : null,
+                $messages,
+            ));
+        }
 
         $userMessages = array_filter(array_map(
             fn (Message $message): ?string => $message->role->value === 'user' ? $message->content : null,
@@ -97,7 +107,7 @@ final class TrajectoryEvaluator extends AbstractEvaluator
         foreach ($userMessages as $idx => $userMessage) {
             $trajectory[] = [
                 'prompt' => $userMessage,
-                'response' => $assistantMessages[$idx],
+                'response' => $references[$idx],
             ];
         }
 

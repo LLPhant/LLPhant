@@ -55,7 +55,7 @@ final class CriteriaEvaluator extends AbstractEvaluator
 
     /**
      * @param  Message[]  $messages
-     * @param  string[]  $references  should be empty for CriteriaEvaluator
+     * @param  string[]  $references  when empty array is passed, assistant messages are extracted from $messages param
      * @param  int  $n  not supported for criteria evaluator
      *
      * @throws \JsonException
@@ -66,21 +66,19 @@ final class CriteriaEvaluator extends AbstractEvaluator
         if ($n !== 1) {
             throw new \LogicException("Criteria evaluator doesn't support N-grams. Keep default param value.");
         }
-        if ($references !== []) {
-            throw new \LogicException('Pass answers as assistant messages.');
+        if ($references === []) {
+            $references = array_filter(array_map(
+                fn (Message $message): ?string => $message->role->value === 'assistant' ? $message->content : null,
+                $messages,
+            ));
         }
-
-        $assistantMessages = array_filter(array_map(
-            fn (Message $message): ?string => $message->role->value === 'assistant' ? $message->content : null,
-            $messages,
-        ));
 
         $userMessages = array_filter(array_map(
             fn (Message $message): ?string => $message->role->value === 'user' ? $message->content : null,
             $messages,
         ));
 
-        $evaluationPrompt = $this->criteriaPromptBuilder->getEvaluationPromptForConversation($userMessages, $assistantMessages);
+        $evaluationPrompt = $this->criteriaPromptBuilder->getEvaluationPromptForConversation($userMessages, $references);
         $this->chat->setSystemMessage($evaluationPrompt);
         $criteriaJSON = $this->chat->generateText(
             'Score the answers from 1-5 for each criterion and return valid JSON only.'
