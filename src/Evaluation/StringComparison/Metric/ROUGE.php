@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace LLPhant\Evaluation\StringComparison\Metric;
 
 use LLPhant\Evaluation\EvaluationResults;
 
-class ROUGE extends AbstractStringComparisonMetric
+final class ROUGE extends AbstractStringComparisonMetric
 {
     public function calculate(string $reference, string $candidate, int $n = 1): EvaluationResults
     {

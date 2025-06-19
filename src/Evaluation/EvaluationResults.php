@@ -5,7 +5,7 @@ namespace LLPhant\Evaluation;
 class EvaluationResults
 {
     /**
-     * @param  float[]  $results
+     * @param  (float|bool|string)[]  $results
      */
     public function __construct(private readonly string $metricName, private readonly array $results)
     {
@@ -17,7 +17,7 @@ class EvaluationResults
     }
 
     /**
-     * @return float[]
+     * @return (float|bool|string)[]
      */
     public function getResults(): array
     {

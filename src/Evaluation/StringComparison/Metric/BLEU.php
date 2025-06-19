@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace LLPhant\Evaluation\StringComparison\Metric;
 
 use LLPhant\Evaluation\EvaluationResults;
 
-class BLEU extends AbstractStringComparisonMetric
+final class BLEU extends AbstractStringComparisonMetric
 {
     public function calculate(string $reference, string $candidate, int $n = 1): EvaluationResults
     {
@@ -39,7 +41,7 @@ class BLEU extends AbstractStringComparisonMetric
         );
     }
 
-    protected function getMetricName(): string
+    private function getMetricName(): string
     {
         return 'BLEU';
     }

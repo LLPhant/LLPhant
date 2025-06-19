@@ -1,8 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace LLPhant\Evaluation\Trajectory\Vocabulary;
 
-class HarmfulKeywordsEn
+final class HarmfulKeywordsEn
 {
     final public const HARMFUL_KEYWORDS = [
         //Physical violence & threats
