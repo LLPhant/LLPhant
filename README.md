@@ -99,7 +99,7 @@ You can also see other use cases on [Qdrant's website](https://qdrant.tech/use-c
 
 ## Usage
 
-You can use OpenAI, Mistral, Ollama or Anthropic as LLM engines. Here you can find a list of [supported features for each AI engine](/docusaurus/docs/features.md).
+You can use OpenAI, Mistral, Ollama, Anthropic or DeepSeek as LLM engines. Here you can find a list of [supported features for each AI engine](/docusaurus/docs/features.md).
 
 ### OpenAI
 
@@ -157,6 +157,22 @@ Creating a chat with no configuration will use a CLAUDE_3_HAIKU model.
 $chat = new AnthropicChat();
 ```
 
+### DeepSeek
+
+To use DeepSeek models you have to provide an API key. You can set the DEEPSEEK_API_KEY environment variable.
+
+```bash
+export DEEPSEEK_API_KEY=XXXXXX
+```
+
+You can also create a DeepseekConfig object and pass it to the constructor of the DeepseekChat.
+
+```php
+$config = new DeepseekConfig();
+$config->apiKey = 'your_api_key_here';
+$chat = new DeepseekChat($config);
+```
+
 ### OpenAI compatible APIs like LocalAI
 
 The most simple way to allow the call to OpenAI is to set the OPENAI_API_KEY and OPENAI_BASE_URL environment variable.
@@ -181,7 +197,7 @@ Here you can find a [docker compose file for running LocalAI](devx/docker-compos
 
 > 💡 This class can be used to generate content, to create a chatbot or to create a text summarizer.
 
-You can use the `OpenAIChat`, `MistralAIChat` or `OllamaChat` to generate text or to create a chat.
+You can use the `OpenAIChat`, `MistralAIChat`, `OllamaChat` or `DeepseekChat` to generate text or to create a chat.
 
 We can use it to simply generate text from a prompt.
 This will ask directly an answer from the LLM.
@@ -201,6 +217,72 @@ You can add instruction so the LLM will behave in a specific manner.
 ```php
 $chat->setSystemMessage('Whatever we ask you, you MUST answer "ok"');
 $response = $chat->generateText('what is one + one ?'); // will return "ok"
+```
+
+### DeepSeekChat
+
+To use DeepSeekChat, you need to set up your API key. You can do this in two ways:
+
+1. Set the environment variable:
+```bash
+export DEEPSEEK_API_KEY=your_api_key_here
+```
+
+2. Or configure it programmatically:
+```php
+use LLPhant\Chat\DeepseekChat;
+use LLPhant\DeepseekConfig;
+
+$config = new DeepseekConfig();
+$config->apiKey = 'your_api_key_here';
+$chat = new DeepseekChat($config);
+```
+
+#### Basic Text Generation
+
+You can generate text using `generateText`:
+
+```php
+$response = $chat->generateText('what is one + one?');
+// Returns a string response
+```
+
+#### Chat with Messages
+
+You can have a conversation using the Message class with `generateChat`:
+
+```php
+use LLPhant\Chat\Message;
+
+$chat->setSystemMessage('Whatever we ask you, you MUST answer "ok"');
+$messages = [
+    Message::user('what is one + one?'),
+];
+$response = $chat->generateChat($messages);
+```
+
+#### Streaming Responses
+
+For streaming text responses, use `generateStreamOfText`:
+
+```php
+$stream = $chat->generateStreamOfText('What is 2+2?');
+while (!$stream->eof()) {
+    $content = $stream->read(1024);
+    // Process the content
+}
+```
+
+For streaming chat responses, use `generateChatStream`:
+
+```php
+$stream = $chat->generateChatStream([
+    Message::user('What is 2+2?'),
+]);
+while (!$stream->eof()) {
+    $content = $stream->read(1024);
+    // Process the content
+}
 ```
 
 ### Images
