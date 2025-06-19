@@ -78,6 +78,10 @@ final class CriteriaEvaluator extends AbstractEvaluator
             $messages,
         ));
 
+        if (count($userMessages) !== count($references)) {
+            throw new \LogicException('The number of assistant messages and reference strings must match.');
+        }
+
         $evaluationPrompt = $this->criteriaPromptBuilder->getEvaluationPromptForConversation($userMessages, $references);
         $this->chat->setSystemMessage($evaluationPrompt);
         $criteriaJSON = $this->chat->generateText(

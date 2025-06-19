@@ -16,10 +16,12 @@ This package gives tools for evaluating LLMs and AI agent responses with differe
 
 ## 🚀 Features
 
-There are 3 major strategies included for evaluating LLM responses:
+There are multiple strategies included for evaluating LLM responses:
 - Criteria evaluator
+- Embedding distance
 - String comparison
 - Trajectory evaluator
+- Pairwise string comparison (A/B testing)
 
 ### Criteria evaluator
 Criteria evaluator passes prompt and generated answer to GPT-4o or Claude model and ask for 1-5 points evaluation in criteria:
@@ -38,6 +40,11 @@ Criteria evaluator passes prompt and generated answer to GPT-4o or Claude model 
 - controversiality: Does the response avoid unnecessarily sparking divisive or sensitive debates?
 - creativity : (Optional) Is the response innovative or insightful?
 
+### Embedding distance
+Embedding distance evaluator compares the generated answer to a reference using vector embeddings (e.g., OpenAI, Cohere, or Sentence Transformers).
+It calculates semantic similarity using cosine distance or Euclidean distance, allowing evaluation based on meaning rather than exact wording.
+This method is reference-based and language-model-agnostic, making it useful for assessing output alignment even when phrasing varies significantly.
+
 ### String comparison
 There are 2 string comparison metrics implemented which compare generated answer to expected text.
 They are not the best solution as they are based on tokens appearance comparison and require providing reference text.
@@ -51,6 +58,11 @@ It compares each intermediate step of the model’s output against a reference c
 computing metrics such as step-level ROUGE overlap, accumulated divergence, and error propagation.
 This lets you quantify whether an LLM is merely reaching the right conclusion or genuinely reasoning in the desired way—ideal for debugging,
 fine-tuning, and safety audits where process integrity matters as much as the end result.
+
+### Pairwise string comparison (A/B testing)
+
+The **PairwiseStringEvaluator** allows classic A/B testing of two candidate answers against the same reference.
+It wraps the existing EvaluatorInterface, computes score for each candidate, then selects the candidate with the higher score.
 
 ## 💻 Usage
 
@@ -123,6 +135,26 @@ Results:
     "controversiality": 0,
     "creativity": 1
 }
+```
+
+#### Embedding distance example
+
+```php
+    $reference = 'pink elephant walks with the suitcase';
+    $candidate = 'pink cheesecake is jumping over the suitcase with dinosaurs';
+    $candidateMessage = new Message();
+    $candidateMessage->role = ChatRole::User;
+    $candidateMessage->content = $candidate;
+
+    $results = (new EmbeddingDistanceEvaluator(new OpenAIADA002EmbeddingGenerator, new EuclideanDistanceL2))
+        ->evaluateMessages([$candidateMessage], [$reference]);
+    $scores = $results->getResults();
+```
+Results:
+```
+[
+    0.474,
+]
 ```
 
 ### String comparison evaluation example
@@ -229,6 +261,31 @@ Results:
       "passed":true,
       "interactionCount":2
    }
+}
+```
+
+### Pairwise string comparison (A/B testing)
+
+```php
+$candidateA = 'this is the way cookie is crashed';
+$candidateB = "cookie doesn't crumble at all";
+
+$reference  = "that's the way cookie crumbles";
+
+$results = (new PairwiseStringEvaluator(new StringComparisonEvaluator))
+    ->evaluateText($candidateA, $candidateB, $reference);
+```
+
+Results:
+
+```json
+{
+    "candidate_with_higher_score": "A",
+    "text_candidate_with_higher_score": "this is the way cookie is crashed",
+    "metric_name": "String Comparison Evaluation: ROUGE, BLEU, METEOR",
+    "score_name": "ROUGE_recall",
+    "score_A": 0.6,
+    "score_B": 0.2
 }
 ```
 

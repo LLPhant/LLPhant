@@ -103,6 +103,11 @@ final class TrajectoryEvaluator extends AbstractEvaluator
             fn (Message $message): ?string => $message->role->value === 'user' ? $message->content : null,
             $messages,
         ));
+
+        if (count($userMessages) !== count($references)) {
+            throw new \LogicException('The number of assistant messages and reference strings must match.');
+        }
+
         $trajectory = [];
         foreach ($userMessages as $idx => $userMessage) {
             $trajectory[] = [
@@ -179,10 +184,10 @@ final class TrajectoryEvaluator extends AbstractEvaluator
         $passed = $overallScore >= $this->passingThreshold;
 
         return [
+            'overallScore' => $overallScore,
             'trajectoryId' => $trajectoryId,
             'stepScores' => $stepScores,
             'metricScores' => $aggregateMetricScores,
-            'overallScore' => $overallScore,
             'passed' => $passed,
             'interactionCount' => count($interactions),
         ];
