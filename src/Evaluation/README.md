@@ -69,7 +69,7 @@ It wraps the existing EvaluatorInterface, computes score for each candidate, the
 When expecting JSON response, checks if returned code is valid JSON.
 
 ### Avoid fallback messages
-Checks response for unexpected fallback mesages like "Sorry, but I can't help you with this problem".
+Checks response for unexpected fallback messages like "Sorry, but I can't help you with this problem".
 
 ## 💻 Usage
 
