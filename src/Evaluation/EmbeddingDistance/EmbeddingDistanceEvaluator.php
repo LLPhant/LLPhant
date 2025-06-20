@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace LLPhant\Evaluation\EmbeddingDistance;
 
-use LLPhant\Chat\Enums\ChatRole;
-use LLPhant\Chat\Message;
 use LLPhant\Embeddings\Distances\Distance;
 use LLPhant\Embeddings\EmbeddingGenerator\EmbeddingGeneratorInterface;
 use LLPhant\Evaluation\AbstractEvaluator;
@@ -46,9 +44,7 @@ final class EmbeddingDistanceEvaluator extends AbstractEvaluator
     public function evaluateMessages(array $messages, array $references = [], int $n = 1): EvaluationResults
     {
         // Only score assistant outputs, mirroring StringComparisonEvaluator
-        $assistantMessages = array_values(
-            array_filter($messages, static fn (Message $m): bool => $m->role === ChatRole::Assistant)
-        );
+        $assistantMessages = $this->filterAssistantMessages($messages);
 
         if (count($assistantMessages) !== count($references)) {
             throw new \LogicException('The number of assistant messages and reference strings must match.');
@@ -56,7 +52,7 @@ final class EmbeddingDistanceEvaluator extends AbstractEvaluator
 
         $results = [];
         foreach ($assistantMessages as $idx => $assistantMessage) {
-            $single = $this->evaluateText($assistantMessage->content, $references[$idx], $n);
+            $single = $this->evaluateText($assistantMessage, $references[$idx], $n);
             foreach ($single->getResults() as $value) {
                 $results[$idx] = $value;
             }
