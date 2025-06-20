@@ -898,8 +898,12 @@ LLPhant framework delivers also tools for evaluating LLMs and AI agent responses
 
 Strategies for evaluating LLM responses include:
 - Criteria evaluator
+- Embedding distance
 - String comparison
 - Trajectory evaluator
+- Pairwise string comparison (A/B testing)
+- JSON format validator
+- Avoid fallback message
 
 Choose most relevant evaluation strategy for your use case and run one of methods listed below. 
 Input can be text, list of Message objects or ChatSession object.
@@ -950,6 +954,25 @@ scores:
     'criminality' => 0,
     'controversiality' => 0,
     'creativity' => 1,
+]
+```
+
+#### Embedding distance
+```php
+    $reference = 'pink elephant walks with the suitcase';
+    $candidate = 'pink cheesecake is jumping over the suitcase with dinosaurs';
+    $candidateMessage = new Message();
+    $candidateMessage->role = ChatRole::User;
+    $candidateMessage->content = $candidate;
+
+    $results = (new EmbeddingDistanceEvaluator(new OpenAIADA002EmbeddingGenerator, new EuclideanDistanceL2))
+        ->evaluateMessages([$candidateMessage], [$reference]);
+    $scores = $results->getResults();
+```
+score:
+```
+[
+    0.474,
 ]
 ```
 
@@ -1029,6 +1052,117 @@ scores:
     'task1_interactionCount' => 2,
 ]
 ```
+
+#### Pairwise string comparison (A/B testing)
+```php
+$candidatesA = [
+    Message::assistant('this is the way cookie is crashed'),
+    Message::assistant('foo bar')
+];
+
+$candidatesB = [
+    Message::assistant("cookie doesn't crumble at all"),
+    Message::assistant('foo bear')
+];
+
+$references = [
+    "that's the way cookie crumbles",
+    'foo bar'
+];
+
+$results = (new PairwiseStringEvaluator(new StringComparisonEvaluator))
+    ->evaluateMessages($candidatesA, $candidatesB, $references);
+
+print_r($results->getResults());
+```
+
+scores:
+
+```json
+{
+  "0_candidate_with_higher_score": "A",
+  "0_text_candidate_with_higher_score": "this is the way cookie is crashed",
+  "0_metric_name": "String Comparison Evaluation: ROUGE, BLEU, METEOR",
+  "0_score_name": "ROUGE_recall",
+  "0_score_A": 0.6,
+  "0_score_B": 0.2,
+  "1_candidate_with_higher_score": "A",
+  "1_text_candidate_with_higher_score": "foo bar",
+  "1_metric_name": "String Comparison Evaluation: ROUGE, BLEU, METEOR",
+  "1_score_name": "ROUGE_recall",
+  "1_score_A": 1.0,
+  "1_score_B": 0.5
+}
+```
+
+#### JSON format validator
+```php
+$candidate = '{"name":"John","age":30}';
+
+$evaluator = new JSONFormatEvaluator();
+$results = $evaluator->evaluateText($candidate);
+$scores = $results->getResults();
+```
+
+scores:
+
+```json
+{
+    "score": 1,
+    "error": "" //parsing error message if invalid
+}
+```
+
+#### Avoid fallback messages
+```php
+$candidate = "I'm sorry, I cannot help with that request.";
+
+$evaluator = new NoFallbackAnswerEvaluator();
+$results = $evaluator->evaluateText($candidate);
+$scores = $results->getResults();
+```
+
+scores:
+
+```json
+{
+    "score" : 0,         
+    "detectedIndicator" : "I'm sorry" // first matched phrase
+}
+```
+
+## Guardrails
+
+Guardrails are lightweight, programmable checkpoints that sit between application and the LLM. \
+After each model response they run an evaluator of your choice (e.g. JSON‐syntax checker, “no fallback” detector).
+Based on the result, either pass the answer through, retry the call, block it, or route it to a custom callback.
+
+```php
+    $llm = getChatMock();
+
+    $guardrails = new Guardrails(
+        llm: $llm,
+        evaluator: new JSONFormatEvaluator(),
+        strategy: Guardrails::STRATEGY_RETRY,
+    );
+
+    $response = $guardrails->generateText('some prompt message');
+```
+
+result without retry:
+
+```json
+{some invalid JSON}
+```
+
+result after retry:
+
+```json
+{
+    "correctKey":"correctVal"
+}
+```
+
 ## AutoPHP
 
 You can now make your [AutoGPT](https://github.com/Significant-Gravitas/Auto-GPT) clone in PHP using LLPhant.

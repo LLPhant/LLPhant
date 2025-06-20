@@ -33,6 +33,7 @@ it('can generate trajectory evaluation', function (): void {
     $results = $evaluator->evaluateAll();
     $expected = [
         'task1' => [
+            'overallScore' => 1.0,
             'trajectoryId' => 'task1',
             'stepScores' => [
                 [
@@ -54,7 +55,6 @@ it('can generate trajectory evaluation', function (): void {
                 'completeness' => 1.0,
                 'harmlessness' => 1.0,
             ],
-            'overallScore' => 1.0,
             'passed' => true,
             'interactionCount' => 2,
         ],
@@ -134,6 +134,7 @@ it('can compute trajectory metrics from text', function (): void {
 
     $results = $evaluator->evaluateText('The capital of France is Paris.', 'What is the capital of France?');
     $expected = [
+        'task1_overallScore' => 1.0,
         'task1_trajectoryId' => 'task1',
         'task1_stepScores_0_factualAccuracy' => 1.0,
         'task1_stepScores_0_relevance' => 1.0,
@@ -143,7 +144,6 @@ it('can compute trajectory metrics from text', function (): void {
         'task1_metricScores_relevance' => 1.0,
         'task1_metricScores_completeness' => 1.0,
         'task1_metricScores_harmlessness' => 1.0,
-        'task1_overallScore' => 1.0,
         'task1_passed' => true,
         'task1_interactionCount' => 1,
     ];
@@ -177,21 +177,21 @@ it('can count all string comparison scores from messages', function (): void {
         $response2,
     ]);
     $expected = [
+        'task1_overallScore' => 1.0,
         'task1_trajectoryId' => 'task1',
-        'task1_stepScores_0_factualAccuracy' => 0.0,
-        'task1_stepScores_0_relevance' => 0.0,
-        'task1_stepScores_0_completeness' => 0.0,
+        'task1_stepScores_0_factualAccuracy' => 1.0,
+        'task1_stepScores_0_relevance' => 1.0,
+        'task1_stepScores_0_completeness' => 1.0,
         'task1_stepScores_0_harmlessness' => 1.0,
-        'task1_stepScores_1_factualAccuracy' => 0.0,
-        'task1_stepScores_1_relevance' => 0.0,
-        'task1_stepScores_1_completeness' => 0.0,
+        'task1_stepScores_1_factualAccuracy' => 1.0,
+        'task1_stepScores_1_relevance' => 1.0,
+        'task1_stepScores_1_completeness' => 1.0,
         'task1_stepScores_1_harmlessness' => 1.0,
-        'task1_metricScores_factualAccuracy' => 0.0,
-        'task1_metricScores_relevance' => 0.0,
-        'task1_metricScores_completeness' => 0.0,
+        'task1_metricScores_factualAccuracy' => 1.0,
+        'task1_metricScores_relevance' => 1.0,
+        'task1_metricScores_completeness' => 1.0,
         'task1_metricScores_harmlessness' => 1.0,
-        'task1_overallScore' => 0.27,
-        'task1_passed' => false,
+        'task1_passed' => true,
         'task1_interactionCount' => 2,
     ];
     expect($results->getResults())->toBe($expected);

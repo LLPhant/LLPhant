@@ -13,7 +13,7 @@ use LLPhant\Evaluation\Criteria\CriteriaEvaluatorPromptBuilder;
 use LLPhant\Query\SemanticSearch\ChatSession;
 use LLPhant\Query\SemanticSearch\QuestionAnswering;
 
-it('can evaluate Message using criteria evaluator', function () {
+it('can evaluate Message using criteria evaluator', function (): void {
     $evaluationPromptBuilder = (new CriteriaEvaluatorPromptBuilder())
         ->addCorrectness()
         ->addHelpfulness()
@@ -32,7 +32,7 @@ it('can evaluate Message using criteria evaluator', function () {
     ]);
 });
 
-it('can evaluate ChatSession using criteria evaluator', function () {
+it('can evaluate ChatSession using criteria evaluator', function (): void {
     $evaluationPromptBuilder = (new CriteriaEvaluatorPromptBuilder())
         ->addCorrectness()
         ->addHelpfulness()
@@ -62,7 +62,7 @@ it('can evaluate ChatSession using criteria evaluator', function () {
     ]);
 });
 
-it('can evaluate ChatSession with criteria evaluator when passing references explicitly', function () {
+it('can evaluate ChatSession with criteria evaluator when passing references explicitly', function (): void {
     $evaluationPromptBuilder = (new CriteriaEvaluatorPromptBuilder())
         ->addCorrectness()
         ->addHelpfulness()

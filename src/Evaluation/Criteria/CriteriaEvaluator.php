@@ -67,16 +67,14 @@ final class CriteriaEvaluator extends AbstractEvaluator
             throw new \LogicException("Criteria evaluator doesn't support N-grams. Keep default param value.");
         }
         if ($references === []) {
-            $references = array_filter(array_map(
-                fn (Message $message): ?string => $message->role->value === 'assistant' ? $message->content : null,
-                $messages,
-            ));
+            $references = $this->filterAssistantMessages($messages);
         }
 
-        $userMessages = array_filter(array_map(
-            fn (Message $message): ?string => $message->role->value === 'user' ? $message->content : null,
-            $messages,
-        ));
+        $userMessages = $this->filterUserMessages($messages);
+
+        if (count($userMessages) !== count($references)) {
+            throw new \LogicException('The number of assistant messages and reference strings must match.');
+        }
 
         $evaluationPrompt = $this->criteriaPromptBuilder->getEvaluationPromptForConversation($userMessages, $references);
         $this->chat->setSystemMessage($evaluationPrompt);

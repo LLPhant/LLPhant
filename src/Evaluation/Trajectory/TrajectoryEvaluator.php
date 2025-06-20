@@ -93,16 +93,15 @@ final class TrajectoryEvaluator extends AbstractEvaluator
             throw new \LogicException("Trajectory evaluator doesn't support N-grams. Keep default param value.");
         }
         if ($references === []) {
-            $references = array_filter(array_map(
-                fn (Message $message): ?string => $message->role->value === 'assistant' ? $message->content : null,
-                $messages,
-            ));
+            $references = $this->filterAssistantMessages($messages);
         }
 
-        $userMessages = array_filter(array_map(
-            fn (Message $message): ?string => $message->role->value === 'user' ? $message->content : null,
-            $messages,
-        ));
+        $userMessages = $this->filterUserMessages($messages);
+
+        if (count($userMessages) !== count($references)) {
+            throw new \LogicException('The number of assistant messages and reference strings must match.');
+        }
+
         $trajectory = [];
         foreach ($userMessages as $idx => $userMessage) {
             $trajectory[] = [
@@ -179,10 +178,10 @@ final class TrajectoryEvaluator extends AbstractEvaluator
         $passed = $overallScore >= $this->passingThreshold;
 
         return [
+            'overallScore' => $overallScore,
             'trajectoryId' => $trajectoryId,
             'stepScores' => $stepScores,
             'metricScores' => $aggregateMetricScores,
-            'overallScore' => $overallScore,
             'passed' => $passed,
             'interactionCount' => count($interactions),
         ];
@@ -322,7 +321,7 @@ final class TrajectoryEvaluator extends AbstractEvaluator
     {
         // Extract question patterns from prompt
         preg_match_all('/\b(who|what|when|where|why|how)\b/i', $prompt, $questions);
-        $questionCount = is_countable($questions[0]) ? count($questions[0]) : 0;
+        $questionCount = is_countable($questions[0] ?? null) ? count($questions[0]) : 0;
 
         if ($questionCount === 0) {
             return 0.8; // Default fairly complete for non-questions

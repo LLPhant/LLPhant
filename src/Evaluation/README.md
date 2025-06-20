@@ -16,10 +16,14 @@ This package gives tools for evaluating LLMs and AI agent responses with differe
 
 ## 🚀 Features
 
-There are 3 major strategies included for evaluating LLM responses:
+There are multiple strategies included for evaluating LLM responses:
 - Criteria evaluator
+- Embedding distance
 - String comparison
 - Trajectory evaluator
+- Pairwise string comparison (A/B testing)
+- JSON format validator
+- Avoid fallback messages
 
 ### Criteria evaluator
 Criteria evaluator passes prompt and generated answer to GPT-4o or Claude model and ask for 1-5 points evaluation in criteria:
@@ -38,6 +42,11 @@ Criteria evaluator passes prompt and generated answer to GPT-4o or Claude model 
 - controversiality: Does the response avoid unnecessarily sparking divisive or sensitive debates?
 - creativity : (Optional) Is the response innovative or insightful?
 
+### Embedding distance
+Embedding distance evaluator compares the generated answer to a reference using vector embeddings (e.g., OpenAI, Cohere, or Sentence Transformers).
+It calculates semantic similarity using cosine distance or Euclidean distance, allowing evaluation based on meaning rather than exact wording.
+This method is reference-based and language-model-agnostic, making it useful for assessing output alignment even when phrasing varies significantly.
+
 ### String comparison
 There are 2 string comparison metrics implemented which compare generated answer to expected text.
 They are not the best solution as they are based on tokens appearance comparison and require providing reference text.
@@ -51,6 +60,16 @@ It compares each intermediate step of the model’s output against a reference c
 computing metrics such as step-level ROUGE overlap, accumulated divergence, and error propagation.
 This lets you quantify whether an LLM is merely reaching the right conclusion or genuinely reasoning in the desired way—ideal for debugging,
 fine-tuning, and safety audits where process integrity matters as much as the end result.
+
+### Pairwise string comparison (A/B testing)
+The **PairwiseStringEvaluator** allows classic A/B testing of two candidate answers against the same reference.
+It wraps the existing EvaluatorInterface, computes score for each candidate, then selects the candidate with the higher score.
+
+### JSON format validator
+When expecting JSON response, checks if returned code is valid JSON.
+
+### Avoid fallback messages
+Checks response for unexpected fallback messages like "Sorry, but I can't help you with this problem".
 
 ## 💻 Usage
 
@@ -123,6 +142,26 @@ Results:
     "controversiality": 0,
     "creativity": 1
 }
+```
+
+#### Embedding distance example
+
+```php
+    $reference = 'pink elephant walks with the suitcase';
+    $candidate = 'pink cheesecake is jumping over the suitcase with dinosaurs';
+    $candidateMessage = new Message();
+    $candidateMessage->role = ChatRole::User;
+    $candidateMessage->content = $candidate;
+
+    $results = (new EmbeddingDistanceEvaluator(new OpenAIADA002EmbeddingGenerator, new EuclideanDistanceL2))
+        ->evaluateMessages([$candidateMessage], [$reference]);
+    $scores = $results->getResults();
+```
+Results:
+```
+[
+    0.474,
+]
 ```
 
 ### String comparison evaluation example
@@ -229,6 +268,99 @@ Results:
       "passed":true,
       "interactionCount":2
    }
+}
+```
+
+### Pairwise string comparison (A/B testing)
+
+```php
+$candidateA = 'this is the way cookie is crashed';
+$candidateB = "cookie doesn't crumble at all";
+
+$reference  = "that's the way cookie crumbles";
+
+$results = (new PairwiseStringEvaluator(new StringComparisonEvaluator))
+    ->evaluateText($candidateA, $candidateB, $reference);
+```
+
+Results:
+
+```json
+{
+    "candidate_with_higher_score": "A",
+    "text_candidate_with_higher_score": "this is the way cookie is crashed",
+    "metric_name": "String Comparison Evaluation: ROUGE, BLEU, METEOR",
+    "score_name": "ROUGE_recall",
+    "score_A": 0.6,
+    "score_B": 0.2
+}
+```
+
+#### JSON format validator
+```php
+$candidate = '{"name":"John","age":30}';
+
+$evaluator = new JSONFormatEvaluator();
+$results = $evaluator->evaluateText($candidate);
+$scores = $results->getResults();
+```
+
+scores:
+
+```json
+{
+    "score": 1,
+    "error": "" //parsing error message if invalid
+}
+```
+
+#### Avoid fallback messages
+```php
+$candidate = "I'm sorry, I cannot help with that request.";
+
+$evaluator = new NoFallbackAnswerEvaluator();
+$results = $evaluator->evaluateText($candidate);
+$scores = $results->getResults();
+```
+
+scores:
+
+```json
+{
+    "score" : 0,         
+    "detectedIndicator" : "I'm sorry" // first matched phrase
+}
+```
+
+## Guardrails
+
+Guardrails are lightweight, programmable checkpoints that sit between application and the LLM. \
+After each model response they run an evaluator of your choice (e.g. JSON‐syntax checker, “no fallback” detector).
+Based on the result, either pass the answer through, retry the call, block it, or route it to a custom callback.
+
+```php
+    $llm = getChatMock();
+
+    $guardrails = new Guardrails(
+        llm: $llm,
+        evaluator: new JSONFormatEvaluator(),
+        strategy: Guardrails::STRATEGY_RETRY,
+    );
+
+    $response = $guardrails->generateText('some prompt message');
+```
+
+result without retry:
+
+```json
+{some invalid JSON}
+```
+
+result after retry:
+
+```json
+{
+    "correctKey":"correctVal"
 }
 ```
 
