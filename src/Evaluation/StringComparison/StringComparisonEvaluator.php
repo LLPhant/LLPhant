@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace LLPhant\Evaluation\StringComparison;
 
-use LLPhant\Chat\Enums\ChatRole;
-use LLPhant\Chat\Message;
 use LLPhant\Evaluation\AbstractEvaluator;
 use LLPhant\Evaluation\EvaluationResults;
 use LLPhant\Evaluation\StringComparison\Metric\BLEU;
@@ -65,17 +63,14 @@ final class StringComparisonEvaluator extends AbstractEvaluator
 
     public function evaluateMessages(array $messages, array $references = [], int $n = 1): EvaluationResults
     {
-        $assistantMessages = array_filter(
-            $messages,
-            fn (Message $message): ChatRole => $message->role = ChatRole::Assistant
-        );
+        $assistantMessages = $this->filterAssistantMessages($messages);
         if (count($assistantMessages) !== count($references)) {
             throw new \LogicException('Number of assistant messages is different than number of references!');
         }
 
         $resultsArray = [];
         foreach ($assistantMessages as $idx => $assistantMessage) {
-            $resultsSingle = $this->evaluateText($assistantMessage->content, $references[$idx], $n);
+            $resultsSingle = $this->evaluateText($assistantMessage, $references[$idx], $n);
             foreach ($resultsSingle->getResults() as $key => $resultSingle) {
                 $resultsArray[$idx.'_'.$key] = $resultSingle;
             }

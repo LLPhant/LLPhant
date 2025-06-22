@@ -98,7 +98,7 @@ it('can compute all string comparison scores from messages', function (): void {
     $reference = 'The quick brown fox jumps over the lazy dog';
     $candidate = 'The quick brown dog jumps over the lazy fox';
     $candidateMessage = new Message();
-    $candidateMessage->role = ChatRole::User;
+    $candidateMessage->role = ChatRole::Assistant;
     $candidateMessage->content = $candidate;
 
     $results = (new StringComparisonEvaluator())->evaluateMessages([$candidateMessage], [$reference]);

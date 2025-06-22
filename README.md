@@ -902,6 +902,8 @@ Strategies for evaluating LLM responses include:
 - String comparison
 - Trajectory evaluator
 - Pairwise string comparison (A/B testing)
+- JSON format validator
+- Avoid fallback message
 
 Choose most relevant evaluation strategy for your use case and run one of methods listed below. 
 Input can be text, list of Message objects or ChatSession object.
@@ -1090,6 +1092,74 @@ scores:
   "1_score_name": "ROUGE_recall",
   "1_score_A": 1.0,
   "1_score_B": 0.5
+}
+```
+
+#### JSON format validator
+```php
+$candidate = '{"name":"John","age":30}';
+
+$evaluator = new JSONFormatEvaluator();
+$results = $evaluator->evaluateText($candidate);
+$scores = $results->getResults();
+```
+
+scores:
+
+```json
+{
+    "score": 1,
+    "error": "" //parsing error message if invalid
+}
+```
+
+#### Avoid fallback messages
+```php
+$candidate = "I'm sorry, I cannot help with that request.";
+
+$evaluator = new NoFallbackAnswerEvaluator();
+$results = $evaluator->evaluateText($candidate);
+$scores = $results->getResults();
+```
+
+scores:
+
+```json
+{
+    "score" : 0,         
+    "detectedIndicator" : "I'm sorry" // first matched phrase
+}
+```
+
+## Guardrails
+
+Guardrails are lightweight, programmable checkpoints that sit between application and the LLM. \
+After each model response they run an evaluator of your choice (e.g. JSON‐syntax checker, “no fallback” detector).
+Based on the result, either pass the answer through, retry the call, block it, or route it to a custom callback.
+
+```php
+    $llm = getChatMock();
+
+    $guardrails = new Guardrails(
+        llm: $llm,
+        evaluator: new JSONFormatEvaluator(),
+        strategy: Guardrails::STRATEGY_RETRY,
+    );
+
+    $response = $guardrails->generateText('some prompt message');
+```
+
+result without retry:
+
+```json
+{some invalid JSON}
+```
+
+result after retry:
+
+```json
+{
+    "correctKey":"correctVal"
 }
 ```
 

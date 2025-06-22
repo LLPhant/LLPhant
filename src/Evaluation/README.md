@@ -22,6 +22,8 @@ There are multiple strategies included for evaluating LLM responses:
 - String comparison
 - Trajectory evaluator
 - Pairwise string comparison (A/B testing)
+- JSON format validator
+- Avoid fallback messages
 
 ### Criteria evaluator
 Criteria evaluator passes prompt and generated answer to GPT-4o or Claude model and ask for 1-5 points evaluation in criteria:
@@ -63,6 +65,12 @@ fine-tuning, and safety audits where process integrity matters as much as the en
 
 The **PairwiseStringEvaluator** allows classic A/B testing of two candidate answers against the same reference.
 It wraps the existing EvaluatorInterface, computes score for each candidate, then selects the candidate with the higher score.
+
+### JSON format validator
+When expecting JSON response, checks if returned code is valid JSON.
+
+### Avoid fallback messages
+Checks response for unexpected fallback messages like "Sorry, but I can't help you with this problem".
 
 ## 💻 Usage
 
@@ -286,6 +294,74 @@ Results:
     "score_name": "ROUGE_recall",
     "score_A": 0.6,
     "score_B": 0.2
+}
+```
+
+#### JSON format validator
+```php
+$candidate = '{"name":"John","age":30}';
+
+$evaluator = new JSONFormatEvaluator();
+$results = $evaluator->evaluateText($candidate);
+$scores = $results->getResults();
+```
+
+scores:
+
+```json
+{
+    "score": 1,
+    "error": "" //parsing error message if invalid
+}
+```
+
+#### Avoid fallback messages
+```php
+$candidate = "I'm sorry, I cannot help with that request.";
+
+$evaluator = new NoFallbackAnswerEvaluator();
+$results = $evaluator->evaluateText($candidate);
+$scores = $results->getResults();
+```
+
+scores:
+
+```json
+{
+    "score" : 0,         
+    "detectedIndicator" : "I'm sorry" // first matched phrase
+}
+```
+
+## Guardrails
+
+Guardrails are lightweight, programmable checkpoints that sit between application and the LLM. \
+After each model response they run an evaluator of your choice (e.g. JSON‐syntax checker, “no fallback” detector).
+Based on the result, either pass the answer through, retry the call, block it, or route it to a custom callback.
+
+```php
+    $llm = getChatMock();
+
+    $guardrails = new Guardrails(
+        llm: $llm,
+        evaluator: new JSONFormatEvaluator(),
+        strategy: Guardrails::STRATEGY_RETRY,
+    );
+
+    $response = $guardrails->generateText('some prompt message');
+```
+
+result without retry:
+
+```json
+{some invalid JSON}
+```
+
+result after retry:
+
+```json
+{
+    "correctKey":"correctVal"
 }
 ```
 
