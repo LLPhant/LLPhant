@@ -101,7 +101,7 @@ final class TrajectoryEvaluator extends AbstractEvaluator
         if (count($userMessages) !== count($references)) {
             throw new \LogicException('The number of assistant messages and reference strings must match.');
         }
-      
+
         $trajectory = [];
         foreach ($userMessages as $idx => $userMessage) {
             $trajectory[] = [

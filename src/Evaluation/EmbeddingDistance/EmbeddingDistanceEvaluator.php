@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace LLPhant\Evaluation\EmbeddingDistance;
 
-use LLPhant\Chat\Enums\ChatRole;
-use LLPhant\Chat\Message;
 use LLPhant\Embeddings\Distances\Distance;
 use LLPhant\Embeddings\EmbeddingGenerator\EmbeddingGeneratorInterface;
 use LLPhant\Evaluation\AbstractEvaluator;
