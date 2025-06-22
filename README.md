@@ -117,6 +117,20 @@ $config->apiKey = 'fakeapikey';
 $chat = new OpenAIChat($config);
 ```
 
+### Gemini
+
+We support Gemini through its OpenAI API compatibility. Here is an example:
+
+```php
+$config = new GeminiOpenAIConfig();
+$config->apiKey = "your_api_key"
+$config->model = 'gemini-2.0-flash';
+$chat = new OpenAIChat($config);
+$response = $chat->generateText('what is one + one ?');
+```
+
+If you do not specify an api key, the `GeminiOpenAIConfig` tries to read it from the `GEMINI_API_KEY` environment variable.
+
 ### Mistral
 
 If you want to use Mistral, you can just specify the model to use using the `OpenAIConfig` object and pass it to the `MistralAIChat`.
