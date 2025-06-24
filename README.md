@@ -1163,6 +1163,20 @@ result after retry:
 }
 ```
 
+## Timeout with OpenAI
+
+Sometimes you may run into a timeout when sending requests to the OpenAI API.
+
+If you use the default HTTP client provided by the bundle (GuzzleHttp), you can set the timeout by defining the 
+OPENAI_DEFAULT_TIMEOUT environment variable. The value should be a float representing the total request timeout in seconds. 
+Use 0 to wait indefinitely (which is the default behavior).
+
+This example illustrates how to change the timeout using Guzzle:
+
+```dotenv
+OPENAI_DEFAULT_TIMEOUT=10.0
+```
+
 ## AutoPHP
 
 You can now make your [AutoGPT](https://github.com/Significant-Gravitas/Auto-GPT) clone in PHP using LLPhant.

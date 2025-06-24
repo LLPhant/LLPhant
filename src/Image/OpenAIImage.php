@@ -3,6 +3,7 @@
 namespace LLPhant\Image;
 
 use Exception;
+use GuzzleHttp\Client;
 use LLPhant\Image\Enums\OpenAIImageModel;
 use LLPhant\Image\Enums\OpenAIImageSize;
 use LLPhant\Image\Enums\OpenAIImageStyle;
@@ -32,11 +33,19 @@ class OpenAIImage implements ImageInterface
                 throw new Exception('You have to provide a OPENAI_API_KEY env var to request OpenAI .');
             }
 
-            $this->client = OpenAI::factory()
+            $factory = OpenAI::factory()
                 ->withApiKey($apiKey)
                 ->withHttpHeader('OpenAI-Beta', 'assistants=v2')
-                ->withBaseUri($config->url ?? (getenv('OPENAI_BASE_URL') ?: 'https://api.openai.com/v1'))
-                ->make();
+                ->withBaseUri($config->url ?? (getenv('OPENAI_BASE_URL') ?: 'https://api.openai.com/v1'));
+
+            if ($defaultTimeout = getenv('OPENAI_DEFAULT_TIMEOUT')) {
+                if (! is_numeric($defaultTimeout)) {
+                    throw new Exception("The OPENAI_DEFAULT_TIMEOUT env var value should be numeric, you provide '$defaultTimeout'");
+                }
+                $factory->withHttpClient(new Client(['timeout' => $defaultTimeout]));
+            }
+
+            $this->client = $factory->make();
         }
         $this->model = $config->model ?? OpenAIImageModel::DallE3->value;
         $this->modelOptions = $config->modelOptions ?? [];
