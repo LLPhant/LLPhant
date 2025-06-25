@@ -72,8 +72,7 @@ class MilvusClient
     }
 
     /**
-     * @param array<int, array<string, mixed>> $data
-     *
+     * @param  array<int, array<string, mixed>>  $data
      * @return array{code: int, data: mixed}
      */
     public function insertData(string $collectionName, array $data): array
@@ -88,9 +87,8 @@ class MilvusClient
     }
 
     /**
-     * @param string[] $outputFields
-     * @param float[] $vector
-     *
+     * @param  string[]  $outputFields
+     * @param  float[]  $vector
      * @return array{code: int, data: mixed}
      */
     public function searchVector(
@@ -153,8 +151,7 @@ class MilvusClient
     }
 
     /**
-     * @param string[]|null $outputFields
-     *
+     * @param  string[]|null  $outputFields
      * @return array{code: int, data: mixed}
      */
     public function getEntity(string $collectionName, string $id, ?array $outputFields = null): array
@@ -172,8 +169,7 @@ class MilvusClient
     }
 
     /**
-     * @param array<string, mixed> $body
-     *
+     * @param  array<string, mixed>  $body
      * @return array{code: int, data: mixed}
      */
     protected function sendRequest(string $method, string $path, array $body = []): array
