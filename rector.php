@@ -5,9 +5,9 @@ declare(strict_types=1);
 use Rector\CodeQuality\Rector\Class_\InlineConstructorDefaultToPropertyRector;
 use Rector\CodeQuality\Rector\Empty_\SimplifyEmptyCheckOnEmptyArrayRector;
 use Rector\Config\RectorConfig;
+use Rector\Php56\Rector\FunctionLike\AddDefaultValueForUndefinedVariableRector;
 use Rector\Privatization\Rector\Class_\ChangeGlobalVariablesToPropertiesRector;
 use Rector\Privatization\Rector\Class_\ChangeReadOnlyVariableWithDefaultValueToConstantRector;
-use Rector\Privatization\Rector\Class_\FinalizeClassesWithoutChildrenRector;
 use Rector\Privatization\Rector\ClassMethod\PrivatizeFinalClassMethodRector;
 use Rector\Privatization\Rector\MethodCall\PrivatizeLocalGetterToPropertyRector;
 use Rector\Privatization\Rector\Property\ChangeReadOnlyPropertyWithDefaultValueToConstantRector;
@@ -44,5 +44,6 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->skip([
         SimplifyEmptyCheckOnEmptyArrayRector::class,
         ArrayShapeFromConstantArrayReturnRector::class,
+        AddDefaultValueForUndefinedVariableRector::class,
     ]);
 };
