@@ -19,5 +19,5 @@ it('can translate audio files', function () {
     $audio = new OpenAIAudio();
     // Original author of the audio file is KenKuhl, clipped by Davidzdh, CC BY-SA 3.0 via Wikimedia Commons
     $translation = $audio->translate(__DIR__.'/wikipedia.ogg');
-    expect($translation->text)->toBe('Wikipedia, the free encyclopedia.');
+    expect($translation)->toBe('Wikipedia, the free encyclopedia.');
 });

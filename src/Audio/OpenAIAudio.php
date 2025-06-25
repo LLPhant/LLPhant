@@ -49,7 +49,7 @@ class OpenAIAudio
      *
      * @see https://platform.openai.com/docs/api-reference/audio/createTranslation
      */
-    public function translate(string $fileName, ?string $prompt = null): Translation
+    public function translate(string $fileName, ?string $prompt = null): string
     {
         $response = $this->client->audio()->translate([
             ...$this->modelOptions,
@@ -59,6 +59,6 @@ class OpenAIAudio
             'prompt' => $prompt,
         ]);
 
-        return new Translation($response->text);
+        return $response->text;
     }
 }
