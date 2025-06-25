@@ -87,7 +87,7 @@ class MilvusClient
     }
 
     /**
-     * @param  string[]  $outputFields
+     * @param  string[]|null  $outputFields
      * @param  float[]  $vector
      * @return array{code: int, data: mixed}
      */
