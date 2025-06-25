@@ -31,6 +31,7 @@ services:
             OPENSEARCH_HOSTS: ${OPENSEARCH_HOSTS}
             TYPESENSE_API_KEY: ${TYPESENSE_API_KEY}
             TYPESENSE_NODE: ${TYPESENSE_NODE}
+            VOYAGE_AI_API_KEY: ${VOYAGE_AI_API_KEY}
             MARIADB_HOST: mariadb
 
     opensearch:
