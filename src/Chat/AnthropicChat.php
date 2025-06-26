@@ -2,8 +2,10 @@
 
 namespace LLPhant\Chat;
 
-use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Utils;
+use Http\Discovery\Psr17Factory;
+use Http\Discovery\Psr18ClientDiscovery;
+use JsonException;
 use LLPhant\AnthropicConfig;
 use LLPhant\Chat\Anthropic\AnthropicMessage;
 use LLPhant\Chat\Anthropic\AnthropicStreamResponse;
@@ -12,29 +14,27 @@ use LLPhant\Chat\FunctionInfo\FunctionFormatter;
 use LLPhant\Chat\FunctionInfo\FunctionInfo;
 use LLPhant\Exception\HttpException;
 use LLPhant\Utility;
+use Psr\Http\Client\ClientExceptionInterface;
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
 class AnthropicChat implements ChatInterface
 {
-    private const DEFAULT_URL = 'https://api.anthropic.com';
+    use AnthropicTotalTokensTrait;
 
-    private const CURRENT_VERSION = '2023-06-01';
-
-    private readonly LoggerInterface $logger;
+    private readonly StreamFactoryInterface&RequestFactoryInterface $factory;
 
     private ?Message $systemMessage = null;
 
     /** @var array<string, mixed> */
     private array $modelOptions = [];
 
-    public Client $client;
-
-    private readonly string $model;
-
-    private readonly int $maxTokens;
+    public ClientInterface $client;
 
     /** @var FunctionInfo[] */
     private array $tools = [];
@@ -43,27 +43,24 @@ class AnthropicChat implements ChatInterface
 
     private ?AnthropicStreamResponse $streamResponse = null;
 
-    use AnthropicTotalTokensTrait;
+    private readonly string $baseUri;
 
-    public function __construct(AnthropicConfig $config = new AnthropicConfig(), ?LoggerInterface $logger = null)
-    {
+    public function __construct(
+        protected AnthropicConfig $config,
+        private readonly LoggerInterface $logger = new NullLogger(),
+        ?ClientInterface $client = null,
+        ?RequestFactoryInterface $requestFactory = null,
+        ?StreamFactoryInterface $streamFactory = null,
+    ) {
+        $this->client = $client ?: Psr18ClientDiscovery::find();
+        $this->baseUri = $config->url;
+
+        $this->factory = new Psr17Factory(
+            requestFactory: $requestFactory,
+            streamFactory: $streamFactory,
+        );
+
         $this->modelOptions = $config->modelOptions;
-        $this->model = $config->model;
-        $this->maxTokens = $config->maxTokens;
-        $this->logger = $logger ?: new NullLogger();
-
-        if ($config->client instanceof Client) {
-            $this->client = $config->client;
-        } else {
-            $this->client = new Client([
-                'base_uri' => self::DEFAULT_URL,
-                'headers' => [
-                    'x-api-key' => $config->apiKey ?? getenv('ANTHROPIC_API_KEY'),
-                    'Content-Type' => 'application/json',
-                    'anthropic-version' => self::CURRENT_VERSION,
-                ],
-            ]);
-        }
     }
 
     public function generateText(string $prompt): string
@@ -199,7 +196,8 @@ class AnthropicChat implements ChatInterface
      * @param  array<string, mixed>  $json
      *
      * @throws HttpException
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws JsonException
+     * @throws ClientExceptionInterface
      */
     protected function sendRequest(array $json, bool $stream): ResponseInterface
     {
@@ -208,12 +206,23 @@ class AnthropicChat implements ChatInterface
             'params' => $json,
         ]);
 
-        $response = $this->client->request('POST', 'v1/messages', ['stream' => $stream, 'json' => $json]);
+        $uri = sprintf('%s/v1/messages', rtrim($this->baseUri, '/'));
+        $body = ['stream' => $stream, 'json' => $json];
+
+        $request = $this->factory->createRequest('POST', $uri);
+        $request = $request->withHeader('Content-Type', 'application/json');
+        $request = $request->withHeader('x-api-key', $this->config->apiKey);
+        $request = $request->withHeader('anthropic-version', $this->config->version);
+        $request = $request->withBody($this->factory->createStream(json_encode($body, JSON_THROW_ON_ERROR)));
+        $response = $this->client->sendRequest($request);
+
         $status = $response->getStatusCode();
         if ($status < 200 || $status >= 300) {
-            throw new HttpException(
-                "HTTP error Anthropic ({$status}): ".$response->getBody()->getContents(),
-            );
+            throw new HttpException(sprintf(
+                'HTTP error Anthropic (%s): %s',
+                $status,
+                $response->getBody()->getContents(),
+            ));
         }
 
         return $response;
@@ -245,10 +254,10 @@ class AnthropicChat implements ChatInterface
     {
         $params = [
             ...$this->modelOptions,
-            'model' => $this->model,
+            'model' => $this->config->model,
             'messages' => $this->createMessagesArray($messages),
             'tools' => FunctionFormatter::formatFunctionsToAnthropic($this->tools),
-            'max_tokens' => $this->maxTokens,
+            'max_tokens' => $this->config->maxTokens,
             'stream' => $stream,
         ];
 

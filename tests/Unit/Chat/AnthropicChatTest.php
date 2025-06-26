@@ -12,6 +12,7 @@ use LLPhant\Chat\Message;
 use Psr\Http\Message\StreamInterface;
 use Psr\Log\AbstractLogger;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 const ANTHROPIC_FAKE_JSON_ANSWER = <<<'JSON'
 {
@@ -60,7 +61,7 @@ event: message_stop
 data: {"type": "message_stop"}
 TXT;
 
-function anthropicChatWithFakeHttpConnection(string $body, ?LoggerInterface $logger = null): AnthropicChat
+function anthropicChatWithFakeHttpConnection(string $body, LoggerInterface $logger = new NullLogger()): AnthropicChat
 {
     $mock = new MockHandler([
         new Response(200, [], $body),
@@ -68,9 +69,7 @@ function anthropicChatWithFakeHttpConnection(string $body, ?LoggerInterface $log
     $handlerStack = HandlerStack::create($mock);
     $client = new Client(['handler' => $handlerStack]);
 
-    $config = new AnthropicConfig(client: $client);
-
-    return new AnthropicChat($config, $logger);
+    return new AnthropicChat(new AnthropicConfig(apiKey: 'FAKE'), $logger, $client);
 }
 
 it('generates a text', function () {
