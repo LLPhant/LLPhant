@@ -14,6 +14,9 @@
         "guzzlehttp/psr7": "^2.7",
         "openai-php/client": "^v0.13.0",
         "phpoffice/phpword": "^1.4.0",
+        "php-http/discovery": "^1.20.0",
+        "php-http/multipart-stream-builder": "^1.4.2",
+        "psr/http-client": "^1.0.3",
         "psr/http-message": "^2.0",
         "psr/log": "^3.0",
         "smalot/pdfparser": "^2.11"
