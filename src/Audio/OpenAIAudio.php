@@ -43,4 +43,22 @@ class OpenAIAudio
 
         return new Transcription($response->text, $response->language, $response->duration);
     }
+
+    /**
+     * Translate an audio into english
+     *
+     * @see https://platform.openai.com/docs/api-reference/audio/createTranslation
+     */
+    public function translate(string $fileName, ?string $prompt = null): string
+    {
+        $response = $this->client->audio()->translate([
+            ...$this->modelOptions,
+            'model' => $this->model,
+            'file' => fopen($fileName, 'r'),
+            'response_format' => 'verbose_json',
+            'prompt' => $prompt,
+        ]);
+
+        return $response->text;
+    }
 }

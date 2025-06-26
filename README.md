@@ -255,6 +255,15 @@ $audio = new OpenAIAudio();
 $transcription = $audio->transcribe('/path/to/audio.mp3');  //$transcription->text contains transcription
 ```
 
+### Translate audio into english
+
+You can use `OpenAIAudio` to translate audio files.
+
+```php
+$audio = new OpenAIAudio();
+$translation = $audio->translate('/path/to/audio.mp3');  //$translation->text contains the english translation
+```
+
 ### Customizing System Messages in Question Answering
 
 When using the `QuestionAnswering` class, it is possible to customize the system message to guide the AI's response style and context sensitivity according to your specific needs. This feature allows you to enhance the interaction between the user and the AI, making it more tailored and responsive to specific scenarios.
