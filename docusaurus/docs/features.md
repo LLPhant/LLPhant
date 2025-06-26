@@ -6,6 +6,7 @@
 | Mistral   |  ✅  |    ✅     |      ✅      |              |               |                |
 | Ollama    |  ✅  |    ✅     | Some models | Some models  |               |                |
 | OpenAI    |  ✅  |    ✅     |      ✅      |      ✅      |      ✅       |       ✅       |
+| DeepSeek  |  ✅  |    ✅     |      ✅      |              |               |                |
 
 # Supported Vector Stores
 
