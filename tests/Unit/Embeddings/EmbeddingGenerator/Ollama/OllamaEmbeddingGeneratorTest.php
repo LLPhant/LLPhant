@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Embeddings\EmbeddingGenerator\Ollama;
 
-use GuzzleHttp\Client;
+use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
@@ -20,7 +20,7 @@ it('embed a text', function () {
         new Response(200, [], '{"embeddings": [[1, 2, 3]]}'),
     ]);
     $handlerStack = HandlerStack::create($mock);
-    $client = new Client(['handler' => $handlerStack]);
+    $client = new GuzzleClient(['handler' => $handlerStack]);
 
     // override client for test
     $generator->client = $client;
@@ -38,7 +38,7 @@ it('embed a non UTF8 text', function () {
         new Response(200, [], '{"embeddings": [[1, 2, 3]]}'),
     ]);
     $handlerStack = HandlerStack::create($mock);
-    $client = new Client(['handler' => $handlerStack]);
+    $client = new GuzzleClient(['handler' => $handlerStack]);
 
     // override client for test
     $generator->client = $client;
@@ -58,7 +58,7 @@ it('embed a document', function () {
         new Response(200, [], '{"embeddings": [[1, 2, 3]]}'),
     ]);
     $handlerStack = HandlerStack::create($mock);
-    $client = new Client(['handler' => $handlerStack]);
+    $client = new GuzzleClient(['handler' => $handlerStack]);
 
     // override client for test
     $generator->client = $client;
@@ -78,7 +78,7 @@ it('embed documents', function () {
         new Response(200, [], '{"embeddings": [[1, 2, 3]]}'),
     ]);
     $handlerStack = HandlerStack::create($mock);
-    $client = new Client(['handler' => $handlerStack]);
+    $client = new GuzzleClient(['handler' => $handlerStack]);
 
     // override client for test
     $generator->client = $client;
@@ -89,4 +89,16 @@ it('embed documents', function () {
     $result = $generator->embedDocuments([$document]);
     expect($result)->toBeArray();
     expect($result[0])->toBeInstanceOf(Document::class);
+});
+
+it('can use timeout option', function () {
+    $config = new OllamaConfig();
+    $config->model = 'fake-model';
+    $config->url = 'http://fakeurl';
+    $config->timeout = 99;
+    $generator = new OllamaEmbeddingGenerator($config);
+
+    expect($generator->client)->toBeInstanceOf(GuzzleClient::class);
+    // This expectation will be removed when using next version of Guzzle
+    expect($generator->client->getConfig()['connect_timeout'])->toBe(99);
 });

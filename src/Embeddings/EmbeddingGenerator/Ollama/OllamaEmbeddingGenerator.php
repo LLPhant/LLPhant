@@ -5,36 +5,57 @@ declare(strict_types=1);
 namespace LLPhant\Embeddings\EmbeddingGenerator\Ollama;
 
 use Exception;
-use GuzzleHttp\Client;
+use GuzzleHttp\Client as GuzzleClient;
+use Http\Discovery\Psr17Factory;
+use Http\Discovery\Psr18ClientDiscovery;
 use LLPhant\Embeddings\Document;
 use LLPhant\Embeddings\DocumentUtils;
 use LLPhant\Embeddings\EmbeddingGenerator\EmbeddingGeneratorInterface;
 use LLPhant\OllamaConfig;
-
-use function str_replace;
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestFactoryInterface;
+use Psr\Http\Message\StreamFactoryInterface;
 
 final class OllamaEmbeddingGenerator implements EmbeddingGeneratorInterface
 {
-    public Client $client;
+    public ClientInterface $client;
+
+    private readonly RequestFactoryInterface
+        &StreamFactoryInterface $factory;
 
     private readonly string $model;
 
-    public function __construct(OllamaConfig $config)
-    {
+    private readonly string $baseUri;
+
+    private readonly ?string $apiKey;
+
+    public function __construct(
+        OllamaConfig $config,
+        ?ClientInterface $client = null,
+        ?RequestFactoryInterface $requestFactory = null,
+        ?StreamFactoryInterface $streamFactory = null,
+    ) {
         $this->model = $config->model;
 
-        $options = [
-            'base_uri' => $config->url,
-            'timeout' => $config->timeout,
-            'connect_timeout' => $config->timeout,
-            'read_timeout' => $config->timeout,
-        ];
+        $this->apiKey = $config->apiKey;
 
-        if (! empty($config->apiKey)) {
-            $options['headers'] = ['Authorization' => 'Bearer '.$config->apiKey];
+        $this->baseUri = $config->url;
+        if ($client instanceof \Psr\Http\Client\ClientInterface) {
+            $this->client = $client;
+        } elseif ($config->timeout !== null) {
+            $options = [
+                'timeout' => $config->timeout,
+                'connect_timeout' => $config->timeout,
+                'read_timeout' => $config->timeout,
+            ];
+            $this->client = new GuzzleClient($options);
+        } else {
+            $this->client = Psr18ClientDiscovery::find();
         }
-
-        $this->client = new Client($options);
+        $this->factory = new Psr17Factory(
+            requestFactory: $requestFactory,
+            streamFactory: $streamFactory,
+        );
     }
 
     /**
@@ -44,17 +65,28 @@ final class OllamaEmbeddingGenerator implements EmbeddingGeneratorInterface
      */
     public function embedText(string $text): array
     {
-        $text = str_replace("\n", ' ', DocumentUtils::toUtf8($text));
+        $text = \str_replace("\n", ' ', DocumentUtils::toUtf8($text));
 
-        $response = $this->client->post('embed', [
-            'body' => json_encode([
-                'model' => $this->model,
-                'input' => $text,
-            ], JSON_THROW_ON_ERROR),
-            'headers' => [
-                'Content-Type' => 'application/json',
-            ],
-        ]);
+        $request = $this->factory->createRequest(
+            'POST',
+            rtrim($this->baseUri, '/').'/embed'
+        );
+        $request = $request->withHeader('Content-Type', 'application/json');
+
+        if ($this->apiKey) {
+            $request = $request->withHeader('Authorization', 'Bearer '.$this->apiKey);
+        }
+
+        $request = $request->withBody(
+            $this->factory->createStream(
+                json_encode([
+                    'model' => $this->model,
+                    'input' => $text,
+                ], JSON_THROW_ON_ERROR)
+            )
+        );
+
+        $response = $this->client->sendRequest($request);
 
         $searchResults = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
         if (! is_array($searchResults)) {
