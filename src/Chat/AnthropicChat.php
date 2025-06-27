@@ -2,7 +2,6 @@
 
 namespace LLPhant\Chat;
 
-use GuzzleHttp\Psr7\Utils;
 use Http\Discovery\Psr17Factory;
 use Http\Discovery\Psr18ClientDiscovery;
 use JsonException;
@@ -270,9 +269,9 @@ class AnthropicChat implements ChatInterface
 
     private function decodeStreamOfChat(ResponseInterface $response): StreamInterface
     {
-        $this->streamResponse = new AnthropicStreamResponse($response);
+        $this->streamResponse = new AnthropicStreamResponse($response, $this->factory->createStream());
 
-        return Utils::streamFor($this->streamResponse->getIterator());
+        return $this->streamResponse->getStream();
     }
 
     /**
