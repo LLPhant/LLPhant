@@ -23,6 +23,7 @@ There are multiple strategies included for evaluating LLM responses:
 - Trajectory evaluator
 - Pairwise string comparison (A/B testing)
 - JSON format validator
+- XML format validator
 - Avoid fallback messages
 
 ### Criteria evaluator
@@ -310,7 +311,25 @@ scores:
 ```json
 {
     "score": 1,
-    "error": "" //parsing error message if invalid
+    "error": ""
+}
+```
+
+#### XML format validator
+```php
+$candidate = '<sometag>some content</sometag>';
+
+$evaluator = new XMLFormatEvaluator();
+$results = $evaluator->evaluateText($candidate);
+$scores = $results->getResults();
+```
+
+scores:
+
+```json
+{
+    "score": 1,
+    "error": ""
 }
 ```
 
@@ -328,7 +347,7 @@ scores:
 ```json
 {
     "score" : 0,         
-    "detectedIndicator" : "I'm sorry" // first matched phrase
+    "detectedIndicator" : "I'm sorry"
 }
 ```
 

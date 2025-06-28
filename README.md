@@ -926,6 +926,7 @@ Strategies for evaluating LLM responses include:
 - Trajectory evaluator
 - Pairwise string comparison (A/B testing)
 - JSON format validator
+- XML format validator
 - Avoid fallback message
 
 Choose most relevant evaluation strategy for your use case and run one of methods listed below. 
@@ -1132,7 +1133,7 @@ scores:
 ```json
 {
     "score": 1,
-    "error": "" //parsing error message if invalid
+    "error": ""
 }
 ```
 
@@ -1150,7 +1151,7 @@ scores:
 ```json
 {
     "score" : 0,         
-    "detectedIndicator" : "I'm sorry" // first matched phrase
+    "detectedIndicator" : "I'm sorry"
 }
 ```
 
