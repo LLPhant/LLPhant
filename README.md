@@ -1161,7 +1161,7 @@ After each model response they run an evaluator of your choice (e.g. JSON‐synt
 Based on the result, either pass the answer through, retry the call, block it, or route it to a custom callback.
 
 ```php
-    $llm = getChatMock();
+    $llm = new OpenAIChat();
 
     $guardrails = new Guardrails(
         llm: $llm,
@@ -1169,7 +1169,7 @@ Based on the result, either pass the answer through, retry the call, block it, o
         strategy: Guardrails::STRATEGY_RETRY,
     );
 
-    $response = $guardrails->generateText('some prompt message');
+    $response = $guardrails->generateText('generate answer in JSON format with object that consists of "correctKey" as a key and "correctVal" as a value');
 ```
 
 result without retry:
