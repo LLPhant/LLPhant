@@ -22,7 +22,7 @@ class OpenAIAudio
             $this->client = $config->client;
         } else {
             $apiKey = $config->apiKey ?? getenv('OPENAI_API_KEY');
-            if (!$apiKey) {
+            if (! $apiKey) {
                 throw new Exception('You have to provide a OPENAI_API_KEY env var to request OpenAI .');
             }
 
