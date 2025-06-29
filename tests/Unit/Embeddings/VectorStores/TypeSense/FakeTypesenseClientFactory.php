@@ -24,6 +24,6 @@ final class FakeTypesenseClientFactory
         $handlerStack = HandlerStack::create($mock);
         $client = new Client(['handler' => $handlerStack]);
 
-        return new LLPhantTypesenseClient(client: $client);
+        return new LLPhantTypesenseClient(apiKey: 'fake', client: $client);
     }
 }
