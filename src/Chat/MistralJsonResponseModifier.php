@@ -2,69 +2,62 @@
 
 namespace LLPhant\Chat;
 
-use GuzzleHttp\Middleware;
-use GuzzleHttp\Psr7\Stream;
+use Psr\Http\Client\ClientExceptionInterface;
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\StreamFactoryInterface;
+use Psr\Http\Message\StreamInterface;
 
-class MistralJsonResponseModifier
+class MistralJsonResponseModifier implements ClientInterface
 {
-    public static function createResponseModifier(): callable
-    {
-        return Middleware::mapResponse(self::getModifierFunction());
+    public function __construct(
+        private readonly ClientInterface $client,
+        private readonly StreamFactoryInterface $streamFactory
+    ) {
     }
 
     /**
-     * Public just for testing purposes
+     * @throws ClientExceptionInterface
      */
-    public static function getModifierFunction(): \Closure
+    public function sendRequest(RequestInterface $request): ResponseInterface
     {
-        return function (ResponseInterface $response): ResponseInterface {
-            if (self::isJson($response)) {
-                $modifiedResponse = self::processJsonResponse($response);
-                if ($modifiedResponse instanceof \Psr\Http\Message\ResponseInterface) {
-                    return $modifiedResponse;
-                }
-            }
+        $response = $this->client->sendRequest($request);
 
-            return $response;
-        };
+        return $this->processResponse($response);
     }
 
-    private static function processJsonResponse(ResponseInterface $response): ?ResponseInterface
+    private function processResponse(ResponseInterface $response): ResponseInterface
     {
+        if (! $this->isJson($response)) {
+            return $response;
+        }
+
         try {
             $body = $response->getBody();
             $bodyString = $body->getContents();
-            $body->seek(0); // Reset the stream position
+            $body->rewind(); // Reset the stream position
 
             if (! str_contains($bodyString, 'tool_calls')) {
-                return null;
+                return $response;
             }
 
             $data = json_decode($bodyString, true, 512, JSON_THROW_ON_ERROR);
             if (! is_array($data)) {
-                return null; // Not valid JSON
+                return $response; // Not valid JSON
             }
 
             if (! isset($data['choices'])) {
-                return null;
+                return $response;
             }
 
-            $data = self::processChoices($data);
-
-            $stream = fopen('php://temp', 'r+');
-            if ($stream === false) {
-                return null;
-            }
-            fwrite($stream, json_encode($data, JSON_THROW_ON_ERROR));
-            rewind($stream);
+            $data = $this->processChoices($data);
 
             return $response->withBody(
-                new Stream($stream),
+                $this->createStream(json_encode($data, JSON_THROW_ON_ERROR))
             );
-
         } catch (\Exception) {
-            return null;
+            return $response;
         }
     }
 
@@ -72,11 +65,11 @@ class MistralJsonResponseModifier
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
-    private static function processChoices(array &$data): array
+    private function processChoices(array &$data): array
     {
         foreach ($data['choices'] as &$choice) {
             if (isset($choice['message']['tool_calls'])) {
-                $choice['message']['tool_calls'] = self::processToolCalls($choice['message']['tool_calls']);
+                $choice['message']['tool_calls'] = $this->processToolCalls($choice['message']['tool_calls']);
             }
         }
 
@@ -87,7 +80,7 @@ class MistralJsonResponseModifier
      * @param  array<string, mixed>  $calls
      * @return array<string, mixed>
      */
-    private static function processToolCalls(array &$calls): array
+    private function processToolCalls(array &$calls): array
     {
         foreach ($calls as &$call) {
             if (! isset($call['type']) || $call['type'] !== 'function') {
@@ -98,12 +91,20 @@ class MistralJsonResponseModifier
         return $calls;
     }
 
-    private static function isJson(ResponseInterface $response): bool
+    private function isJson(ResponseInterface $response): bool
     {
         if (! $response->hasHeader('Content-Type')) {
             return false;
         }
 
         return str_contains($response->getHeaderLine('Content-Type'), 'application/json');
+    }
+
+    private function createStream(string $content): StreamInterface
+    {
+        $stream = $this->streamFactory->createStream($content);
+        $stream->rewind();
+
+        return $stream;
     }
 }

@@ -3,8 +3,8 @@
 namespace LLPhant\Chat;
 
 use Exception;
-use GuzzleHttp\Client as GuzzleClient;
-use GuzzleHttp\HandlerStack;
+use Http\Discovery\Psr17Factory;
+use Http\Discovery\Psr18ClientDiscovery;
 use LLPhant\Chat\Enums\MistralAIChatModel;
 use LLPhant\OpenAIConfig;
 use OpenAI\Client;
@@ -18,8 +18,10 @@ class MistralAIChat extends OpenAIChat
 {
     private const BASE_URL = 'api.mistral.ai/v1';
 
-    public function __construct(?OpenAIConfig $config = null, ?LoggerInterface $logger = null)
-    {
+    public function __construct(
+        ?OpenAIConfig $config = null,
+        ?LoggerInterface $logger = null,
+    ) {
         if (! $config instanceof OpenAIConfig) {
             $config = new OpenAIConfig();
         }
@@ -44,11 +46,9 @@ class MistralAIChat extends OpenAIChat
 
     private function createMistralClient(): ClientInterface
     {
-        $stack = HandlerStack::create();
-        $stack->push(MistralJsonResponseModifier::createResponseModifier());
+        $httpClient = Psr18ClientDiscovery::find();
+        $factory = new Psr17Factory();
 
-        return new GuzzleClient([
-            'handler' => $stack,
-        ]);
+        return new MistralJsonResponseModifier($httpClient, $factory);
     }
 }

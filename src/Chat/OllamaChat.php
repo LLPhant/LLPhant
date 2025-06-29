@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace LLPhant\Chat;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\Psr7\Utils;
+use Http\Discovery\Psr17Factory;
+use Http\Discovery\Psr18ClientDiscovery;
 use LLPhant\Chat\CalledFunction\CalledFunction;
 use LLPhant\Chat\FunctionInfo\FunctionInfo;
 use LLPhant\Chat\FunctionInfo\ToolFormatter;
@@ -14,7 +14,10 @@ use LLPhant\Exception\HttpException;
 use LLPhant\Exception\MissingParameterException;
 use LLPhant\OllamaConfig;
 use LLPhant\Utility;
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -33,9 +36,12 @@ class OllamaChat implements ChatInterface
     /** @var array<string, mixed> */
     private array $modelOptions = [];
 
-    public Client $client;
+    public ClientInterface $client;
 
     private readonly LoggerInterface $logger;
+
+    private readonly StreamFactoryInterface
+        &RequestFactoryInterface $factory;
 
     /** @var FunctionInfo[] */
     private array $tools = [];
@@ -43,18 +49,26 @@ class OllamaChat implements ChatInterface
     /** @var CalledFunction[] */
     public array $functionsCalled = [];
 
-    public function __construct(protected OllamaConfig $config, ?LoggerInterface $logger = null)
-    {
+    private readonly string $baseUri;
+
+    public function __construct(
+        protected OllamaConfig $config,
+        ?LoggerInterface $logger = null,
+        ?ClientInterface $client = null,
+        ?RequestFactoryInterface $requestFactory = null,
+        ?StreamFactoryInterface $streamFactory = null,
+    ) {
         if (! isset($config->model)) {
             throw new MissingParameterException('You need to specify a model for Ollama');
         }
 
-        $this->client = new Client([
-            'base_uri' => $config->url,
-            'timeout' => $config->timeout,
-            'connect_timeout' => $config->timeout,
-            'read_timeout' => $config->timeout,
-        ]);
+        $this->client = $client ?: Psr18ClientDiscovery::find();
+        $this->baseUri = $config->url;
+
+        $this->factory = new Psr17Factory(
+            requestFactory: $requestFactory,
+            streamFactory: $streamFactory,
+        );
 
         $this->formatJson = $config->formatJson;
         $this->modelOptions = $config->modelOptions;
@@ -262,7 +276,11 @@ class OllamaChat implements ChatInterface
             'params' => $json,
         ]);
 
-        $response = $this->client->request($method, $path, ['json' => $json, 'stream' => $json['stream'] ?? false]);
+        $uri = rtrim($this->baseUri, '/').'/'.ltrim($path, '/');
+
+        $request = $this->factory->createRequest($method, $uri);
+        $request = $request->withBody($this->factory->createStream(json_encode($json, JSON_THROW_ON_ERROR)));
+        $response = $this->client->sendRequest($request);
 
         $status = $response->getStatusCode();
         if ($status < 200 || $status >= 300) {
@@ -281,30 +299,32 @@ class OllamaChat implements ChatInterface
      */
     protected function decodeStreamOfText(ResponseInterface $response): StreamInterface
     {
+        $stream = $this->factory->createStream();
+
         // Split the application/x-ndjson response into json responses
-        $generator = function (ResponseInterface $response) {
-            while (! $response->getBody()->eof()) {
-                $line = $this->readLineFromStream($response->getBody());
+        while (! $response->getBody()->eof()) {
+            $line = $this->readLineFromStream($response->getBody());
 
-                if (empty($line)) {
-                    continue;
-                }
-
-                $json = Utility::decodeJson($line);
-                if ((bool) $json['done']) {
-                    break;
-                }
-                if (! isset($json['response'])) {
-                    continue;
-                }
-                if (empty($json['response'])) {
-                    continue;
-                }
-                yield $json['response'];
+            if (empty($line)) {
+                continue;
             }
-        };
 
-        return Utils::streamFor($generator($response));
+            $json = Utility::decodeJson($line);
+            if ((bool) $json['done']) {
+                break;
+            }
+            if (! isset($json['response'])) {
+                continue;
+            }
+            if (empty($json['response'])) {
+                continue;
+            }
+            $stream->write($json['response']);
+        }
+
+        $stream->rewind();
+
+        return $stream;
     }
 
     private function readLineFromStream(StreamInterface $stream): string
@@ -329,29 +349,31 @@ class OllamaChat implements ChatInterface
      */
     protected function decodeStreamOfChat(ResponseInterface $response): StreamInterface
     {
-        $generator = function (ResponseInterface $response) {
-            while (! $response->getBody()->eof()) {
-                $line = $this->readLineFromStream($response->getBody());
+        $stream = $this->factory->createStream();
 
-                if (empty($line)) {
-                    continue;
-                }
+        while (! $response->getBody()->eof()) {
+            $line = $this->readLineFromStream($response->getBody());
 
-                $json = Utility::decodeJson($line);
-                if ((bool) $json['done']) {
-                    break;
-                }
-                if (! isset($json['message'])) {
-                    continue;
-                }
-                if ($json['message']['role'] !== 'assistant') {
-                    continue;
-                }
-                yield $json['message']['content'];
+            if (empty($line)) {
+                continue;
             }
-        };
 
-        return Utils::streamFor($generator($response));
+            $json = Utility::decodeJson($line);
+            if ((bool) $json['done']) {
+                break;
+            }
+            if (! isset($json['message'])) {
+                continue;
+            }
+            if ($json['message']['role'] !== 'assistant') {
+                continue;
+            }
+            $stream->write($json['message']['content']);
+        }
+
+        $stream->rewind();
+
+        return $stream;
     }
 
     /**
@@ -382,7 +404,7 @@ class OllamaChat implements ChatInterface
             if ($msg instanceof VisionMessage) {
                 $responseMessage['images'] = [];
                 foreach ($msg->images as $image) {
-                    $responseMessage['images'][] = $image->getBase64($this->client);
+                    $responseMessage['images'][] = $image->getBase64($this->client, $this->factory);
                 }
             }
 
