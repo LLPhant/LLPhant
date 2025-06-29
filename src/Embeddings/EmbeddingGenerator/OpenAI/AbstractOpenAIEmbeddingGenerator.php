@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace LLPhant\Embeddings\EmbeddingGenerator\OpenAI;
 
 use Exception;
-use GuzzleHttp\Client as GuzzleClient;
-use GuzzleHttp\ClientInterface;
-use GuzzleHttp\RequestOptions;
+use Http\Discovery\Psr17Factory;
+use Http\Discovery\Psr18ClientDiscovery;
 use LLPhant\Embeddings\Document;
 use LLPhant\Embeddings\DocumentUtils;
 use LLPhant\Embeddings\EmbeddingGenerator\EmbeddingGeneratorInterface;
@@ -15,6 +14,9 @@ use LLPhant\OpenAIConfig;
 use OpenAI;
 use OpenAI\Contracts\ClientContract;
 use Psr\Http\Client\ClientExceptionInterface;
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestFactoryInterface;
+use Psr\Http\Message\StreamFactoryInterface;
 
 use function getenv;
 use function str_replace;
@@ -29,28 +31,39 @@ abstract class AbstractOpenAIEmbeddingGenerator implements EmbeddingGeneratorInt
 
     protected string $uri = 'https://api.openai.com/v1/embeddings';
 
+    private readonly StreamFactoryInterface
+        &RequestFactoryInterface $factory;
+
     /**
      * @throws Exception
      */
-    public function __construct(?OpenAIConfig $config = null)
-    {
+    public function __construct(
+        ?OpenAIConfig $config = null,
+        ?RequestFactoryInterface $requestFactory = null,
+        ?StreamFactoryInterface $streamFactory = null,
+    ) {
+        $this->apiKey = $config->apiKey ?? (getenv('OPENAI_API_KEY') ?: '');
+        if ($this->apiKey === '' || $this->apiKey === '0') {
+            throw new Exception('You have to provide a OPENAI_API_KEY env var to request OpenAI.');
+        }
+
         if ($config instanceof OpenAIConfig && $config->client instanceof ClientContract) {
             $this->client = $config->client;
         } else {
-            $apiKey = $config->apiKey ?? getenv('OPENAI_API_KEY');
-            if (! $apiKey) {
-                throw new Exception('You have to provide a OPENAI_API_KEY env var to request OpenAI .');
-            }
             $url = $config->url ?? (getenv('OPENAI_BASE_URL') ?: 'https://api.openai.com/v1');
 
             $this->client = OpenAI::factory()
-                ->withApiKey($apiKey)
+                ->withApiKey($this->apiKey)
                 ->withHttpHeader('OpenAI-Beta', 'assistants=v2')
                 ->withBaseUri($url)
                 ->make();
             $this->uri = $url.'/embeddings';
-            $this->apiKey = $apiKey;
         }
+
+        $this->factory = new Psr17Factory(
+            requestFactory: $requestFactory,
+            streamFactory: $streamFactory,
+        );
     }
 
     /**
@@ -105,11 +118,12 @@ abstract class AbstractOpenAIEmbeddingGenerator implements EmbeddingGeneratorInt
                 'input' => $chunk,
             ];
 
-            $options = [
-                RequestOptions::JSON => $body,
-            ];
-
-            $response = $clientForBatch->request('POST', $this->uri, $options);
+            $request = $this->factory->createRequest('POST', $this->uri)
+                ->withHeader('Content-Type', 'application/json')
+                ->withHeader('Accept', 'application/json')
+                ->withHeader('Authorization', 'Bearer '.$this->apiKey)
+                ->withBody($this->factory->createStream(json_encode($body, JSON_THROW_ON_ERROR)));
+            $response = $clientForBatch->sendRequest($request);
             $jsonResponse = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
 
             if (\array_key_exists('data', $jsonResponse)) {
@@ -132,12 +146,6 @@ abstract class AbstractOpenAIEmbeddingGenerator implements EmbeddingGeneratorInt
             throw new Exception('You have to provide an $apiKey to batch embeddings.');
         }
 
-        return new GuzzleClient([
-            'headers' => [
-                'Authorization' => 'Bearer '.$this->apiKey,
-                'Content-Type' => 'application/json',
-                'Accept' => 'application/json',
-            ],
-        ]);
+        return Psr18ClientDiscovery::find();
     }
 }
