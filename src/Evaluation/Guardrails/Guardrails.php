@@ -2,56 +2,81 @@
 
 namespace LLPhant\Evaluation\Guardrails;
 
+use _PHPStan_8b6260c21\Symfony\Component\Console\Exception\LogicException;
 use LLPhant\Chat\ChatInterface;
 use LLPhant\Chat\Message;
-use LLPhant\Evaluation\AbstractEvaluator;
+use LLPhant\Evaluation\EvaluatorInterface;
 
 class Guardrails
 {
-    final public const STRATEGY_BLOCK = 'block';
-
-    final public const STRATEGY_RETRY = 'retry';
-
-    final public const STRATEGY_CALLBACK = 'callback';
-
-    /** @var callable|null */
-    private $callback;
+    /** @var GuardrailStrategy[] */
+    private array $strategies = [];
 
     public function __construct(
         private readonly ChatInterface $llm,
-        private readonly AbstractEvaluator $evaluator,
-        private readonly string $strategy = self::STRATEGY_BLOCK,
-        ?callable $callback = null,
-        private readonly string $defaultMessage = "I'm unable to answer your question right now."
     ) {
-        $this->callback = $callback;
-        if ($this->strategy !== self::STRATEGY_CALLBACK) {
-            return;
-        }
-        if ($this->callback !== null) {
-            return;
-        }
-        throw new \LogicException('Missing callback function.');
     }
 
-    public function generateText(string $message): string
+    public function generateText(string $message, int $maxRetry = 3): string
     {
+        if ($this->strategies === []) {
+            throw new LogicException('need to specify guardrails strategies');
+        }
         $response = $this->llm->generateText($message);
-        $score = $this->evaluator
-            ->evaluateMessages([Message::user($message), Message::assistant($response)])
-            ->getResults();
+        while ($strategy = array_shift($this->strategies)) {
+            $score = $strategy->getEvaluator()
+                ->evaluateMessages([Message::user($message), Message::assistant($response)])
+                ->getResults();
 
-        $scoreValue = (int) array_values($score)[0];
+            $scoreValue = (int) array_values($score)[0];
 
-        if ($scoreValue === 1) {
-            return $response;
+            if ($scoreValue === 1) {
+                continue;
+            }
+
+            if ($strategy->getStrategy() === GuardrailStrategy::STRATEGY_RETRY) {
+                if (--$maxRetry === 0) {
+                    return $strategy->getDefaultMessage();
+                }
+                array_unshift($this->strategies, $strategy);
+
+                return $this->generateText($message, $maxRetry);
+            }
+
+            if ($strategy->getStrategy() === GuardrailStrategy::STRATEGY_BLOCK) {
+                return $strategy->getDefaultMessage();
+            }
+
+            if ($strategy->getStrategy() === GuardrailStrategy::STRATEGY_CALLBACK) {
+                if ($strategy->getCallback() === null) {
+                    throw new LogicException('missing callback function');
+                }
+
+                return call_user_func($strategy->getCallback(), $response, $message);
+            }
+
+            throw new \InvalidArgumentException("Unknown strategy: {$strategy->getStrategy()}");
         }
 
-        return match ($this->strategy) {
-            self::STRATEGY_BLOCK => $this->defaultMessage,
-            self::STRATEGY_RETRY => $this->llm->generateText($message),
-            self::STRATEGY_CALLBACK => $this->callback ? call_user_func($this->callback, $response, $message) : '',
-            default => throw new \InvalidArgumentException("Unknown strategy: {$this->strategy}"),
-        };
+        return $response;
+    }
+
+    public function addStrategy(
+        EvaluatorInterface $evaluator,
+        string $strategy = GuardrailStrategy::STRATEGY_RETRY,
+        ?callable $callback = null,
+        string $defaultMessage = "I'm unable to answer your question right now."
+    ): self {
+        if ($strategy === GuardrailStrategy::STRATEGY_CALLBACK && $callback === null) {
+            throw new \LogicException('Missing callback function.');
+        }
+        $this->strategies[] = new GuardrailStrategy(
+            $evaluator,
+            $strategy,
+            $callback,
+            $defaultMessage
+        );
+
+        return $this;
     }
 }

@@ -920,14 +920,23 @@ Evaluating output of LLM is a challenging task due to lack of structure in text 
 LLPhant framework delivers also tools for evaluating LLMs and AI agent responses with different strategies.
 
 Strategies for evaluating LLM responses include:
+
+**Score evaluators:**
 - Criteria evaluator
-- Embedding distance
-- String comparison
+- Embedding distance evaluator
+- String comparison evaluator
 - Trajectory evaluator
-- Pairwise string comparison (A/B testing)
+
+**Output validation:**
 - JSON format validator
 - XML format validator
-- Avoid fallback message
+- Fallback messages validator
+- Regex pattern validator
+- Token limit validator
+- Word limit validator
+
+**A/B testing:**
+- Pairwise string comparison
 
 Choose most relevant evaluation strategy for your use case and run one of methods listed below. 
 Input can be text, list of Message objects or ChatSession object.
@@ -981,7 +990,7 @@ scores:
 ]
 ```
 
-#### Embedding distance
+#### Embedding distance evaluator
 ```php
     $reference = 'pink elephant walks with the suitcase';
     $candidate = 'pink cheesecake is jumping over the suitcase with dinosaurs';
@@ -1000,7 +1009,7 @@ score:
 ]
 ```
 
-#### String comparison
+#### String comparison evaluator
 ```php
     $reference = 'The quick brown fox jumps over the lazy dog';
     $candidate = 'The quick brown dog jumps over the lazy fox';
@@ -1077,6 +1086,125 @@ scores:
 ]
 ```
 
+#### JSON format validator
+```php
+$candidate = '{"name":"John","age":30}';
+
+$evaluator = new JSONFormatEvaluator();
+$results = $evaluator->evaluateText($candidate);
+$scores = $results->getResults();
+```
+
+scores:
+
+```json
+{
+    "score": 1,
+    "error": ""
+}
+```
+
+#### XML format validator
+```php
+$output = '<sometag>some content</sometag>';
+
+$evaluator = new XMLFormatEvaluator();
+$results = $evaluator->evaluateText($output);
+$scores = $results->getResults();
+```
+
+scores:
+
+```json
+{
+    "score": 1,
+    "error": ""
+}
+```
+
+#### Fallback messages validator
+```php
+$candidate = "I'm sorry, I cannot help with that request.";
+
+$evaluator = new NoFallbackAnswerEvaluator();
+$results = $evaluator->evaluateText($candidate);
+$scores = $results->getResults();
+```
+
+scores:
+
+```json
+{
+    "score" : 0,         
+    "detectedIndicator" : "I'm sorry"
+}
+```
+
+#### Regex pattern validator
+check if output matches pattern:
+```php
+    $output = 'once upon a time pink elephant jumped over a table';
+    $evaluator = new ShouldMatchRegexPatternEvaluator();
+    $scores = $evaluator->setRegexPattern('/pink elephant/')->evaluateText($output);
+```
+
+scores:
+
+```json
+{
+    "score": 1,
+    "error": ""
+}
+```
+
+check if output doesn't match pattern:
+```php
+    $output = 'once upon a time pink elephant jumped over a table';
+    $evaluator = new ShouldNotMatchRegexPatternEvaluator();
+    $scores = $evaluator->setRegexPattern('/pink elephant/')->evaluateText($output);
+```
+
+scores:
+
+```json
+{
+    "score": 1,
+    "error": ""
+}
+```
+
+#### Token limit validator
+```php
+    $output = "Lorizzle ipsum dolor sit fizzle, dizzle adipiscing fo shizzle. Nullam sapien own yo', mah nizzle volutpizzle, suscipizzle yippiyo, gravida vizzle, fo shizzle my nizzle. Pellentesque egizzle tortor. Fo shizzle erizzle. Rizzle at break it down dapibus pimpin' tempizzle shiz. Mauris gangster my shizz sizzle turpizzle. Vestibulum shut the shizzle up fizzle. Pellentesque eleifend rhoncizzle doggy. In hac that's the shizzle fo shizzle dictumst. Donec shizznit.";
+    $evaluator = new TokenLimitEvaluator();
+    $scores = $evaluator->setProvider('cl100k_base')->setTokenLimit(100)->evaluateText($output);
+```
+
+scores:
+
+```json
+{
+    "score": 0,
+    "error": "Generated 137 tokens is grater than limit of 100"
+}
+```
+
+#### Word limit validator
+```php
+$output = "Lorizzle ipsum dolor sit fizzle, dizzle adipiscing fo shizzle. Nullam sapien own yo', mah nizzle volutpizzle, suscipizzle yippiyo, gravida vizzle, fo shizzle my nizzle. Pellentesque egizzle tortor. Fo shizzle erizzle. Rizzle at break it down dapibus pimpin' tempizzle shiz. Mauris gangster my shizz sizzle turpizzle. Vestibulum shut the shizzle up fizzle. Pellentesque eleifend rhoncizzle doggy. In hac that's the shizzle fo shizzle dictumst. Donec shizznit.";
+$evaluator = new WordLimitEvaluator()
+$scores = $evaluator->setWordLimit(50)->evaluateText($output);
+```
+
+scores:
+
+```json
+{
+    "score": 0,
+    "error": "Generated 66 words is grater than limit of 50"
+}
+```
+
 #### Pairwise string comparison (A/B testing)
 ```php
 $candidatesA = [
@@ -1119,42 +1247,6 @@ scores:
 }
 ```
 
-#### JSON format validator
-```php
-$candidate = '{"name":"John","age":30}';
-
-$evaluator = new JSONFormatEvaluator();
-$results = $evaluator->evaluateText($candidate);
-$scores = $results->getResults();
-```
-
-scores:
-
-```json
-{
-    "score": 1,
-    "error": ""
-}
-```
-
-#### Avoid fallback messages
-```php
-$candidate = "I'm sorry, I cannot help with that request.";
-
-$evaluator = new NoFallbackAnswerEvaluator();
-$results = $evaluator->evaluateText($candidate);
-$scores = $results->getResults();
-```
-
-scores:
-
-```json
-{
-    "score" : 0,         
-    "detectedIndicator" : "I'm sorry"
-}
-```
-
 ## Guardrails
 
 Guardrails are lightweight, programmable checkpoints that sit between application and the LLM. \
@@ -1164,11 +1256,8 @@ Based on the result, either pass the answer through, retry the call, block it, o
 ```php
     $llm = new OpenAIChat();
 
-    $guardrails = new Guardrails(
-        llm: $llm,
-        evaluator: new JSONFormatEvaluator(),
-        strategy: Guardrails::STRATEGY_RETRY,
-    );
+    $guardrails = new Guardrails(llm: $llm);
+    $guardrails->addStrategy(new JSONFormatEvaluator(), GuardrailStrategy::STRATEGY_RETRY);
 
     $response = $guardrails->generateText('generate answer in JSON format with object that consists of "correctKey" as a key and "correctVal" as a value');
 ```
@@ -1185,6 +1274,24 @@ result after retry:
 {
     "correctKey":"correctVal"
 }
+```
+
+use multiple guardrails evaluators
+```php
+    $llm = new OpenAIChat();
+
+   $guardrails = new Guardrails(llm: $llm);
+
+    $guardrails->addStrategy(
+        evaluator: new NoFallbackAnswerEvaluator(),
+        strategy: GuardrailStrategy::STRATEGY_BLOCK
+    )->addStrategy(
+        evaluator: (new WordLimitEvaluator())->setWordLimit(1),
+        strategy: GuardrailStrategy::STRATEGY_BLOCK,
+        defaultMessage: "I'm unable to answer your question right now."
+    );
+
+    $response = $guardrails->generateText('some prompt message');
 ```
 
 ## AutoPHP

@@ -17,14 +17,23 @@ This package gives tools for evaluating LLMs and AI agent responses with differe
 ## 🚀 Features
 
 There are multiple strategies included for evaluating LLM responses:
+
+Score evaluators:
 - Criteria evaluator
-- Embedding distance
-- String comparison
+- Embedding distance evaluator
+- String comparison evaluator
 - Trajectory evaluator
-- Pairwise string comparison (A/B testing)
+
+Output validation:
 - JSON format validator
 - XML format validator
-- Avoid fallback messages
+- Fallback messages validator
+- Regex pattern validator
+- Token limit validator
+- Word limit validator
+
+A/B testing:
+- Pairwise string comparison
 
 ### Criteria evaluator
 Criteria evaluator passes prompt and generated answer to GPT-4o or Claude model and ask for 1-5 points evaluation in criteria:
@@ -43,12 +52,12 @@ Criteria evaluator passes prompt and generated answer to GPT-4o or Claude model 
 - controversiality: Does the response avoid unnecessarily sparking divisive or sensitive debates?
 - creativity : (Optional) Is the response innovative or insightful?
 
-### Embedding distance
+### Embedding distance evaluator
 Embedding distance evaluator compares the generated answer to a reference using vector embeddings (e.g., OpenAI, Cohere, or Sentence Transformers).
 It calculates semantic similarity using cosine distance or Euclidean distance, allowing evaluation based on meaning rather than exact wording.
 This method is reference-based and language-model-agnostic, making it useful for assessing output alignment even when phrasing varies significantly.
 
-### String comparison
+### String comparison evaluator
 There are 2 string comparison metrics implemented which compare generated answer to expected text.
 They are not the best solution as they are based on tokens appearance comparison and require providing reference text.
 - ROUGE
@@ -69,84 +78,58 @@ It wraps the existing EvaluatorInterface, computes score for each candidate, the
 ### JSON format validator
 When expecting JSON response, checks if returned code is valid JSON.
 
-### Avoid fallback messages
+### XML format validator
+When expecting XML response, checks if returned code is valid XML.
+
+### Fallback messages validator
 Checks response for unexpected fallback messages like "Sorry, but I can't help you with this problem".
+
+### Regex pattern validator
+Gives possibility to check output against any provided regular expression. It can check if output matches regular expression or check if unexpected pattern doesn't appear in generated answer.
+
+### Token limit validator
+Checks if specified token limit is not exceeded. In English language number of tokens ~= 0.75 * number of words.
+In languages with diacritical marks there can be higher proportion of tokens comparing to number of words. 
+
+### Word limit validator
+Checks if specified words limit is not exceeded.
 
 ## 💻 Usage
 
-### Criteria evaluation example
-
+#### Criteria evaluator
 ```php
-$question = 'Does “Ruby on Rails”, the web framework, have anything to do with Ruby Rails, the country singer?';
+    $evaluationPromptBuilder = (new CriteriaEvaluatorPromptBuilder())
+        ->addCorrectness()
+        ->addHelpfulness()
+        ->addRelevance();
 
-$response = <<<TEXT
-No — they are completely unrelated.
-
-• **Ruby on Rails** (often just “Rails”) is an open-source web-application framework written in the Ruby programming language.  
-• **Ruby Rails** (born Ruby Jane Smith, 1999) is an American country & bluegrass fiddler and singer-songwriter.
-
-Aside from sharing the word “Ruby”, the software project and the musician work in entirely different domains.
-TEXT;
-
-$evaluationPrompt = (new CriteriaEvaluatorPromptBuilder())
-    ->addClarity()
-    ->addCoherence()
-    ->addConciseness()
-    ->addControversiality()
-    ->addCreativity()
-    ->addCriminality()
-    ->addFactualAccuracy()
-    ->addRelevance()
-    ->addHarmfulness()
-    ->addHelpfulness()
-    ->addInsensitivity()
-    ->addMaliciousness()
-    ->addMisogyny()
-    ->addCorrectness()
-    ->getEvaluationPromptForQuestion($question, $response);
-
-
-$configGPT = new OpenAIConfig();
-$configGPT->apiKey = 'your-OpenAI-API-key';
-$gpt = new OpenAIChat($configGPT); 
-$gpt->setSystemMessage($evaluationPrompt);
-$gptJson = $gpt->generateText(
-    'Score the answer from 1-5 for each criterion and return valid JSON only.'
-);
-print_r(json_decode($gptJson, true));
-
-
-$configClaude = new AnthropicConfig(apiKey: 'your-Antrophic-API-key');
-$claude = new AnthropicChat($configClaude);
-$claude->setSystemMessage($evaluationPrompt);
-$claudeJson = $claude->generateText(
-    'Score the answer from 1-5 for each criterion and return valid JSON only.'
-);
-print_r(json_decode($claudeJson, true));
-
+    $evaluator = new CriteriaEvaluator();
+    $evaluator->setChat(getChatMock());
+    $evaluator->setCriteriaPromptBuilder($evaluationPromptBuilder);
+    $results = $evaluator->evaluateMessages([Message::user('some text')], ['some question']);
+    $scores = $results->getResults();
 ```
-Results:
-```json
-{
-    "correctness": 5,
-    "helpfulness": 4,
-    "relevance": 4,
-    "conciseness": 5,
-    "clarity": 4,
-    "factual_accuracy": 4,
-    "insensitivity": 5,
-    "maliciousness": 0,
-    "harmfulness": 0,
-    "coherence": 1,
-    "misogyny": 0,
-    "criminality": 0,
-    "controversiality": 0,
-    "creativity": 1
-}
+scores:
+```
+[
+    'correctness' => 5,
+    'helpfulness' => 4,
+    'relevance' => 4,
+    'conciseness' => 5,
+    'clarity' => 4,
+    'factual_accuracy' => 4,
+    'insensitivity' => 5,
+    'maliciousness' => 0,
+    'harmfulness' => 0,
+    'coherence' => 1,
+    'misogyny' => 0,
+    'criminality' => 0,
+    'controversiality' => 0,
+    'creativity' => 1,
+]
 ```
 
-#### Embedding distance example
-
+#### Embedding distance evaluator
 ```php
     $reference = 'pink elephant walks with the suitcase';
     $candidate = 'pink cheesecake is jumping over the suitcase with dinosaurs';
@@ -158,143 +141,88 @@ Results:
         ->evaluateMessages([$candidateMessage], [$reference]);
     $scores = $results->getResults();
 ```
-Results:
+score:
 ```
 [
     0.474,
 ]
 ```
 
-### String comparison evaluation example
-
+#### String comparison evaluator
 ```php
-        $tokenSimilarityEvaluator = new StringComparisonEvaluator();
-        $reference = "that's the way cookie crumbles";
-        $candidate = 'this is the way cookie is crashed';
+    $reference = 'The quick brown fox jumps over the lazy dog';
+    $candidate = 'The quick brown dog jumps over the lazy fox';
+    $candidateMessage = new Message();
+    $candidateMessage->role = ChatRole::User;
+    $candidateMessage->content = $candidate;
 
-        $results = [
-            'ROUGE' => $tokenSimilarityEvaluator->calculateROUGE($reference, $candidate),
-            'BLEU' => $tokenSimilarityEvaluator->calculateBLEU($reference, $candidate),
-            'METEOR' => $tokenSimilarityEvaluator->calculateMETEOR($reference, $candidate),
-        ];
+    $results = (new StringComparisonEvaluator())->evaluateMessages([$candidateMessage], [$reference]);
+    $scores = $results->getResults();
 ```
-Results:
-```json
-{
-  "ROUGE": {
-     "metricName":  "ROUGE",
-     "results": {
-       "recall": 0.6,
-       "precision": 0.43,
-       "f1": 0.5
-     }
-  },
-  "BLEU": {
-     "metricName": "BLEU",
-     "results": {
-       "score": 0.43
-     }
-  },
-   "METEOR": {
-      "metricName": "METEOR",
-      "results": {
-        "score": 0.56,
-        "precision": 0.43,
-        "recall": 0.6,
-        "chunks": 1,
-        "penalty": 0.02,
-        "fMean": 0.58
-      }
-   }
-}
+scores:
+```
+[
+    '0_ROUGE_recall' => 1.0,
+    '0_ROUGE_precision' => 1.0,
+    '0_ROUGE_f1' => 1.0,
+    '0_BLEU_score' => 1.0,
+    '0_METEOR_score' => 0.96,
+    '0_METEOR_precision' => 1,
+    '0_METEOR_recall' => 1,
+    '0_METEOR_chunks' => 4,
+    '0_METEOR_penalty' => 0.04389574759945129,
+    '0_METEOR_fMean' => 1.0,
+]
 ```
 
-### Trajectory evaluation example
-
+#### Trajectory evaluator
 ```php
-     $evaluator = new TrajectoryEvaluator([
-         'factualAccuracy' => 2.0,  // Double weight for factual accuracy
-         'relevance' => 1.0,
-         'completeness' => 1.0,
-         'harmlessness' => 1.5      // Higher weight for harmlessness
-     ]);
-     
-     // Add a trajectory with multiple steps
-     $evaluator->addTrajectory('task1', [
-         [
-             'prompt' => 'What is the capital of France?',
-             'response' => 'The capital of France is Paris.'
-         ],
-         [
-             'prompt' => 'What is the population of Paris?',
-             'response' => 'Paris has a population of approximately 2.2 million people in the city proper.'
-         ]
-     ]);
-     
-     $evaluator->addGroundTruth('task1', [
-         ['Paris', 'capital', 'France'],
-         ['Paris', 'population', '2.2 million']
-     ]);
-     
-     // Evaluate all trajectories
-     $results = $evaluator->evaluateAll();
-``` 
-     
-Results:
-```json
-{
-   "task1":{
-      "trajectoryId":"task1",
-      "stepScores":[
-         {
-            "factualAccuracy":1,
-            "relevance":0.67,
-            "completeness":1,
-            "harmlessness":1
-         },
-         {
-            "factualAccuracy":1,
-            "relevance":0.67,
-            "completeness":1,
-            "harmlessness":1
-         }
-      ],
-      "metricScores":{
-         "factualAccuracy":1,
-         "relevance":0.67,
-         "completeness":1,
-         "harmlessness":1
-      },
-      "overallScore":0.95,
-      "passed":true,
-      "interactionCount":2
-   }
-}
+    $evaluator = new TrajectoryEvaluator([
+        'factualAccuracy' => 2.0,
+        'relevance' => 1.0,
+        'completeness' => 1.0,
+        'harmlessness' => 1.5,
+    ]);
+
+    $evaluator->addGroundTruth('task1', [
+        ['Paris', 'capital', 'France'],
+        ['Paris', 'population', '2.2 million'],
+    ]);
+
+    $message1 = Message::user('What is the capital of France?');
+    $response1 = Message::assistant('The capital of France is Paris.');
+
+    $message2 = Message::user('What is the population of Paris?');
+    $response2 = Message::assistant('Paris has a population of approximately 2.2 million people in the city proper.');
+
+    $results = $evaluator->evaluateMessages([
+        $message1,
+        $response1,
+        $message2,
+        $response2,
+    ]);
+    $scores = $results->getResults();
 ```
-
-### Pairwise string comparison (A/B testing)
-
-```php
-$candidateA = 'this is the way cookie is crashed';
-$candidateB = "cookie doesn't crumble at all";
-
-$reference  = "that's the way cookie crumbles";
-
-$results = (new PairwiseStringEvaluator(new StringComparisonEvaluator))
-    ->evaluateText($candidateA, $candidateB, $reference);
+scores:
 ```
-
-Results:
-
-```json
-{
-    "candidate_with_higher_score": "A",
-    "text_candidate_with_higher_score": "this is the way cookie is crashed",
-    "metric_name": "String Comparison Evaluation: ROUGE, BLEU, METEOR",
-    "score_name": "ROUGE_recall",
-    "score_A": 0.6,
-    "score_B": 0.2
-}
+[
+    'task1_trajectoryId' => 'task1',
+    'task1_stepScores_0_factualAccuracy' => 0.0,
+    'task1_stepScores_0_relevance' => 0.0,
+    'task1_stepScores_0_completeness' => 0.0,
+    'task1_stepScores_0_harmlessness' => 1.0,
+    'task1_stepScores_1_factualAccuracy' => 0.0,
+    'task1_stepScores_1_relevance' => 0.0,
+    'task1_stepScores_1_completeness' => 0.0,
+    'task1_stepScores_1_harmlessness' => 1.0,
+    'task1_metricScores_factualAccuracy' => 0.0,
+    'task1_metricScores_relevance' => 0.0,
+    'task1_metricScores_completeness' => 0.0,
+    'task1_metricScores_harmlessness' => 1.0,
+    'task1_overallScore' => 0.27,
+    'task1_passed' => false,
+    'task1_interactionCount' => 2,
+]
 ```
 
 #### JSON format validator
@@ -317,10 +245,10 @@ scores:
 
 #### XML format validator
 ```php
-$candidate = '<sometag>some content</sometag>';
+$output = '<sometag>some content</sometag>';
 
 $evaluator = new XMLFormatEvaluator();
-$results = $evaluator->evaluateText($candidate);
+$results = $evaluator->evaluateText($output);
 $scores = $results->getResults();
 ```
 
@@ -333,7 +261,7 @@ scores:
 }
 ```
 
-#### Avoid fallback messages
+#### Fallback messages validator
 ```php
 $candidate = "I'm sorry, I cannot help with that request.";
 
@@ -351,6 +279,114 @@ scores:
 }
 ```
 
+#### Regex pattern validator
+check if output matches pattern:
+```php
+    $output = 'once upon a time pink elephant jumped over a table';
+    $evaluator = new ShouldMatchRegexPatternEvaluator();
+    $scores = $evaluator->setRegexPattern('/pink elephant/')->evaluateText($output);
+```
+
+scores:
+
+```json
+{
+    "score": 1,
+    "error": ""
+}
+```
+
+check if output doesn't match pattern:
+```php
+    $output = 'once upon a time pink elephant jumped over a table';
+    $evaluator = new ShouldNotMatchRegexPatternEvaluator();
+    $scores = $evaluator->setRegexPattern('/pink elephant/')->evaluateText($output);
+```
+
+scores:
+
+```json
+{
+    "score": 1,
+    "error": ""
+}
+```
+
+#### Token limit validator
+```php
+    $output = "Lorizzle ipsum dolor sit fizzle, dizzle adipiscing fo shizzle. Nullam sapien own yo', mah nizzle volutpizzle, suscipizzle yippiyo, gravida vizzle, fo shizzle my nizzle. Pellentesque egizzle tortor. Fo shizzle erizzle. Rizzle at break it down dapibus pimpin' tempizzle shiz. Mauris gangster my shizz sizzle turpizzle. Vestibulum shut the shizzle up fizzle. Pellentesque eleifend rhoncizzle doggy. In hac that's the shizzle fo shizzle dictumst. Donec shizznit.";
+    $evaluator = new TokenLimitEvaluator();
+    $scores = $evaluator->setProvider('cl100k_base')->setTokenLimit(100)->evaluateText($output);
+```
+
+scores:
+
+```json
+{
+    "score": 0,
+    "error": "Generated 137 tokens is grater than limit of 100"
+}
+```
+
+#### Word limit validator
+```php
+$output = "Lorizzle ipsum dolor sit fizzle, dizzle adipiscing fo shizzle. Nullam sapien own yo', mah nizzle volutpizzle, suscipizzle yippiyo, gravida vizzle, fo shizzle my nizzle. Pellentesque egizzle tortor. Fo shizzle erizzle. Rizzle at break it down dapibus pimpin' tempizzle shiz. Mauris gangster my shizz sizzle turpizzle. Vestibulum shut the shizzle up fizzle. Pellentesque eleifend rhoncizzle doggy. In hac that's the shizzle fo shizzle dictumst. Donec shizznit.";
+$evaluator = new WordLimitEvaluator()
+$scores = $evaluator->setWordLimit(50)->evaluateText($output);
+```
+
+scores:
+
+```json
+{
+    "score": 0,
+    "error": "Generated 66 words is grater than limit of 50"
+}
+```
+
+#### Pairwise string comparison (A/B testing)
+```php
+$candidatesA = [
+    Message::assistant('this is the way cookie is crashed'),
+    Message::assistant('foo bar')
+];
+
+$candidatesB = [
+    Message::assistant("cookie doesn't crumble at all"),
+    Message::assistant('foo bear')
+];
+
+$references = [
+    "that's the way cookie crumbles",
+    'foo bar'
+];
+
+$results = (new PairwiseStringEvaluator(new StringComparisonEvaluator))
+    ->evaluateMessages($candidatesA, $candidatesB, $references);
+
+print_r($results->getResults());
+```
+
+scores:
+
+```json
+{
+  "0_candidate_with_higher_score": "A",
+  "0_text_candidate_with_higher_score": "this is the way cookie is crashed",
+  "0_metric_name": "String Comparison Evaluation: ROUGE, BLEU, METEOR",
+  "0_score_name": "ROUGE_recall",
+  "0_score_A": 0.6,
+  "0_score_B": 0.2,
+  "1_candidate_with_higher_score": "A",
+  "1_text_candidate_with_higher_score": "foo bar",
+  "1_metric_name": "String Comparison Evaluation: ROUGE, BLEU, METEOR",
+  "1_score_name": "ROUGE_recall",
+  "1_score_A": 1.0,
+  "1_score_B": 0.5
+}
+```
+
+
 ## Guardrails
 
 Guardrails are lightweight, programmable checkpoints that sit between application and the LLM. \
@@ -360,11 +396,8 @@ Based on the result, either pass the answer through, retry the call, block it, o
 ```php
     $llm = new OpenAIChat();
 
-    $guardrails = new Guardrails(
-        llm: $llm,
-        evaluator: new JSONFormatEvaluator(),
-        strategy: Guardrails::STRATEGY_RETRY,
-    );
+    $guardrails = new Guardrails(llm: $llm);
+    $guardrails->addStrategy(new JSONFormatEvaluator(), GuardrailStrategy::STRATEGY_RETRY);
 
     $response = $guardrails->generateText('generate answer in JSON format with object that consists of "correctKey" as a key and "correctVal" as a value');
 ```
@@ -381,6 +414,24 @@ result after retry:
 {
     "correctKey":"correctVal"
 }
+```
+
+use multiple guardrails evaluators
+```php
+    $llm = new OpenAIChat();
+
+   $guardrails = new Guardrails(llm: $llm);
+
+    $guardrails->addStrategy(
+        evaluator: new NoFallbackAnswerEvaluator(),
+        strategy: GuardrailStrategy::STRATEGY_BLOCK
+    )->addStrategy(
+        evaluator: (new WordLimitEvaluator())->setWordLimit(1),
+        strategy: GuardrailStrategy::STRATEGY_BLOCK,
+        defaultMessage: "I'm unable to answer your question right now."
+    );
+
+    $response = $guardrails->generateText('some prompt message');
 ```
 
 ## 📚 Resources
