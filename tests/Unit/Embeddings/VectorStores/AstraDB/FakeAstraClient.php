@@ -82,6 +82,6 @@ class FakeAstraClient
         $handlerStack = HandlerStack::create($mock);
         $client = new Client(['handler' => $handlerStack]);
 
-        return new FakeAstraClient(new AstraDBClient(client: $client), $mock);
+        return new FakeAstraClient(new AstraDBClient(endpoint: '', token: '', client: $client), $mock);
     }
 }
