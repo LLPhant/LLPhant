@@ -3,6 +3,7 @@
 namespace LLPhant\Audio;
 
 use Exception;
+use GuzzleHttp\Client;
 use LLPhant\OpenAIConfig;
 use OpenAI;
 use OpenAI\Contracts\ClientContract;
@@ -26,11 +27,19 @@ class OpenAIAudio
                 throw new Exception('You have to provide a OPENAI_API_KEY env var to request OpenAI .');
             }
 
-            $this->client = OpenAI::factory()
+            $factory = OpenAI::factory()
                 ->withApiKey($apiKey)
                 ->withHttpHeader('OpenAI-Beta', 'assistants=v2')
-                ->withBaseUri($config->url ?? (getenv('OPENAI_BASE_URL') ?: 'https://api.openai.com/v1'))
-                ->make();
+                ->withBaseUri($config->url ?? (getenv('OPENAI_BASE_URL') ?: 'https://api.openai.com/v1'));
+
+            if ($defaultTimeout = getenv('OPENAI_DEFAULT_TIMEOUT')) {
+                if (! is_numeric($defaultTimeout)) {
+                    throw new Exception("The OPENAI_DEFAULT_TIMEOUT env var value should be numeric, you provide '$defaultTimeout'");
+                }
+                $factory->withHttpClient(new Client(['timeout' => $defaultTimeout]));
+            }
+
+            $this->client = $factory->make();
         }
         $this->model = $config->model ?? OpenAIAudioModel::Whisper1->value;
         // See https://platform.openai.com/docs/api-reference/audio/createTranscription for possible options
