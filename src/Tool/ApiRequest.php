@@ -3,18 +3,21 @@
 namespace LLPhant\Tool;
 
 use Exception;
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\GuzzleException;
+use Http\Discovery\Psr17Factory;
+use Http\Discovery\Psr18ClientDiscovery;
 use LLPhant\Render\CLIOutputUtils;
 use LLPhant\Render\OutputAgentInterface;
+use Psr\Http\Client\ClientExceptionInterface;
 
 class ApiRequest extends ToolBase
 {
     /**
      * @throws Exception
      */
-    public function __construct(bool $verbose = false, public OutputAgentInterface $outputAgent = new CLIOutputUtils())
-    {
+    public function __construct(
+        bool $verbose = false,
+        public OutputAgentInterface $outputAgent = new CLIOutputUtils(),
+    ) {
         parent::__construct($verbose);
     }
 
@@ -25,14 +28,14 @@ class ApiRequest extends ToolBase
     {
         try {
             $this->outputAgent->renderTitleAndMessageOrange('🔧 Executing tool ApiRequest', $url, $this->verbose);
-            $client = new Client();
-            $response = $client->request('GET', $url);
+            $client = Psr18ClientDiscovery::find();
+            $response = $client->sendRequest((new Psr17Factory())->createRequest('GET', $url));
 
             $rawContent = $response->getBody()->getContents();
             $this->outputAgent->render("Results from ApiRequest to {$url}: {$rawContent}", $this->verbose);
             $this->wasSuccessful = true;
 
-        } catch (GuzzleException $e) {
+        } catch (ClientExceptionInterface $e) {
             $this->wasSuccessful = false;
             $this->lastResponse = $e->getMessage();
         }

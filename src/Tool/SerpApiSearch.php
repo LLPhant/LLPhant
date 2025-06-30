@@ -3,37 +3,54 @@
 namespace LLPhant\Tool;
 
 use Exception;
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\GuzzleException;
+use Http\Discovery\Psr17Factory;
+use Http\Discovery\Psr18ClientDiscovery;
 use LLPhant\Chat\OpenAIChat;
 use LLPhant\Render\CLIOutputUtils;
 use LLPhant\Render\OutputAgentInterface;
 use LLPhant\Render\StringParser;
+use Psr\Http\Client\ClientExceptionInterface;
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestFactoryInterface;
+use Psr\Http\Message\StreamFactoryInterface;
+use Psr\Http\Message\UriFactoryInterface;
 
 class SerpApiSearch extends ToolBase
 {
     private readonly string $apiKey;
 
-    private readonly Client $client;
+    private readonly string $baseUri;
+
+    private readonly ClientInterface $client;
+
+    private readonly RequestFactoryInterface
+        &UriFactoryInterface
+        &StreamFactoryInterface $factory;
 
     /**
      * @throws Exception
      */
-    public function __construct(?string $apiKey = null, bool $verbose = false, public OutputAgentInterface $outputAgent = new CLIOutputUtils())
-    {
+    public function __construct(
+        ?string $apiKey = null,
+        bool $verbose = false,
+        public OutputAgentInterface $outputAgent = new CLIOutputUtils(),
+    ) {
         parent::__construct($verbose);
+
         $apiKey ??= getenv('SERP_API_KEY');
         if (! $apiKey) {
             throw new Exception('You have to provide a SERP_API_KEY env var to request SerpApi .');
         }
         $this->apiKey = $apiKey;
-        $this->client = new Client(['base_uri' => 'https://serpapi.com/search']);
+        $this->baseUri = 'https://serpapi.com/search';
+        $this->client = Psr18ClientDiscovery::find();
+        $this->factory = new Psr17Factory();
     }
 
     /**
      * Perform a Google search and extract a clear response.
      *
-     * @throws Exception|GuzzleException
+     * @throws Exception|ClientExceptionInterface
      */
     public function googleSearch(string $googleQuery): string
     {
@@ -41,7 +58,9 @@ class SerpApiSearch extends ToolBase
         $this->outputAgent->renderTitleAndMessageOrange('🔧 Executing tool SerpApi', $googleQuery, $this->verbose);
 
         try {
-            $response = $this->client->request('GET', '', ['query' => $params]);
+            $request = $this->factory->createRequest('GET', $this->baseUri);
+            $request = $request->withUri($request->getUri()->withQuery(http_build_query($params)));
+            $response = $this->client->sendRequest($request);
             $searchResults = json_decode($response->getBody(), true, 512, JSON_THROW_ON_ERROR);
 
             $results = '';
@@ -72,7 +91,7 @@ class SerpApiSearch extends ToolBase
     /**
      * Perform a Google Search information using Google.
      *
-     * @throws Exception|GuzzleException
+     * @throws Exception|ClientExceptionInterface
      */
     public function searchAndGetPageContent(string $googleQuery, string $informationWeAreLookingFor): string
     {
@@ -80,8 +99,10 @@ class SerpApiSearch extends ToolBase
         $this->outputAgent->renderTitleAndMessageOrange('🔧 Executing tool SerpApi', $googleQuery, $this->verbose);
 
         try {
-            $response = $this->client->request('GET', '', ['query' => $params]);
-            $searchResults = json_decode($response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+            $request = $this->factory->createRequest('GET', $this->baseUri);
+            $request = $request->withUri($request->getUri()->withQuery(http_build_query($params)));
+            $response = $this->client->sendRequest($request);
+            $searchResults = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
 
             $results = '';
 
