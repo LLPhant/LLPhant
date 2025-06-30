@@ -2,7 +2,6 @@
 
 namespace LLPhant\Evaluation\Guardrails;
 
-use _PHPStan_8b6260c21\Symfony\Component\Console\Exception\LogicException;
 use LLPhant\Chat\ChatInterface;
 use LLPhant\Chat\Message;
 use LLPhant\Evaluation\EvaluatorInterface;
@@ -20,7 +19,7 @@ class Guardrails
     public function generateText(string $message, int $maxRetry = 3, bool $returnAfterCallback = true): string
     {
         if ($this->strategies === []) {
-            throw new LogicException('need to specify guardrails strategies');
+            throw new \LogicException('need to specify guardrails strategies');
         }
         $response = $this->llm->generateText($message);
         while ($strategy = array_shift($this->strategies)) {
@@ -51,7 +50,7 @@ class Guardrails
 
             if ($strategy->getStrategy() === GuardrailStrategy::STRATEGY_CALLBACK) {
                 if ($strategy->getCallback() === null) {
-                    throw new LogicException('missing callback function');
+                    throw new \LogicException('missing callback function');
                 }
                 $response = call_user_func($strategy->getCallback(), $response, $message);
                 if ($returnAfterCallback) {
