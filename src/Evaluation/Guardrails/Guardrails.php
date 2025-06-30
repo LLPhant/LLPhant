@@ -54,7 +54,10 @@ class Guardrails
                     throw new LogicException('missing callback function');
                 }
                 $response = call_user_func($strategy->getCallback(), $response, $message);
-                if ($returnAfterCallback || $this->strategies === []) {
+                if ($returnAfterCallback) {
+                    return $response;
+                }
+                if ($this->strategies === []) {
                     return $response;
                 }
 
