@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Chat;
 
-use GuzzleHttp\Psr7\Response;
+use Http\Discovery\Psr17Factory;
 use LLPhant\Chat\Message;
 use LLPhant\Chat\MistralAIChat;
 use LLPhant\OpenAIConfig;
@@ -30,11 +30,9 @@ it('returns a stream response using generateStreamOfText()', function () {
         }
     };
 
-    $response = new Response(
-        200,
-        [],
-        'This is the response from Mistral AI'
-    );
+    $factory = new Psr17Factory;
+    $response = $factory->createResponse(200)
+        ->withBody($factory->createStream('This is the response from Mistral AI'));
     $transport = Mockery::mock(TransporterContract::class);
     $transport->allows([
         'requestStream' => $response,
@@ -52,11 +50,9 @@ it('returns a stream response using generateStreamOfText()', function () {
 });
 
 it('returns a stream response using generateChatStream()', function () {
-    $response = new Response(
-        200,
-        [],
-        'This is the response from Mistral AI'
-    );
+    $factory = new Psr17Factory;
+    $response = $factory->createResponse(200)
+        ->withBody($factory->createStream('This is the response from Mistral AI'));
     $transport = Mockery::mock(TransporterContract::class);
     $transport->allows([
         'requestStream' => $response,

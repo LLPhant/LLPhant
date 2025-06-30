@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Chat;
 
-use GuzzleHttp\Psr7\Response;
+use Http\Discovery\Psr17Factory;
 use LLPhant\Chat\MistralJsonResponseModifier;
 use Psr\Http\Message\ResponseInterface;
 
@@ -44,7 +44,10 @@ it('can change JSON without tool_calls type', function () {
 
     $modifier = MistralJsonResponseModifier::getModifierFunction();
 
-    $response = new Response(headers: ['Content-Type' => 'application/json'], body: $originalResponse);
+    $factory = new Psr17Factory;
+    $response = ($factory)->createResponse()
+        ->withHeader('Content-Type', 'application/json')
+        ->withBody($factory->createStream($originalResponse));
 
     /**
      * @var ResponseInterface $newResponse
@@ -128,7 +131,10 @@ it('does not change payloads with wrong header', function () {
 
     $modifier = MistralJsonResponseModifier::getModifierFunction();
 
-    $response = new Response(headers: ['Content-Type' => 'text/plain'], body: $originalResponse);
+    $factory = new Psr17Factory;
+    $response = ($factory)->createResponse()
+        ->withHeader('Content-Type', 'text/plain')
+        ->withBody($factory->createStream($originalResponse));
 
     /**
      * @var ResponseInterface $newResponse
