@@ -96,6 +96,22 @@ Checks if specified words limit is not exceeded.
 
 ## 💻 Usage
 
+Choose most relevant evaluation strategy for your use case and run one of methods listed below.
+Input can be text, list of Message objects or ChatSession object.
+```php
+    /** @var string $candidate */
+    /** @var string $reference */
+    $evaluator->evaluateText($candidate, $reference);
+
+    /** @var Message[] $messages */
+    /** @var string[] $references */
+    $evaluator->evaluateMessages($messages, $references);
+
+    /** @var ChatSession $chatSession */
+    /** @var string[] $references */
+    $evaluator->evaluateChatSession($chatSession, $references);
+```
+
 #### Criteria evaluator
 ```php
     $evaluationPromptBuilder = (new CriteriaEvaluatorPromptBuilder())
@@ -423,13 +439,13 @@ use multiple guardrails evaluators
    $guardrails = new Guardrails(llm: $llm);
 
     $guardrails->addStrategy(
-        evaluator: new NoFallbackAnswerEvaluator(),
-        strategy: GuardrailStrategy::STRATEGY_BLOCK
-    )->addStrategy(
-        evaluator: (new WordLimitEvaluator())->setWordLimit(1),
-        strategy: GuardrailStrategy::STRATEGY_BLOCK,
-        defaultMessage: "I'm unable to answer your question right now."
-    );
+            evaluator: new NoFallbackAnswerEvaluator(),
+            strategy: GuardrailStrategy::STRATEGY_BLOCK
+        )->addStrategy(
+            evaluator: (new WordLimitEvaluator())->setWordLimit(1),
+            strategy: GuardrailStrategy::STRATEGY_BLOCK,
+            defaultMessage: "I'm unable to answer your question right now."
+        );
 
     $response = $guardrails->generateText('some prompt message');
 ```

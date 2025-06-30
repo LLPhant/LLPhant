@@ -17,7 +17,7 @@ class Guardrails
     ) {
     }
 
-    public function generateText(string $message, int $maxRetry = 3): string
+    public function generateText(string $message, int $maxRetry = 3, bool $returnAfterCallback = true): string
     {
         if ($this->strategies === []) {
             throw new LogicException('need to specify guardrails strategies');
@@ -31,6 +31,8 @@ class Guardrails
             $scoreValue = (int) array_values($score)[0];
 
             if ($scoreValue === 1) {
+                $maxRetry = 3;
+
                 continue;
             }
 
@@ -40,7 +42,7 @@ class Guardrails
                 }
                 array_unshift($this->strategies, $strategy);
 
-                return $this->generateText($message, $maxRetry);
+                return $this->generateText($message, $maxRetry, $returnAfterCallback);
             }
 
             if ($strategy->getStrategy() === GuardrailStrategy::STRATEGY_BLOCK) {
@@ -51,8 +53,12 @@ class Guardrails
                 if ($strategy->getCallback() === null) {
                     throw new LogicException('missing callback function');
                 }
+                $response = call_user_func($strategy->getCallback(), $response, $message);
+                if ($returnAfterCallback || $this->strategies === []) {
+                    return $response;
+                }
 
-                return call_user_func($strategy->getCallback(), $response, $message);
+                continue;
             }
 
             throw new \InvalidArgumentException("Unknown strategy: {$strategy->getStrategy()}");

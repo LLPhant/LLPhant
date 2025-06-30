@@ -9,6 +9,8 @@ use LLPhant\Evaluation\Guardrails\Guardrails;
 use LLPhant\Evaluation\Guardrails\GuardrailStrategy;
 use LLPhant\Evaluation\Output\JSONFormatEvaluator;
 use LLPhant\Evaluation\Output\NoFallbackAnswerEvaluator;
+use LLPhant\Evaluation\Output\ShouldMatchRegexPatternEvaluator;
+use LLPhant\Evaluation\Output\ShouldNotMatchRegexPatternEvaluator;
 use LLPhant\Evaluation\Output\WordLimitEvaluator;
 use LLPhant\OpenAIConfig;
 
@@ -68,6 +70,30 @@ it('can use multiple guardrails', function (): void {
     $response = $guardrails->generateText('some prompt message');
 
     expect($response)->toBe("I'm unable to answer your question right now.");
+});
+
+it('can process message with multiple callbacks', function (): void {
+    $llm = getChatMock();
+
+    $guardrails = new Guardrails(llm: $llm);
+
+    $guardrails->addStrategy(
+        evaluator: new JSONFormatEvaluator(),
+        strategy: GuardrailStrategy::STRATEGY_CALLBACK,
+        callback: fn (string $output, string $message): string => '{"correctKey":"defaultVal"}'
+    )->addStrategy(
+        evaluator: (new ShouldMatchRegexPatternEvaluator())->setRegexPattern('/:\s/'),
+        strategy: GuardrailStrategy::STRATEGY_CALLBACK,
+        callback: fn (string $output, string $message): string => (string) preg_replace('/":"/', '": "', $output)
+    )->addStrategy(
+        evaluator: (new ShouldNotMatchRegexPatternEvaluator())->setRegexPattern('/[A-Z]/'),
+        strategy: GuardrailStrategy::STRATEGY_CALLBACK,
+        callback: fn (string $output, string $message): string => strtolower($output)
+    );
+
+    $response = $guardrails->generateText('generate correct JSON output...', returnAfterCallback: false);
+
+    expect($response)->toBe('{"correctkey": "defaultval"}');
 });
 
 function getChatMock(): OpenAIChat
