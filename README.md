@@ -221,7 +221,7 @@ $response = $chat->generateText('what is one + one ?'); // will return "ok"
 
 #### Reading images
 
-With OpenAI chat you can use images as input for your chat. For example:
+With [OpenAI](tests/Integration/Chat/Vision/OpenVisionChatTest.php) chat you can use images as input for your chat. For example:
 
 ```php
 $config = new OpenAIConfig();
@@ -232,6 +232,18 @@ $messages = [
     new ImageSource('https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Lecco_riflesso.jpg/800px-Lecco_riflesso.jpg'),
     new ImageSource('https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Lecco_con_riflessi_all%27alba.jpg/640px-Lecco_con_riflessi_all%27alba.jpg')
   ], 'What is represented in these images?')
+];
+$response = $chat->generateChat($messages);
+```
+
+Something similar works for [Anthropic](tests/Integration/Chat/AnthropicChatTest.php) too. Here is an example:
+
+```php
+$chat = new AnthropicChat();
+$fileContents = \file_get_contents('/path/to/my/cat_file.jpeg');
+$base64 = \base64_encode($fileContents);
+$messages = [
+    new AnthropicVisionMessage([new AnthropicImage(AnthropicImageType::JPEG, $base64)], 'How many cats are there in this image? Answer in words'),
 ];
 $response = $chat->generateChat($messages);
 ```

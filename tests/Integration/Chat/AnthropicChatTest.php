@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Chat;
 
+use LLPhant\Chat\Anthropic\AnthropicImage;
+use LLPhant\Chat\Anthropic\AnthropicImageType;
+use LLPhant\Chat\Anthropic\AnthropicVisionMessage;
 use LLPhant\Chat\AnthropicChat;
 use LLPhant\Chat\FunctionInfo\FunctionInfo;
 use LLPhant\Chat\FunctionInfo\Parameter;
@@ -77,4 +80,26 @@ it('can use the result of a function', function () {
         ->and($answer)->toContain('Venice')
         ->and($answer)->toContain('sunny')
         ->and($answer)->toContain('26');
+});
+
+it('can describe images in base64', function () {
+    $chat = new AnthropicChat();
+    $fileContents = \file_get_contents(__DIR__.'/Vision/test.jpg');
+    $base64 = \base64_encode($fileContents);
+    $messages = [
+        new AnthropicVisionMessage([new AnthropicImage(AnthropicImageType::JPEG, $base64)]),
+    ];
+    $response = $chat->generateChat($messages);
+    expect($response)->toContain('cat');
+});
+
+it('can use message for asking something on images', function () {
+    $chat = new AnthropicChat();
+    $fileContents = \file_get_contents(__DIR__.'/Vision/test.jpg');
+    $base64 = \base64_encode($fileContents);
+    $messages = [
+        new AnthropicVisionMessage([new AnthropicImage(AnthropicImageType::JPEG, $base64)], 'How many cats are there in this image? Answer in words'),
+    ];
+    $response = $chat->generateChat($messages);
+    expect($response)->toContain('one');
 });
