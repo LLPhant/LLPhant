@@ -18,6 +18,8 @@ class MistralEmbeddingGenerator extends AbstractOpenAIEmbeddingGenerator
      */
     public function __construct(?OpenAIConfig $config = null)
     {
+        parent::__construct($config);
+
         if ($config instanceof OpenAIConfig && $config->client instanceof ClientContract) {
             $this->client = $config->client;
 
