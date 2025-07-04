@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace LLPhant;
 
-use GuzzleHttp\Client;
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestFactoryInterface;
+use Psr\Http\Message\StreamFactoryInterface;
 
 class AnthropicConfig
 {
@@ -26,7 +28,9 @@ class AnthropicConfig
         public readonly int $maxTokens = 1024,
         public readonly array $modelOptions = [],
         public readonly ?string $apiKey = null,
-        public readonly ?Client $client = null, )
-    {
+        public readonly ?ClientInterface $client = null,
+        public readonly ?RequestFactoryInterface $requestFactory = null,
+        public readonly ?StreamFactoryInterface $streamFactory = null,
+    ) {
     }
 }

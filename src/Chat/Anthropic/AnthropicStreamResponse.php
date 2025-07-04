@@ -2,7 +2,6 @@
 
 namespace LLPhant\Chat\Anthropic;
 
-use Generator;
 use LLPhant\Exception\FormatException;
 use LLPhant\Exception\HttpException;
 use LLPhant\Utility;
@@ -15,15 +14,17 @@ class AnthropicStreamResponse
 
     use AnthropicTotalTokensTrait;
 
-    public function __construct(protected ResponseInterface $response)
-    {
+    public function __construct(
+        protected ResponseInterface $response,
+        private readonly StreamInterface $finalStream,
+    ) {
     }
 
     /**
      * @throws FormatException
      * @throws HttpException
      */
-    public function getIterator(): Generator
+    public function getStream(): StreamInterface
     {
         while (! $this->response->getBody()->eof()) {
             $line = $this->readLine($this->response->getBody());
@@ -45,13 +46,17 @@ class AnthropicStreamResponse
             $this->addUsedTokens($json);
 
             if ($type === 'content_block_delta' && $json['delta']['type'] === 'text_delta') {
-                yield $json['delta']['text'];
+                $this->finalStream->write($json['delta']['text']);
             }
 
             if ($type === 'message_stop') {
                 break;
             }
         }
+
+        $this->finalStream->rewind();
+
+        return $this->finalStream;
     }
 
     private function readLine(StreamInterface $stream): string
