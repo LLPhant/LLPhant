@@ -3,7 +3,7 @@
 namespace LLPhant\Chat;
 
 use Exception;
-use GuzzleHttp\Psr7\Utils;
+use Http\Discovery\Psr17Factory;
 use LLPhant\Chat\CalledFunction\CalledFunction;
 use LLPhant\Chat\Enums\ChatRole;
 use LLPhant\Chat\Enums\OpenAIChatModel;
@@ -16,7 +16,7 @@ use OpenAI\Contracts\ClientContract;
 use OpenAI\Responses\Chat\CreateResponse;
 use OpenAI\Responses\Chat\CreateResponseToolCall;
 use OpenAI\Responses\Chat\CreateStreamedResponseToolCall;
-use OpenAI\Responses\StreamResponse;
+use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -53,8 +53,11 @@ class OpenAIChat implements ChatInterface
 
     public ?FunctionInfo $requiredFunction = null;
 
-    public function __construct(?OpenAIConfig $config = null, ?LoggerInterface $logger = null)
-    {
+    public function __construct(
+        ?OpenAIConfig $config = null,
+        ?LoggerInterface $logger = null,
+        private readonly StreamFactoryInterface $factory = new Psr17Factory(),
+    ) {
         if ($config instanceof OpenAIConfig && $config->client instanceof ClientContract) {
             $this->client = $config->client;
         } else {
@@ -242,54 +245,57 @@ class OpenAIChat implements ChatInterface
             'args' => $openAiArgs,
         ]);
 
+        $toolsToCall = [];
+        $finalStream = $this->factory->createStream();
         $stream = $this->client->chat()->createStreamed($openAiArgs);
-        $generator = function (StreamResponse $stream) use ($messages) {
-            $toolsToCall = [];
-            foreach ($stream as $partialResponse) {
-                $toolCalls = $partialResponse->choices[0]->delta->toolCalls ?? [];
-                /** @var CreateStreamedResponseToolCall $toolCall */
-                foreach ($toolCalls as $toolCall) {
-                    if ($toolCall->function->name) {
-                        $toolsToCall[] = [
-                            'function' => $toolCall->function->name,
-                            'arguments' => $toolCall->function->arguments,
-                            'id' => $toolCall->id,
-                        ];
+        foreach ($stream as $partialResponse) {
+            $toolCalls = $partialResponse->choices[0]->delta->toolCalls ?? [];
+            /** @var CreateStreamedResponseToolCall $toolCall */
+            foreach ($toolCalls as $toolCall) {
+                if ($toolCall->function->name) {
+                    $toolsToCall[] = [
+                        'function' => $toolCall->function->name,
+                        'arguments' => $toolCall->function->arguments,
+                        'id' => $toolCall->id,
+                    ];
+                }
+            }
+
+            // $functionName should be always set if finishReason is function_call
+            if ($this->shouldCallTool($partialResponse->choices[0]->finishReason) && $toolsToCall !== []) {
+                foreach ($toolsToCall as $tool) {
+                    if (is_string($tool['function']) && is_string($tool['id'])) {
+                        $this->callFunction($tool['function'], $tool['arguments'], $tool['id']);
                     }
                 }
+                $newMessages = $this->getNewMessagesFromTools($messages);
 
-                // $functionName should be always set if finishReason is function_call
-                if ($this->shouldCallTool($partialResponse->choices[0]->finishReason) && $toolsToCall !== []) {
-                    foreach ($toolsToCall as $tool) {
-                        if (is_string($tool['function']) && is_string($tool['id'])) {
-                            $this->callFunction($tool['function'], $tool['arguments'], $tool['id']);
-                        }
-                    }
-                    $newMessages = $this->getNewMessagesFromTools($messages);
-                    if ($newMessages === []) {
-                        break;
-                    }
-                    // We move to a non-streamed answer here. Maybe it could be improved
-                    yield $this->generateChat($newMessages);
-                }
-
-                if (! is_null($partialResponse->choices[0]->finishReason)) {
+                if ($newMessages === []) {
                     break;
                 }
 
-                if ($partialResponse->choices[0]->delta->content === null) {
-                    continue;
-                }
-
-                if ($partialResponse->choices[0]->delta->content === '') {
-                    continue;
-                }
-
-                yield $partialResponse->choices[0]->delta->content;
+                // We move to a non streamed answer here. Maybe it could be improved
+                $finalStream->write($this->generateChat($newMessages));
             }
-        };
 
-        return Utils::streamFor($generator($stream));
+            if (! is_null($partialResponse->choices[0]->finishReason)) {
+                break;
+            }
+
+            if ($partialResponse->choices[0]->delta->content === null) {
+                continue;
+            }
+
+            if ($partialResponse->choices[0]->delta->content === '') {
+                continue;
+            }
+
+            $finalStream->write($partialResponse->choices[0]->delta->content);
+        }
+
+        $finalStream->rewind();
+
+        return $finalStream;
     }
 
     /**
