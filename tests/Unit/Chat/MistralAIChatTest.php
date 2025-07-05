@@ -5,7 +5,7 @@ namespace Tests\Unit\Chat;
 use GuzzleHttp\Psr7\Response;
 use LLPhant\Chat\Message;
 use LLPhant\Chat\MistralAIChat;
-use LLPhant\OpenAIConfig;
+use LLPhant\MistralAIConfig;
 use Mockery;
 use OpenAI\Client;
 use OpenAI\Contracts\TransporterContract;
@@ -13,7 +13,7 @@ use Psr\Http\Message\StreamInterface;
 use Psr\Log\AbstractLogger;
 
 it('no error when construct with no model', function () {
-    $config = new OpenAIConfig();
+    $config = new MistralAIConfig();
     $config->apiKey = 'fakeapikey';
     $chat = new MistralAIChat($config);
     expect(isset($chat))->toBeTrue();
@@ -40,7 +40,7 @@ it('returns a stream response using generateStreamOfText()', function () {
         'requestStream' => $response,
     ]);
 
-    $config = new OpenAIConfig();
+    $config = new MistralAIConfig();
     $config->client = new Client($transport);
     $chat = new MistralAIChat($config, $logger);
 
@@ -62,7 +62,7 @@ it('returns a stream response using generateChatStream()', function () {
         'requestStream' => $response,
     ]);
 
-    $config = new OpenAIConfig();
+    $config = new MistralAIConfig();
     $config->client = new Client($transport);
     $chat = new MistralAIChat($config);
 

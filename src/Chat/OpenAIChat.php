@@ -6,10 +6,10 @@ use Exception;
 use GuzzleHttp\Psr7\Utils;
 use LLPhant\Chat\CalledFunction\CalledFunction;
 use LLPhant\Chat\Enums\ChatRole;
-use LLPhant\Chat\Enums\OpenAIChatModel;
 use LLPhant\Chat\FunctionInfo\FunctionInfo;
 use LLPhant\Chat\FunctionInfo\ToolCall;
 use LLPhant\Chat\FunctionInfo\ToolFormatter;
+use LLPhant\Exception\MissingParameterException;
 use LLPhant\OpenAIConfig;
 use OpenAI;
 use OpenAI\Contracts\ClientContract;
@@ -21,13 +21,11 @@ use Psr\Http\Message\StreamInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
-use function getenv;
-
-class OpenAIChat implements ChatInterface
+/**
+ * @phpstan-import-type ModelOptions from OpenAIConfig
+ */ class OpenAIChat implements ChatInterface
 {
     private readonly ClientContract $client;
-
-    private readonly LoggerInterface $logger;
 
     public string $model;
 
@@ -53,25 +51,26 @@ class OpenAIChat implements ChatInterface
 
     public ?FunctionInfo $requiredFunction = null;
 
-    public function __construct(?OpenAIConfig $config = null, ?LoggerInterface $logger = null)
+    public function __construct(OpenAIConfig $config = new OpenAIConfig(), private readonly LoggerInterface $logger = new NullLogger())
     {
         if ($config instanceof OpenAIConfig && $config->client instanceof ClientContract) {
             $this->client = $config->client;
         } else {
-            $apiKey = $config->apiKey ?? getenv('OPENAI_API_KEY');
-            if (! $apiKey) {
-                throw new Exception('You have to provide a OPENAI_API_KEY env var to request OpenAI .');
+            if (! $config->apiKey) {
+                throw new MissingParameterException('You have to provide a OPENAI_API_KEY env var to request OpenAI.');
+            }
+            if (! $config->url) {
+                throw new MissingParameterException('You have to provide an url o to set OPENAI_BASE_URL env var to request OpenAI.');
             }
 
             $this->client = OpenAI::factory()
-                ->withApiKey($apiKey)
+                ->withApiKey($config->apiKey)
                 ->withHttpHeader('OpenAI-Beta', 'assistants=v2')
-                ->withBaseUri($config->url ?? (getenv('OPENAI_BASE_URL') ?: 'https://api.openai.com/v1'))
+                ->withBaseUri($config->url)
                 ->make();
         }
-        $this->model = $config->model ?? OpenAIChatModel::Gpt4Turbo->value;
-        $this->modelOptions = $config->modelOptions ?? [];
-        $this->logger = $logger ?: new NullLogger();
+        $this->model = $config->model;
+        $this->modelOptions = $config->modelOptions;
     }
 
     public function generateText(string $prompt): string

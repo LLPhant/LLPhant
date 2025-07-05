@@ -7,7 +7,7 @@ namespace Tests\Integration\Chat;
 use LLPhant\Chat\FunctionInfo\FunctionBuilder;
 use LLPhant\Chat\Message;
 use LLPhant\Chat\MistralAIChat;
-use LLPhant\OpenAIConfig;
+use LLPhant\MistralAIConfig;
 
 it('can generate some stuff', function () {
     $chat = new MistralAIChat();
@@ -23,7 +23,7 @@ it('can generate some stuff with a system prompt', function () {
 });
 
 it('can load any existing model', function () {
-    $config = new OpenAIConfig();
+    $config = new MistralAIConfig();
     $config->model = 'mistral-tiny';
     $chat = new MistralAIChat($config);
     $response = $chat->generateText('one + one ?');
@@ -31,7 +31,7 @@ it('can load any existing model', function () {
 });
 
 it('calls tool functions during a chat', function () {
-    $config = new OpenAIConfig();
+    $config = new MistralAIConfig();
     $config->model = 'mistral-small-latest';
     $chat = new MistralAIChat($config);
 

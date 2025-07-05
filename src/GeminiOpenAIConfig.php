@@ -4,10 +4,8 @@ namespace LLPhant;
 
 class GeminiOpenAIConfig extends OpenAIConfig
 {
-    public string $url = 'https://generativelanguage.googleapis.com/v1beta/openai';
-
-    public function __construct(?string $apiKey = null)
+    public function __construct(?string $apiKey = null, string $url = 'https://generativelanguage.googleapis.com/v1beta/openai')
     {
-        $this->apiKey = $apiKey ?? (getenv('GEMINI_API_KEY') ?: '');
+        parent::__construct($apiKey ?? (getenv('GEMINI_API_KEY') ?: null), $url);
     }
 }
