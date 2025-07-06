@@ -11,13 +11,11 @@ use GuzzleHttp\RequestOptions;
 use LLPhant\Embeddings\Document;
 use LLPhant\Embeddings\DocumentUtils;
 use LLPhant\Embeddings\EmbeddingGenerator\EmbeddingGeneratorInterface;
+use LLPhant\Exception\MissingParameterException;
 use LLPhant\OpenAIConfig;
 use OpenAI;
 use OpenAI\Contracts\ClientContract;
 use Psr\Http\Client\ClientExceptionInterface;
-
-use function getenv;
-use function str_replace;
 
 abstract class AbstractOpenAIEmbeddingGenerator implements EmbeddingGeneratorInterface
 {
@@ -27,29 +25,30 @@ abstract class AbstractOpenAIEmbeddingGenerator implements EmbeddingGeneratorInt
 
     public string $apiKey;
 
-    protected string $uri = 'https://api.openai.com/v1/embeddings';
+    protected string $uri;
 
     /**
      * @throws Exception
      */
-    public function __construct(?OpenAIConfig $config = null)
+    public function __construct(OpenAIConfig $config = new OpenAIConfig())
     {
+        if (! $config->apiKey) {
+            throw new MissingParameterException('You have to provide an api key.');
+        }
+        $this->apiKey = $config->apiKey;
+
+        if (! $config->url) {
+            throw new MissingParameterException('You have to provide an url.');
+        }
+        $this->uri = $config->url.'/embeddings';
+
         if ($config instanceof OpenAIConfig && $config->client instanceof ClientContract) {
             $this->client = $config->client;
         } else {
-            $apiKey = $config->apiKey ?? getenv('OPENAI_API_KEY');
-            if (! $apiKey) {
-                throw new Exception('You have to provide a OPENAI_API_KEY env var to request OpenAI .');
-            }
-            $url = $config->url ?? (getenv('OPENAI_BASE_URL') ?: 'https://api.openai.com/v1');
-
             $this->client = OpenAI::factory()
-                ->withApiKey($apiKey)
-                ->withHttpHeader('OpenAI-Beta', 'assistants=v2')
-                ->withBaseUri($url)
+                ->withApiKey($this->apiKey)
+                ->withBaseUri($config->url)
                 ->make();
-            $this->uri = $url.'/embeddings';
-            $this->apiKey = $apiKey;
         }
     }
 

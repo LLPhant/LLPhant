@@ -133,10 +133,11 @@ If you do not specify an api key, the `GeminiOpenAIConfig` tries to read it from
 
 ### Mistral
 
-If you want to use Mistral, you can just specify the model to use using the `OpenAIConfig` object and pass it to the `MistralAIChat`.
+If you want to use Mistral, you can just specify the model to use using the `MistralAIConfig` object and pass it to the `MistralAIChat`.
+** Note that since version 0.11.0 the usage of `MistralAIConfig` instead of `OpenAIConfig` is mandatory **
 
 ```php
-$config = new OpenAIConfig();
+$config = new MistralAIConfig();
 $config->apiKey = 'fakeapikey';
 $chat = new MistralAIChat($config);
 ```

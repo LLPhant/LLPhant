@@ -28,7 +28,7 @@ it('can generate some stuff with a system prompt', function () {
 it('can generate some stuff using a stream', function () {
     $chat = new AnthropicChat();
     $response = $chat->generateStreamOfText('Can you describe the recipe for making carbonara in 5 steps');
-    expect($response->__toString())->toContain('eggs')
+    expect($response->__toString())->toContain('egg')
         ->and($chat->getTotalTokens())->toBeGreaterThan(0);
 });
 

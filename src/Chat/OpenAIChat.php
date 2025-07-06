@@ -65,7 +65,6 @@ use Psr\Log\NullLogger;
 
             $this->client = OpenAI::factory()
                 ->withApiKey($config->apiKey)
-                ->withHttpHeader('OpenAI-Beta', 'assistants=v2')
                 ->withBaseUri($config->url)
                 ->make();
         }
