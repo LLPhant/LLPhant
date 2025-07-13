@@ -10,15 +10,15 @@ it('can create and delete a collection', function () {
 
     $client->deleteCollection();
 
-    expect($client->collectionVectorDimension())->toBe(false);
+    expect($client->collectionVectorDimension())->toBe(0);
 
     $client->createCollection();
 
-    expect($client->collectionVectorDimension())->toBe(true);
+    expect($client->collectionVectorDimension())->toBe(1536);
 
     $client->deleteCollection();
 
-    expect($client->collectionVectorDimension())->toBe(false);
+    expect($client->collectionVectorDimension())->toBe(0);
 });
 
 it('can insert documents', function () {
