@@ -21,7 +21,7 @@ class MistralJsonResponseModifier
         return function (ResponseInterface $response): ResponseInterface {
             if (self::isJson($response)) {
                 $modifiedResponse = self::processJsonResponse($response);
-                if ($modifiedResponse instanceof \Psr\Http\Message\ResponseInterface) {
+                if ($modifiedResponse instanceof ResponseInterface) {
                     return $modifiedResponse;
                 }
             }
