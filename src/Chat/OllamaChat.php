@@ -169,6 +169,7 @@ class OllamaChat implements ChatInterface
         );
 
         $contents = $response->getBody()->getContents();
+        $this->logger->debug($contents);
         $json = Utility::decodeJson($contents);
 
         $message = $json['message'];
@@ -193,7 +194,7 @@ class OllamaChat implements ChatInterface
         return $message['content'];
     }
 
-    /** @param  Message[]  $messages */
+    /** @param Message[] $messages */
     public function generateChatStream(array $messages): StreamInterface
     {
         $params = [

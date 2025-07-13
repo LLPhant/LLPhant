@@ -9,16 +9,19 @@ use LLPhant\Chat\FunctionInfo\Parameter;
 use LLPhant\Chat\Message;
 use LLPhant\Chat\OllamaChat;
 use LLPhant\OllamaConfig;
+use Symfony\Component\Console\Logger\ConsoleLogger;
+use Symfony\Component\Console\Output\ConsoleOutput;
+use Symfony\Component\Console\Output\OutputInterface;
 
 function ollamaChat(): OllamaChat
 {
     $config = new OllamaConfig();
     // We need a model that can run tools. See https://ollama.com/blog/tool-support
     // Please note that at the moment (August 2024) llama3.1 model is terrible at using tools, crating a lot of hallucinations
-    $config->model = 'mistral-nemo';
+    $config->model = 'llama3.2:3b';
     $config->url = getenv('OLLAMA_URL') ?: 'http://localhost:11434/api/';
 
-    return new OllamaChat($config);
+    return new OllamaChat($config, new ConsoleLogger(new ConsoleOutput(OutputInterface::VERBOSITY_DEBUG)));
 }
 
 it('can generate some stuff', function () {
@@ -99,14 +102,14 @@ it('can use the result of a function', function () {
     $chat->addFunction($function);
 
     $messages = [
-        Message::system('You are an AI that answers to questions about best clothing in a certain area based on the current weather. You use the external system tool currentWeatherForLocation for getting information on the current weather.'),
-        Message::user('Should I wear a fur cap and a wool scarf for my trip to Venice? Please include the current weather in your answer. '),
+        Message::system('You are an AI that answers to questions about best clothing in a certain area based on the current weather. IT IS MANDATORY TO USE THE EXTERNAL SYSTEM TOOL currentWeatherForLocation FOR GETTING INFORMATION ON THE CURRENT WEATHER.'),
+        Message::user('Should I wear a fur cap and a wool scarf and clothes for very cold weather for my trip to Venice? Please just answer YES or NO, without any other words!'),
     ];
 
-
     $answer = $chat->generateChat($messages);
-    expect($answer)->toContain('sunny');
 
     expect($chat->lastFunctionCalled()->definition)->toBe($function)
         ->and(strtolower($chat->lastFunctionCalled()->return))->toContain('weather');
+
+    expect(strtoupper($answer))->toContain('NO');
 });

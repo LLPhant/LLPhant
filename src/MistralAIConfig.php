@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace LLPhant;
 
-use LLPhant\Chat\Enums\OpenAIChatModel;
 use OpenAI\Contracts\ClientContract;
 
 /**
@@ -25,7 +24,7 @@ class MistralAIConfig extends OpenAIConfig
         parent::__construct(
             apiKey: $apiKey ?? (getenv('MISTRAL_API_KEY') ?: null),
             url: $url,
-            model: $model ??  'mistral-small-latest',
+            model: $model ?? 'mistral-small-latest',
             client: $client,
             modelOptions: $modelOptions,
         );

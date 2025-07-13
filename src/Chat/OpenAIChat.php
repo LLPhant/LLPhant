@@ -68,7 +68,7 @@ use Psr\Log\NullLogger;
                 ->withBaseUri($config->url)
                 ->make();
         }
-        $this->model = $config->model;
+        $this->model = $config->model ?? throw new MissingParameterException('You have to provide a model');
         $this->modelOptions = $config->modelOptions;
     }
 

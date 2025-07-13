@@ -6,6 +6,7 @@ use Rector\CodeQuality\Rector\Class_\InlineConstructorDefaultToPropertyRector;
 use Rector\CodeQuality\Rector\Empty_\SimplifyEmptyCheckOnEmptyArrayRector;
 use Rector\Config\RectorConfig;
 use Rector\Php56\Rector\FunctionLike\AddDefaultValueForUndefinedVariableRector;
+use Rector\Php80\Rector\Class_\ClassPropertyAssignToConstructorPromotionRector;
 use Rector\Privatization\Rector\Class_\ChangeGlobalVariablesToPropertiesRector;
 use Rector\Privatization\Rector\Class_\ChangeReadOnlyVariableWithDefaultValueToConstantRector;
 use Rector\Privatization\Rector\ClassMethod\PrivatizeFinalClassMethodRector;
@@ -23,15 +24,14 @@ return static function (RectorConfig $rectorConfig): void {
 
     $rectorConfig->rules([
         InlineConstructorDefaultToPropertyRector::class,
+        ClassPropertyAssignToConstructorPromotionRector::class,
+        ChangeGlobalVariablesToPropertiesRector::class,
+        ChangeReadOnlyPropertyWithDefaultValueToConstantRector::class,
+        ChangeReadOnlyVariableWithDefaultValueToConstantRector::class,
+        PrivatizeLocalGetterToPropertyRector::class,
+        PrivatizeFinalClassPropertyRector::class,
+        PrivatizeFinalClassMethodRector::class,
     ]);
-
-    // Same as SetList::PRIVATIZATION without FinalizeClassesWithoutChildrenRector
-    $rectorConfig->rule(ChangeGlobalVariablesToPropertiesRector::class);
-    $rectorConfig->rule(ChangeReadOnlyPropertyWithDefaultValueToConstantRector::class);
-    $rectorConfig->rule(ChangeReadOnlyVariableWithDefaultValueToConstantRector::class);
-    $rectorConfig->rule(PrivatizeLocalGetterToPropertyRector::class);
-    $rectorConfig->rule(PrivatizeFinalClassPropertyRector::class);
-    $rectorConfig->rule(PrivatizeFinalClassMethodRector::class);
 
     $rectorConfig->sets([
         LevelSetList::UP_TO_PHP_81,
