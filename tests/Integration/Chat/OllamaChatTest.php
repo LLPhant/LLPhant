@@ -103,9 +103,10 @@ it('can use the result of a function', function () {
         Message::user('Should I wear a fur cap and a wool scarf for my trip to Venice? Please include the current weather in your answer. '),
     ];
 
-    $answer = $chat->generateChat($messages);
 
-    expect($weatherExample->lastMessage)->toContain('sunny')
-        ->and($chat->lastFunctionCalled()->definition)->toBe($function)
+    $answer = $chat->generateChat($messages);
+    expect($answer)->toContain('sunny');
+
+    expect($chat->lastFunctionCalled()->definition)->toBe($function)
         ->and(strtolower($chat->lastFunctionCalled()->return))->toContain('weather');
 });

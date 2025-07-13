@@ -32,7 +32,6 @@ it('can load any existing model', function () {
 
 it('calls tool functions during a chat', function () {
     $config = new MistralAIConfig();
-    $config->model = 'mistral-small-latest';
     $chat = new MistralAIChat($config);
 
     $notifier = new NotificationExample();

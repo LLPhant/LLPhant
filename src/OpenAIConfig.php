@@ -31,22 +31,24 @@ use OpenAI\Contracts\ClientContract;
  *     user?: string|null,
  * }
  */
-class OpenAIConfig
+class OpenAIConfig extends AIConfig
 {
-    public string $model;
-
     /**
      * @param  ModelOptions  $modelOptions
      */
     public function __construct(
-        public ?string $apiKey = null,
-        public ?string $url = null,
+        ?string $apiKey = null,
+        ?string $url = null,
         ?string $model = null,
-        public ?ClientContract $client = null,
-        public array $modelOptions = [],
+        ?ClientContract $client = null,
+        array $modelOptions = [],
     ) {
-        $this->apiKey ??= (getenv('OPENAI_API_KEY') ?: null);
-        $this->url ??= (getenv('OPENAI_BASE_URL') ?: 'https://api.openai.com/v1');
-        $this->model = $model ?? OpenAIChatModel::Gpt4Turbo->value;
+        parent::__construct(
+            apiKey: $apiKey ?? (getenv('OPENAI_API_KEY') ?: null),
+            url: $url ?? (getenv('OPENAI_BASE_URL') ?: 'https://api.openai.com/v1'),
+            model: $model ?? OpenAIChatModel::Gpt4Turbo->value,
+            client: $client,
+            modelOptions: $modelOptions,
+        );
     }
 }
