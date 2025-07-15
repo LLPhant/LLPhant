@@ -5,26 +5,42 @@ declare(strict_types=1);
 namespace LLPhant\Embeddings\EmbeddingGenerator\Ollama;
 
 use Exception;
-use GuzzleHttp\Client;
+use Http\Discovery\Psr17Factory;
+use Http\Discovery\Psr18ClientDiscovery;
 use LLPhant\Embeddings\Document;
 use LLPhant\Embeddings\DocumentUtils;
 use LLPhant\Embeddings\EmbeddingGenerator\EmbeddingGeneratorInterface;
 use LLPhant\OllamaConfig;
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestFactoryInterface;
+use Psr\Http\Message\StreamFactoryInterface;
 
 use function str_replace;
 
 final class OllamaEmbeddingGenerator implements EmbeddingGeneratorInterface
 {
-    public Client $client;
+    public ClientInterface $client;
+
+    private readonly RequestFactoryInterface
+        &StreamFactoryInterface $factory;
 
     private readonly string $model;
 
-    public function __construct(OllamaConfig $config)
-    {
+    private readonly string $baseUri;
+
+    public function __construct(
+        OllamaConfig $config,
+        ?ClientInterface $client = null,
+        ?RequestFactoryInterface $requestFactory = null,
+        ?StreamFactoryInterface $streamFactory = null,
+    ) {
         $this->model = $config->model;
-        $this->client = new Client([
-            'base_uri' => $config->url,
-        ]);
+        $this->baseUri = $config->url;
+        $this->client = $client ?? Psr18ClientDiscovery::find();
+        $this->factory = new Psr17Factory(
+            requestFactory: $requestFactory,
+            streamFactory: $streamFactory,
+        );
     }
 
     /**
@@ -36,15 +52,21 @@ final class OllamaEmbeddingGenerator implements EmbeddingGeneratorInterface
     {
         $text = str_replace("\n", ' ', DocumentUtils::toUtf8($text));
 
-        $response = $this->client->post('embed', [
-            'body' => json_encode([
-                'model' => $this->model,
-                'input' => $text,
-            ], JSON_THROW_ON_ERROR),
-            'headers' => [
-                'Content-Type' => 'application/json',
-            ],
-        ]);
+        $request = $this->factory->createRequest(
+            'POST',
+            rtrim($this->baseUri, '/').'/embed'
+        );
+        $request = $request->withHeader('Content-Type', 'application/json');
+        $request = $request->withBody(
+            $this->factory->createStream(
+                json_encode([
+                    'model' => $this->model,
+                    'input' => $text,
+                ], JSON_THROW_ON_ERROR)
+            )
+        );
+
+        $response = $this->client->sendRequest($request);
 
         $searchResults = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
         if (! is_array($searchResults)) {
