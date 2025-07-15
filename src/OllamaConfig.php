@@ -16,6 +16,8 @@ class OllamaConfig
 
     public ?int $timeout = null;
 
+    public ?string $apiKey = null;
+
     /**
      * model options, example:
      * - options

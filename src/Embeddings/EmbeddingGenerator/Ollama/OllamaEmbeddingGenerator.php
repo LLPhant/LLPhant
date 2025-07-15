@@ -22,9 +22,19 @@ final class OllamaEmbeddingGenerator implements EmbeddingGeneratorInterface
     public function __construct(OllamaConfig $config)
     {
         $this->model = $config->model;
-        $this->client = new Client([
+
+        $options = [
             'base_uri' => $config->url,
-        ]);
+            'timeout' => $config->timeout,
+            'connect_timeout' => $config->timeout,
+            'read_timeout' => $config->timeout,
+        ];
+
+        if (! empty($config->apiKey)) {
+            $options['headers'] = ['Authorization' => 'Bearer '.$config->apiKey];
+        }
+
+        $this->client = new Client($options);
     }
 
     /**
