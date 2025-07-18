@@ -34,6 +34,7 @@ services:
             TYPESENSE_NODE: ${TYPESENSE_NODE}
             VOYAGE_AI_API_KEY: ${VOYAGE_AI_API_KEY}
             MARIADB_HOST: mariadb
+            SERP_API_KEY: ${SERP_API_KEY}
 
     opensearch:
       image: opensearchproject/opensearch:2.17.1
