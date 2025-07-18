@@ -2,15 +2,23 @@
 
 namespace LLPhant\Embeddings\VectorStores\AstraDB;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Exception\ClientException;
-use GuzzleHttp\Exception\ServerException;
-use GuzzleHttp\RequestOptions;
+use Http\Discovery\Psr17Factory;
+use Http\Discovery\Psr18ClientDiscovery;
+use LLPhant\Exception\HttpException;
+use Psr\Http\Client\ClientExceptionInterface;
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestFactoryInterface;
+use Psr\Http\Message\StreamFactoryInterface;
 
 class AstraDBClient
 {
-    public ClientInterface $client;
+    private readonly string $endpoint;
+
+    private readonly string $token;
+
+    private readonly ClientInterface $client;
+
+    private readonly StreamFactoryInterface&RequestFactoryInterface $factory;
 
     /**
      * @var array<string, array<string, array<string, true>>>
@@ -26,35 +34,20 @@ class AstraDBClient
     public function __construct(
         ?string $endpoint = null,
         ?string $token = null,
-        string $keySpace = 'default_keyspace',
+        private readonly string $keySpace = 'default_keyspace',
         public readonly string $collectionName = 'default_collection',
         ?ClientInterface $client = null)
     {
-        if ($client instanceof ClientInterface) {
-            $this->client = $client;
-        } else {
-            $this->client = $this->createClient($endpoint, $token, $keySpace);
+        if ($endpoint === null && is_string(getenv('ASTRADB_ENDPOINT'))) {
+            $endpoint = getenv('ASTRADB_ENDPOINT');
         }
-    }
-
-    private function createClient(?string $endpoint, ?string $token, string $keySpace): ClientInterface
-    {
-        if ($endpoint === null) {
-            $endpoint = getenv('ASTRADB_ENDPOINT') ?: throw new \Exception('You have to provide a ASTRADB_ENDPOINT env var to connect to AstraDB.');
+        $this->endpoint = $endpoint ?? throw new \Exception('You have to provide a ASTRADB_ENDPOINT env var to connect to AstraDB.');
+        if ($token === null && is_string(getenv('ASTRADB_TOKEN'))) {
+            $token = getenv('ASTRADB_TOKEN');
         }
-
-        if ($token === null) {
-            $token = getenv('ASTRADB_TOKEN') ?: throw new \Exception('You have to provide a ASTRADB_TOKEN env var to connect to AstraDB.');
-        }
-
-        return new Client([
-            'base_uri' => $endpoint.'/api/json/v1/'.$keySpace.'/',
-            'headers' => [
-                'Token' => $token,
-                'Content-Type' => 'application/json',
-                'Accept' => 'application/json',
-            ],
-        ]);
+        $this->token = $token ?? throw new \Exception('You have to provide a ASTRADB_TOKEN env var to connect to AstraDB.');
+        $this->client = $client ?? Psr18ClientDiscovery::find();
+        $this->factory = new Psr17Factory;
     }
 
     public function createCollection(
@@ -182,29 +175,34 @@ class AstraDBClient
      * @param  array<string, mixed>  $body
      * @return array<string, mixed>
      *
-     * @throws \GuzzleHttp\Exception\GuzzleException
      * @throws \JsonException
+     * @throws ClientExceptionInterface
      */
     private function sendRequest(array $body, bool $forObjectInCollection): array
     {
         $path = $forObjectInCollection ? $this->collectionName : '';
 
-        $options = [
-            RequestOptions::JSON => $body,
-        ];
+        $request = $this->factory->createRequest('POST', sprintf('%s/api/json/v1/%s/%s', $this->endpoint, $this->keySpace, $path))
+            ->withHeader('Token', $this->token)
+            ->withHeader('Content-Type', 'application/json')
+            ->withHeader('Accept', 'application/json')
+            ->withBody($this->factory->createStream(json_encode($body, JSON_THROW_ON_ERROR)));
+        $response = $this->client->sendRequest($request);
 
-        try {
-            $response = $this->client->request('POST', $path, $options);
-
-            $result = \json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
-            if (\array_key_exists('errors', $result) || \array_key_exists('error', $result)) {
-                throw new \Exception('AstraDB API error: '.\print_r($result, true));
-            }
-
-            return $result;
-        } catch (ServerException|ClientException $e) {
-            $response = $e->getResponse();
-            throw new \Exception('AstraDB API error: '.$response->getBody()->getContents(), $e->getCode(), $e);
+        $status = $response->getStatusCode();
+        if ($status < 200 || $status >= 300) {
+            throw new HttpException(sprintf(
+                'AstraDB API error (%s): %s',
+                $status,
+                $response->getBody()->getContents(),
+            ));
         }
+
+        $result = \json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
+        if (\array_key_exists('errors', $result) || \array_key_exists('error', $result)) {
+            throw new \Exception('AstraDB API error: '.\print_r($result, true));
+        }
+
+        return $result;
     }
 }
