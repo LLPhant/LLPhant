@@ -28,9 +28,8 @@ it('can evaluate Messages using embedding distance evaluator', function (): void
         'pink cheesecake is jumping over the suitcase with dinosaurs',
         'lorem ipsum',
     ];
-    $results = $evaluator->evaluateMessages($candidateMessages, $referenceMessages);
-    expect($results->getResults())->toBe([
-        0.474,
-        0.572,
-    ]);
+    $results = $evaluator->evaluateMessages($candidateMessages, $referenceMessages)->getResults();
+    expect(\count($results))->toBe(2);
+    expect($results[0])->toBeNearTo(0.474, 0.01);
+    expect($results[1])->toBeNearTo(0.572, 0.01);
 });

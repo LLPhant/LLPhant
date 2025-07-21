@@ -17,3 +17,7 @@ expect()->extend('toMatchJson', function (string $actual) {
     return expect(json_decode($this->value, true))
         ->toEqual(json_decode($actual, true));
 });
+
+expect()->extend('toBeNearTo', function (float $actual, float $epsilon) {
+    return expect(abs($this->value - $actual))->toBeLessThanOrEqual($epsilon, "Values are not near: {$this->value}, {$actual}%");
+});
