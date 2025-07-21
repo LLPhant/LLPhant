@@ -19,6 +19,9 @@ final class OllamaEmbeddingGenerator implements EmbeddingGeneratorInterface
 
     private readonly string $model;
 
+    /** @var array<string, mixed> */
+    private array $modelOptions = [];
+
     public function __construct(OllamaConfig $config)
     {
         $this->model = $config->model;
@@ -35,6 +38,8 @@ final class OllamaEmbeddingGenerator implements EmbeddingGeneratorInterface
         }
 
         $this->client = new Client($options);
+
+        $this->modelOptions = $config->modelOptions;
     }
 
     /**
@@ -46,11 +51,14 @@ final class OllamaEmbeddingGenerator implements EmbeddingGeneratorInterface
     {
         $text = str_replace("\n", ' ', DocumentUtils::toUtf8($text));
 
+        $params = [
+            ...$this->modelOptions,
+            'model' => $this->model,
+            'input' => $text,
+        ];
+
         $response = $this->client->post('embed', [
-            'body' => json_encode([
-                'model' => $this->model,
-                'input' => $text,
-            ], JSON_THROW_ON_ERROR),
+            'body' => json_encode($params, JSON_THROW_ON_ERROR),
             'headers' => [
                 'Content-Type' => 'application/json',
             ],
@@ -92,6 +100,6 @@ final class OllamaEmbeddingGenerator implements EmbeddingGeneratorInterface
 
     public function getEmbeddingLength(): int
     {
-        return 1024;
+        return $this->modelOptions['options']['num_ctx'] ?? 2048;
     }
 }
