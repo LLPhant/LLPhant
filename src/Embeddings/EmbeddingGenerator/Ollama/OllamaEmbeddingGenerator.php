@@ -29,6 +29,9 @@ final class OllamaEmbeddingGenerator implements EmbeddingGeneratorInterface
 
     private readonly ?string $apiKey;
 
+    /** @var array<string, mixed> */
+    private array $modelOptions = [];
+
     public function __construct(
         OllamaConfig $config,
         ?ClientInterface $client = null,
@@ -56,6 +59,7 @@ final class OllamaEmbeddingGenerator implements EmbeddingGeneratorInterface
             requestFactory: $requestFactory,
             streamFactory: $streamFactory,
         );
+        $this->modelOptions = $config->modelOptions;
     }
 
     /**
@@ -77,12 +81,14 @@ final class OllamaEmbeddingGenerator implements EmbeddingGeneratorInterface
             $request = $request->withHeader('Authorization', 'Bearer '.$this->apiKey);
         }
 
+        $parameters = [
+            'model' => $this->model,
+            'input' => $text,
+            ...$this->modelOptions,
+        ];
         $request = $request->withBody(
             $this->factory->createStream(
-                json_encode([
-                    'model' => $this->model,
-                    'input' => $text,
-                ], JSON_THROW_ON_ERROR)
+                json_encode($parameters, JSON_THROW_ON_ERROR)
             )
         );
 
@@ -124,6 +130,6 @@ final class OllamaEmbeddingGenerator implements EmbeddingGeneratorInterface
 
     public function getEmbeddingLength(): int
     {
-        return 1024;
+        return $this->modelOptions['options']['num_ctx'] ?? 2048;
     }
 }
