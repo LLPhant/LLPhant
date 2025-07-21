@@ -18,6 +18,8 @@ class ImageSource implements JsonSerializable
         } elseif ($this->isBase64($urlOrBase64Image)) {
             $this->base64 = $urlOrBase64Image;
             $this->url = 'data:image/jpeg;base64,'.$urlOrBase64Image;
+        } elseif ($this->isDataUri($urlOrBase64Image)) {
+            $this->url = $urlOrBase64Image;
         } else {
             throw new \InvalidArgumentException('Invalid image URL or base64 format.');
         }
@@ -31,6 +33,11 @@ class ImageSource implements JsonSerializable
     protected function isBase64(string $image): bool
     {
         return \preg_match('/^[a-zA-Z0-9\/\r\n+]*={0,2}$/', $image) === 1;
+    }
+
+    protected function isDataUri(string $image): bool
+    {
+        return \preg_match('/^data:((?:\w+\/(?:(?!;).)+)?)((?:;[\w\W]*?[^;])*),(.+)$/m', $image) === 1;
     }
 
     public function getBase64(Client $client): string
