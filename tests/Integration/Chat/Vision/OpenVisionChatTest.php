@@ -23,11 +23,11 @@ it('can describe images with urls', function () {
     expect($response)->toContain('lake', 'mountain');
 });
 
-it('can describe images in base64', function () {
+it('can describe images in base64', function (string $fileName) {
     $config = new OpenAIConfig();
     $config->model = 'gpt-4o-mini';
     $chat = new OpenAIChat($config);
-    $fileContents = \file_get_contents(__DIR__.'/test.jpg');
+    $fileContents = \file_get_contents(__DIR__.'/'.$fileName);
     $base64 = \base64_encode($fileContents);
     $messages = [
         VisionMessage::fromImages([
@@ -36,4 +36,8 @@ it('can describe images in base64', function () {
     ];
     $response = $chat->generateChat($messages);
     expect($response)->toContain('cat');
-});
+})->with([
+    'test.jpg',
+    'test.png',
+    'test.gif',
+]);
