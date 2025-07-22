@@ -13,14 +13,23 @@ class ImageSource implements JsonSerializable
 
     public function __construct(string $urlOrBase64Image, private readonly ImageQuality $detail = ImageQuality::Auto)
     {
+        $this->url = $this->decodeUrl($urlOrBase64Image);
+    }
+
+    private function decodeUrl(string $urlOrBase64Image): string
+    {
         if ($this->isUrl($urlOrBase64Image)) {
-            $this->url = $urlOrBase64Image;
-        } elseif ($this->isBase64($urlOrBase64Image)) {
-            $this->base64 = $urlOrBase64Image;
-            $this->url = 'data:image/jpeg;base64,'.$urlOrBase64Image;
-        } else {
-            throw new \InvalidArgumentException('Invalid image URL or base64 format.');
+            return $urlOrBase64Image;
         }
+        if ($this->isBase64($urlOrBase64Image)) {
+            $imageType = $this->imageType($urlOrBase64Image);
+            if ($imageType !== null) {
+                $this->base64 = $urlOrBase64Image;
+
+                return "data:{$imageType};base64,${urlOrBase64Image}";
+            }
+        }
+        throw new \InvalidArgumentException('Invalid image URL or base64 format.');
     }
 
     protected function isUrl(string $image): bool
@@ -56,5 +65,35 @@ class ImageSource implements JsonSerializable
                 'detail' => $this->detail->value,
             ],
         ];
+    }
+
+    private function imageType(string $urlOrBase64Image): ?string
+    {
+        $binaryData = base64_decode($urlOrBase64Image, true);
+
+        if ($binaryData === false) {
+            return null;
+        }
+
+        $binaryDataHex = strtoupper(bin2hex($binaryData));
+
+        if (\str_starts_with($binaryDataHex, '89504E470D0A1A0A')) {
+            return 'image/png';
+        }
+        if (\str_starts_with($binaryDataHex, '474946383761')) {
+            return 'image/gif';
+        }
+        if (\str_starts_with($binaryDataHex, '474946383961')) {
+            return 'image/gif';
+        }
+        // Check JPEG signature (starts with FF D8 and ends with FF D9)
+        if (! \str_starts_with($binaryDataHex, 'FFD8')) {
+            return null;
+        }
+        if (! \str_ends_with($binaryDataHex, 'FFD9')) {
+            return null;
+        }
+
+        return 'image/jpeg';
     }
 }
