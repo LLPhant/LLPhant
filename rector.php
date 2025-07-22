@@ -48,6 +48,6 @@ return static function (RectorConfig $rectorConfig): void {
         ArrayShapeFromConstantArrayReturnRector::class,
         AddDefaultValueForUndefinedVariableRector::class,
         ChangeAndIfToEarlyReturnRector::class,
-        ChangeOrIfReturnToEarlyReturnRector::class
+        ChangeOrIfReturnToEarlyReturnRector::class,
     ]);
 };
