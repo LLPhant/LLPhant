@@ -75,25 +75,19 @@ class ImageSource implements JsonSerializable
             return null;
         }
 
-        $binaryDataHex = strtoupper(bin2hex($binaryData));
-
-        if (\str_starts_with($binaryDataHex, '89504E470D0A1A0A')) {
+        if (\substr($binaryData, 0, 8) === "\x89PNG\x0D\x0A\x1A\x0A") {
             return 'image/png';
         }
-        if (\str_starts_with($binaryDataHex, '474946383761')) {
+
+        $gifHeader = \substr($binaryData, 0, 6);
+        if ($gifHeader === 'GIF87a' || $gifHeader === 'GIF89a') {
             return 'image/gif';
-        }
-        if (\str_starts_with($binaryDataHex, '474946383961')) {
-            return 'image/gif';
-        }
-        // Check JPEG signature (starts with FF D8 and ends with FF D9)
-        if (! \str_starts_with($binaryDataHex, 'FFD8')) {
-            return null;
-        }
-        if (! \str_ends_with($binaryDataHex, 'FFD9')) {
-            return null;
         }
 
-        return 'image/jpeg';
+        if (\substr($binaryData, 0, 2) === "\xFF\xD8" && \substr($binaryData, -2) === "\xFF\xD9") {
+            return 'image/jpeg';
+        }
+
+        return null;
     }
 }
