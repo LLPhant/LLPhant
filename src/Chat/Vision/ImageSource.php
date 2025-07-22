@@ -75,7 +75,7 @@ class ImageSource implements JsonSerializable
             return null;
         }
 
-        if (\substr($binaryData, 0, 8) === "\x89PNG\x0D\x0A\x1A\x0A") {
+        if (str_starts_with($binaryData, "\x89PNG\x0D\x0A\x1A\x0A")) {
             return 'image/png';
         }
 
@@ -84,7 +84,7 @@ class ImageSource implements JsonSerializable
             return 'image/gif';
         }
 
-        if (\substr($binaryData, 0, 2) === "\xFF\xD8" && \substr($binaryData, -2) === "\xFF\xD9") {
+        if (str_starts_with($binaryData, "\xFF\xD8") && str_ends_with($binaryData, "\xFF\xD9")) {
             return 'image/jpeg';
         }
 

@@ -5,6 +5,8 @@ declare(strict_types=1);
 use Rector\CodeQuality\Rector\Class_\InlineConstructorDefaultToPropertyRector;
 use Rector\CodeQuality\Rector\Empty_\SimplifyEmptyCheckOnEmptyArrayRector;
 use Rector\Config\RectorConfig;
+use Rector\EarlyReturn\Rector\If_\ChangeAndIfToEarlyReturnRector;
+use Rector\EarlyReturn\Rector\If_\ChangeOrIfReturnToEarlyReturnRector;
 use Rector\Php56\Rector\FunctionLike\AddDefaultValueForUndefinedVariableRector;
 use Rector\Php80\Rector\Class_\ClassPropertyAssignToConstructorPromotionRector;
 use Rector\Privatization\Rector\Class_\ChangeGlobalVariablesToPropertiesRector;
@@ -45,5 +47,7 @@ return static function (RectorConfig $rectorConfig): void {
         SimplifyEmptyCheckOnEmptyArrayRector::class,
         ArrayShapeFromConstantArrayReturnRector::class,
         AddDefaultValueForUndefinedVariableRector::class,
+        ChangeAndIfToEarlyReturnRector::class,
+        ChangeOrIfReturnToEarlyReturnRector::class
     ]);
 };
