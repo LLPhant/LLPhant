@@ -3,13 +3,13 @@
 namespace Tests\Unit\Embedding\EmbeddingGenerator\OpenAI;
 
 use GuzzleHttp\Client;
-use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 use LLPhant\Embeddings\DocumentUtils;
 use LLPhant\Embeddings\EmbeddingGenerator\OpenAI\AbstractOpenAIEmbeddingGenerator;
 use LLPhant\OpenAIConfig;
+use Psr\Http\Client\ClientInterface;
 use Tests\Unit\Chat\MockOpenAIClient;
 
 const FAKE_EMBEDDING_ANSWER = <<<'JSON'
