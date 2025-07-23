@@ -6,7 +6,7 @@ use LLPhant\Embeddings\EmbeddingGenerator\OpenAI\OpenAI3SmallEmbeddingGenerator;
 use LLPhant\Embeddings\VectorStores\AstraDB\AstraDBClient;
 
 it('can create and delete a collection', function () {
-    $client = new AstraDBClient(endpoint: '', token: '', collectionName: 'test_collection');
+    $client = new AstraDBClient(collectionName: 'test_collection');
 
     $client->deleteCollection();
 
@@ -22,7 +22,7 @@ it('can create and delete a collection', function () {
 });
 
 it('can insert documents', function () {
-    $client = new AstraDBClient(endpoint: '', token: '');
+    $client = new AstraDBClient();
 
     if (! $client->collectionVectorDimension()) {
         $client->createCollection();
