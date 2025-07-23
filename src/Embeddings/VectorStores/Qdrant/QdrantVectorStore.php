@@ -3,7 +3,7 @@
 namespace LLPhant\Embeddings\VectorStores\Qdrant;
 
 use Exception;
-use GuzzleHttp\Client;
+use Http\Discovery\Psr18ClientDiscovery;
 use LLPhant\Embeddings\Document;
 use LLPhant\Embeddings\DocumentUtils;
 use LLPhant\Embeddings\VectorStores\VectorStoreBase;
@@ -33,7 +33,7 @@ class QdrantVectorStore extends VectorStoreBase
         private ?string $vectorName = self::QDRANT_OPENAI_VECTOR_NAME,
         private string $distance = VectorParams::DISTANCE_COSINE,
     ) {
-        $this->client = new Qdrant(new Transport(new Client(), $config));
+        $this->client = new Qdrant(new Transport(Psr18ClientDiscovery::find(), $config));
     }
 
     public function setClient(Qdrant $client): void
