@@ -16,7 +16,7 @@ use Tests\Integration\Embeddings\VectorStores\Doctrine\PlaceEntity;
 
 function getCleanVectorStoreForCollectionCompatibleWith(EmbeddingGeneratorInterface $embeddingGenerator): AstraDBVectorStore
 {
-    $vectorStore = new AstraDBVectorStore(new AstraDBClient(endpoint: '', token: '', collectionName: 'collection_'.$embeddingGenerator->getEmbeddingLength()));
+    $vectorStore = new AstraDBVectorStore(new AstraDBClient(collectionName: 'collection_'.$embeddingGenerator->getEmbeddingLength()));
 
     $currentEmbeddingLength = $vectorStore->getEmbeddingLength();
     if ($currentEmbeddingLength === 0) {
