@@ -26,7 +26,7 @@ class ImageSource implements JsonSerializable
             if ($imageType !== null) {
                 $this->base64 = $urlOrBase64Image;
 
-                return "data:{$imageType};base64,${urlOrBase64Image}";
+                return "data:{$imageType};base64,{$urlOrBase64Image}";
             }
         }
         throw new \InvalidArgumentException('Invalid image URL or base64 format.');
