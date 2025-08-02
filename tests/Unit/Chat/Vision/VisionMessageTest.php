@@ -43,6 +43,13 @@ it('generates a correct user message for OpenAI', function () {
                     "url": "data:image\/gif;base64,R0lGODlhAQABAIAAAAAAAP\/\/\/wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==",
                     "detail": "low"
                 }
+            },
+            {
+                "type": "image_url",
+                "image_url": {
+                    "url": "data:image\/webp;base64,UklGRhYAAABXRUJQVlA4TAoAAAAvAAAAAEX\/I\/of",
+                    "detail": "low"
+                }
             }
         ]
     }
@@ -53,6 +60,7 @@ it('generates a correct user message for OpenAI', function () {
         new ImageSource('/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/wAALCAABAAEBAREA/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AKp//2Q==', ImageQuality::Low),
         new ImageSource('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==', ImageQuality::Low),
         new ImageSource('R0lGODlhAQABAIAAAAAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==', ImageQuality::Low),
+        new ImageSource('UklGRhYAAABXRUJQVlA4TAoAAAAvAAAAAEX/I/of', ImageQuality::Low),
     ];
 
     expect(\json_encode(VisionMessage::fromImages($images, 'What are in these images? Is there any difference between them?'), JSON_PRETTY_PRINT))->toBe($expectedJson);

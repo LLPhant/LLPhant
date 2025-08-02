@@ -40,4 +40,5 @@ it('can describe images in base64', function (string $fileName) {
     'test.jpg',
     'test.png',
     'test.gif',
+    'test.webp',
 ]);
