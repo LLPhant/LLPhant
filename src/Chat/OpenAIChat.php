@@ -3,6 +3,7 @@
 namespace LLPhant\Chat;
 
 use Exception;
+use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Psr7\Utils;
 use LLPhant\Chat\CalledFunction\CalledFunction;
 use LLPhant\Chat\Enums\ChatRole;
@@ -63,10 +64,20 @@ use Psr\Log\NullLogger;
                 throw new MissingParameterException('You have to provide an url o to set OPENAI_BASE_URL env var to request OpenAI.');
             }
 
-            $this->client = OpenAI::factory()
+            $factory = OpenAI::factory()
                 ->withApiKey($config->apiKey)
-                ->withBaseUri($config->url)
-                ->make();
+                ->withBaseUri($config->url);
+
+            if ($config->timeout !== null) {
+                $options = [
+                    'timeout' => $config->timeout,
+                    'connect_timeout' => $config->timeout,
+                    'read_timeout' => $config->timeout,
+                ];
+                $factory->withHttpClient(new GuzzleClient($options));
+            }
+
+            $this->client = $factory->make();
         }
         $this->model = $config->model ?? throw new MissingParameterException('You have to provide a model');
         $this->modelOptions = $config->modelOptions;

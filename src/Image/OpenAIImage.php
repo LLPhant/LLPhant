@@ -3,6 +3,7 @@
 namespace LLPhant\Image;
 
 use Exception;
+use GuzzleHttp\Client as GuzzleClient;
 use LLPhant\Image\Enums\OpenAIImageModel;
 use LLPhant\Image\Enums\OpenAIImageSize;
 use LLPhant\Image\Enums\OpenAIImageStyle;
@@ -32,11 +33,20 @@ class OpenAIImage implements ImageInterface
                 throw new Exception('You have to provide a OPENAI_API_KEY env var to request OpenAI .');
             }
 
-            $this->client = OpenAI::factory()
-                ->withApiKey($apiKey)
-                ->withHttpHeader('OpenAI-Beta', 'assistants=v2')
-                ->withBaseUri($config->url ?? (getenv('OPENAI_BASE_URL') ?: 'https://api.openai.com/v1'))
-                ->make();
+            $factory = OpenAI::factory()
+                ->withApiKey($config->apiKey)
+                ->withBaseUri($config->url);
+
+            if ($config->timeout !== null) {
+                $options = [
+                    'timeout' => $config->timeout,
+                    'connect_timeout' => $config->timeout,
+                    'read_timeout' => $config->timeout,
+                ];
+                $factory->withHttpClient(new GuzzleClient($options));
+            }
+
+            $this->client = $factory->make();
         }
         $this->model = $config->model ?? OpenAIImageModel::DallE3->value;
         $this->modelOptions = $config->modelOptions ?? [];
