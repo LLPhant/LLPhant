@@ -28,7 +28,7 @@ class OpenAIAudio
             }
 
             $factory = OpenAI::factory()
-                ->withApiKey($config->apiKey)
+                ->withApiKey($apiKey)
                 ->withHttpHeader('OpenAI-Beta', 'assistants=v2')
                 ->withBaseUri($config->url ?? (getenv('OPENAI_BASE_URL') ?: 'https://api.openai.com/v1'));
 
