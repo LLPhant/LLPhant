@@ -27,9 +27,9 @@ it('not setting any timeout for HTTP client', function () {
 it('is setting a timeout for HTTP client', function () {
     $config = new OllamaConfig();
     $config->model = 'test';
-    $config->timeout = 60;
+    $config->timeout = 60.0;
     $chat = new OllamaChat($config);
-    expect($chat->client->getConfig('timeout'))->toBe(60);
+    expect($chat->client->getConfig('timeout'))->toBe(60.0);
 });
 
 it('error when construct with no model', function () {
