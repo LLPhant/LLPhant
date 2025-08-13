@@ -95,10 +95,10 @@ it('can use timeout option', function () {
     $config = new OllamaConfig();
     $config->model = 'fake-model';
     $config->url = 'http://fakeurl';
-    $config->timeout = 99;
+    $config->timeout = 99.0;
     $generator = new OllamaEmbeddingGenerator($config);
 
     expect($generator->client)->toBeInstanceOf(GuzzleClient::class);
     // This expectation will be removed when using next version of Guzzle
-    expect($generator->client->getConfig()['connect_timeout'])->toBe(99);
+    expect($generator->client->getConfig()['connect_timeout'])->toBe(99.0);
 });
