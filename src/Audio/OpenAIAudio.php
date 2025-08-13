@@ -32,14 +32,13 @@ class OpenAIAudio
                 ->withHttpHeader('OpenAI-Beta', 'assistants=v2')
                 ->withBaseUri($config->url ?? (getenv('OPENAI_BASE_URL') ?: 'https://api.openai.com/v1'));
 
-            if ($config->timeout !== null) {
+            if ($config?->timeout !== null) {
                 $options = [
                     'timeout' => $config->timeout,
                     'connect_timeout' => $config->timeout,
                     'read_timeout' => $config->timeout,
                 ];
                 $factory->withHttpClient(new GuzzleClient($options));
-
             }
 
             $this->client = $factory->make();

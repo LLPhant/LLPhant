@@ -34,10 +34,13 @@ class OpenAIImage implements ImageInterface
             }
 
             $factory = OpenAI::factory()
-                ->withApiKey($apiKey)
-                ->withBaseUri($config->url);
+                ->withApiKey($apiKey);
 
-            if ($config->timeout !== null) {
+            if ($config?->url != null) {
+                $factory->withBaseUri($config->url);
+            }
+
+            if ($config?->timeout !== null) {
                 $options = [
                     'timeout' => $config->timeout,
                     'connect_timeout' => $config->timeout,
