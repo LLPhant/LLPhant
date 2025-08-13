@@ -33,7 +33,7 @@ use OpenAI\Contracts\ClientContract;
  */
 class OpenAIConfig extends AIConfig
 {
-    public ?int $timeout = null;
+    public ?float $timeout = null;
 
     /**
      * @param  ModelOptions  $modelOptions

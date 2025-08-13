@@ -14,7 +14,7 @@ class OllamaConfig
 
     public bool $formatJson = false;
 
-    public ?int $timeout = null;
+    public ?float $timeout = null;
 
     public ?string $apiKey = null;
 
