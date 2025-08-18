@@ -40,7 +40,7 @@ final class OllamaEmbeddingGenerator implements EmbeddingGeneratorInterface
         $this->apiKey = $config->apiKey;
 
         $this->baseUri = $config->url;
-        if ($client instanceof \Psr\Http\Client\ClientInterface) {
+        if ($client instanceof ClientInterface) {
             $this->client = $client;
         } elseif ($config->timeout !== null) {
             $options = [
