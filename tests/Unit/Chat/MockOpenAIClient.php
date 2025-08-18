@@ -16,6 +16,7 @@ use OpenAI\Contracts\Resources\FineTuningContract;
 use OpenAI\Contracts\Resources\ImagesContract;
 use OpenAI\Contracts\Resources\ModelsContract;
 use OpenAI\Contracts\Resources\ModerationsContract;
+use OpenAI\Contracts\Resources\RealtimeContract;
 use OpenAI\Contracts\Resources\ResponsesContract;
 use OpenAI\Contracts\Resources\ThreadsContract;
 use OpenAI\Contracts\Resources\VectorStoresContract;
@@ -100,5 +101,10 @@ class MockOpenAIClient implements ClientContract
     public function vectorStores(): VectorStoresContract
     {
         // TODO: Implement vectorStores() method.
+    }
+
+    public function realtime(): RealtimeContract
+    {
+        // TODO: Implement realtime() method.
     }
 }
