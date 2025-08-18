@@ -211,7 +211,7 @@ it('does not throw away "0" strings when creating streamed response', function (
     $response->allows([
         'getBody' => $stream,
     ]);
-    $response->shouldReceive('getHeaders');
+    $response->shouldReceive('getHeaders')->andReturns([]);
 
     $transport = Mockery::mock(TransporterContract::class);
     $transport->allows([
