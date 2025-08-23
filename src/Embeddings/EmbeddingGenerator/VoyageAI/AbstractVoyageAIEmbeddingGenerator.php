@@ -58,11 +58,11 @@ abstract class AbstractVoyageAIEmbeddingGenerator implements EmbeddingGeneratorI
         if ($config instanceof VoyageAIConfig && $config->client instanceof ClientContract) {
             throw new \RuntimeException('Passing a client to a VoyageAIConfig is no more admitted.');
         }
-        $apiKey = $config->apiKey ?? getenv('VOYAGE_AI_API_KEY');
+        $apiKey = $config->apiKey ?? getenv('VOYAGE_AI_API_KEY') ?: ($_ENV['VOYAGE_AI_API_KEY'] ?? null);
         if (! $apiKey) {
             throw new Exception('You have to provide a VOYAGE_API_KEY env var to request VoyageAI.');
         }
-        $url = $config->url ?? (getenv('VOYAGE_AI_BASE_URL') ?: 'https://api.voyageai.com/v1');
+        $url = $config->url ?? getenv('VOYAGE_AI_BASE_URL') ?: ($_ENV['VOYAGE_AI_BASE_URL'] ?? 'https://api.voyageai.com/v1');
         $this->uri = $url.'/embeddings';
         $this->apiKey = $apiKey;
         $this->client = $client ?? Psr18ClientDiscovery::find();

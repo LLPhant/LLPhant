@@ -38,13 +38,16 @@ class AstraDBClient
         public readonly string $collectionName = 'default_collection',
         ?ClientInterface $client = null)
     {
-        if (! $endpoint && getenv('ASTRADB_ENDPOINT') !== '') {
-            $endpoint = (string) getenv('ASTRADB_ENDPOINT');
+        if (! $endpoint && (getenv('ASTRADB_ENDPOINT') !== '' || ! empty($_ENV['ASTRADB_ENDPOINT']))) {
+            $endpoint = (string) (getenv('ASTRADB_ENDPOINT') ?: $_ENV['ASTRADB_ENDPOINT']);
         }
+
         $this->endpoint = $endpoint ?? throw new \Exception('You have to provide a ASTRADB_ENDPOINT env var to connect to AstraDB.');
-        if (! $token && getenv('ASTRADB_TOKEN') !== '') {
-            $token = (string) getenv('ASTRADB_TOKEN');
+
+        if (! $token && (getenv('ASTRADB_TOKEN') !== '' || ! empty($_ENV['ASTRADB_TOKEN']))) {
+            $token = (string) (getenv('ASTRADB_TOKEN') ?: $_ENV['ASTRADB_TOKEN']);
         }
+
         $this->token = $token ?? throw new \Exception('You have to provide a ASTRADB_TOKEN env var to connect to AstraDB.');
         $this->client = $client ?? Psr18ClientDiscovery::find();
         $this->factory = new Psr17Factory;

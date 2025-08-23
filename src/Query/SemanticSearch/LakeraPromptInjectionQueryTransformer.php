@@ -24,14 +24,16 @@ class LakeraPromptInjectionQueryTransformer implements QueryTransformer
         ?string $apiKey = null,
         ?ClientInterface $client = null)
     {
-        if ($endpoint === null && is_string(getenv('LAKERA_ENDPOINT'))) {
-            $endpoint = getenv('LAKERA_ENDPOINT');
+        if ($endpoint === null && (is_string(getenv('LAKERA_ENDPOINT')) || (! empty($_ENV['LAKERA_ENDPOINT']) && is_string($_ENV['LAKERA_ENDPOINT'])))) {
+            $endpoint = getenv('LAKERA_ENDPOINT') ?: $_ENV['LAKERA_ENDPOINT'];
         }
+
         $this->endpoint = $endpoint ?? throw new \Exception('You have to provide a LAKERA_ENDPOINT env var to connect to LAKERA.');
 
-        if ($apiKey === null && is_string(getenv('LAKERA_API_KEY'))) {
-            $apiKey = getenv('LAKERA_API_KEY');
+        if ($apiKey === null && (is_string(getenv('LAKERA_API_KEY')) || (! empty($_ENV['LAKERA_API_KEY']) && is_string($_ENV['LAKERA_API_KEY'])))) {
+            $apiKey = getenv('LAKERA_API_KEY') ?: $_ENV['LAKERA_API_KEY'];
         }
+
         $this->apiKey = $apiKey ?? throw new \Exception('You have to provide a LAKERA_API_KEY env var to connect to LAKERA.');
 
         $this->client = $client instanceof ClientInterface ? $client : Psr18ClientDiscovery::find();
