@@ -37,7 +37,7 @@ class SerpApiSearch extends ToolBase
     ) {
         parent::__construct($verbose);
 
-        $apiKey ??= getenv('SERP_API_KEY');
+        $apiKey ??= getenv('SERP_API_KEY') ?: ($_ENV['SERP_API_KEY'] ?? null);
         if (! $apiKey) {
             throw new Exception('You have to provide a SERP_API_KEY env var to request SerpApi .');
         }

@@ -45,9 +45,15 @@ class OpenAIConfig extends AIConfig
         ?ClientContract $client = null,
         array $modelOptions = [],
     ) {
+        $resolvedApiKey = $apiKey
+            ?? (getenv('OPENAI_API_KEY') ?: ($_ENV['OPENAI_API_KEY'] ?? null));
+
+        $resolvedUrl = $url
+            ?? (getenv('OPENAI_BASE_URL') ?: ($_ENV['OPENAI_BASE_URL'] ?? 'https://api.openai.com/v1'));
+
         parent::__construct(
-            apiKey: $apiKey ?? (getenv('OPENAI_API_KEY') ?: null),
-            url: $url ?? (getenv('OPENAI_BASE_URL') ?: 'https://api.openai.com/v1'),
+            apiKey: $resolvedApiKey,
+            url: $resolvedUrl,
             model: $model ?? OpenAIChatModel::Gpt4Turbo->value,
             client: $client,
             modelOptions: $modelOptions,
