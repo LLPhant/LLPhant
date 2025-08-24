@@ -22,7 +22,7 @@ class MistralAIConfig extends OpenAIConfig
         array $modelOptions = [],
     ) {
         parent::__construct(
-            apiKey: $apiKey ?? (getenv('MISTRAL_API_KEY') ?: null),
+            apiKey: $apiKey ?? Utility::readEnvironment('MISTRAL_API_KEY'),
             url: $url,
             model: $model ?? 'mistral-small-latest',
             client: $client,

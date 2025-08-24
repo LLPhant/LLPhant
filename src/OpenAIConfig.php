@@ -46,10 +46,10 @@ class OpenAIConfig extends AIConfig
         array $modelOptions = [],
     ) {
         $resolvedApiKey = $apiKey
-            ?? (getenv('OPENAI_API_KEY') ?: ($_ENV['OPENAI_API_KEY'] ?? null));
+            ?? Utility::readEnvironment('OPENAI_API_KEY');
 
         $resolvedUrl = $url
-            ?? (getenv('OPENAI_BASE_URL') ?: ($_ENV['OPENAI_BASE_URL'] ?? 'https://api.openai.com/v1'));
+            ?? Utility::readEnvironment('OPENAI_BASE_URL', 'https://api.openai.com/v1');
 
         parent::__construct(
             apiKey: $resolvedApiKey,

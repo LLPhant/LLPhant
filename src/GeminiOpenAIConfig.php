@@ -7,7 +7,7 @@ class GeminiOpenAIConfig extends OpenAIConfig
     public function __construct(?string $apiKey = null, string $url = 'https://generativelanguage.googleapis.com/v1beta/openai')
     {
         parent::__construct(
-            $apiKey ?? (getenv('GEMINI_API_KEY') ?: ($_ENV['GEMINI_API_KEY'] ?? null)),
+            $apiKey ?? Utility::readEnvironment('GEMINI_API_KEY'),
             $url
         );
     }

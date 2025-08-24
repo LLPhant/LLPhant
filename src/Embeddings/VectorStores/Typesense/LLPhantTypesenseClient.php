@@ -4,6 +4,7 @@ namespace LLPhant\Embeddings\VectorStores\Typesense;
 
 use Http\Discovery\Psr17Factory;
 use Http\Discovery\Psr18ClientDiscovery;
+use LLPhant\Utility;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
@@ -25,14 +26,14 @@ class LLPhantTypesenseClient
         ?string $apiKey = null,
         ?ClientInterface $client = null
     ) {
-        if ($node === null && is_string(getenv('TYPESENSE_NODE'))) {
-            $node = getenv('TYPESENSE_NODE');
+        $node ??= (string) Utility::readEnvironment('TYPESENSE_NODE', 'http://localhost:8108');
+        $apiKey ??= Utility::readEnvironment('TYPESENSE_API_KEY');
+        if (! $apiKey) {
+            throw new \Exception('You have to provide a TYPESENSE_API_KEY env var to connect to Typesense.');
         }
-        $this->baseUri = $node ?? 'http://localhost:8108';
-        if ($apiKey === null && is_string(getenv('TYPESENSE_API_KEY'))) {
-            $apiKey = getenv('TYPESENSE_API_KEY');
-        }
-        $this->apiKey = $apiKey ?? throw new \Exception('You have to provide a TYPESENSE_API_KEY env var to connect to Typesense.');
+
+        $this->baseUri = $node;
+        $this->apiKey = $apiKey;
         $this->client = $client ?? Psr18ClientDiscovery::find();
         $this->factory = new Psr17Factory;
     }

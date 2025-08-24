@@ -5,6 +5,7 @@ namespace LLPhant\Audio;
 use Exception;
 use GuzzleHttp\Client as GuzzleClient;
 use LLPhant\OpenAIConfig;
+use LLPhant\Utility;
 use OpenAI;
 use OpenAI\Contracts\ClientContract;
 
@@ -22,7 +23,7 @@ class OpenAIAudio
         if ($config instanceof OpenAIConfig && $config->client instanceof ClientContract) {
             $this->client = $config->client;
         } else {
-            $apiKey = $config->apiKey ?? (getenv('OPENAI_API_KEY') ?: ($_ENV['OPENAI_API_KEY'] ?? null));
+            $apiKey = $config->apiKey ?? Utility::readEnvironment('OPENAI_API_KEY');
             if (! $apiKey) {
                 throw new Exception('You have to provide a OPENAI_API_KEY env var to request OpenAI .');
             }
@@ -32,7 +33,7 @@ class OpenAIAudio
                 ->withHttpHeader('OpenAI-Beta', 'assistants=v2')
                 ->withBaseUri(
                     $config->url
-                    ?? (getenv('OPENAI_BASE_URL') ?: ($_ENV['OPENAI_BASE_URL'] ?? 'https://api.openai.com/v1'))
+                    ?? (string) Utility::readEnvironment('OPENAI_BASE_URL', 'https://api.openai.com/v1')
                 );
 
             if ($config?->timeout !== null) {
