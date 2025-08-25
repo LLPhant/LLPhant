@@ -25,4 +25,22 @@ class Utility
             ), $e->getCode(), $e);
         }
     }
+
+    public static function readEnvironment(string $name, ?string $defaultValue = null): ?string
+    {
+        $value = getenv($name);
+        if ($value !== false) {
+            return $value;
+        }
+
+        if (isset($_ENV[$name])) {
+            return $_ENV[$name];
+        }
+
+        if (isset($_SERVER[$name])) {
+            return $_SERVER[$name];
+        }
+
+        return $defaultValue;
+    }
 }

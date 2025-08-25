@@ -10,6 +10,7 @@ use Http\Discovery\Psr18ClientDiscovery;
 use LLPhant\Embeddings\Document;
 use LLPhant\Embeddings\DocumentUtils;
 use LLPhant\Embeddings\EmbeddingGenerator\EmbeddingGeneratorInterface;
+use LLPhant\Utility;
 use LLPhant\VoyageAIConfig;
 use OpenAI\Contracts\ClientContract;
 use Psr\Http\Client\ClientExceptionInterface;
@@ -18,7 +19,6 @@ use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 
-use function getenv;
 use function str_replace;
 
 abstract class AbstractVoyageAIEmbeddingGenerator implements EmbeddingGeneratorInterface
@@ -58,11 +58,11 @@ abstract class AbstractVoyageAIEmbeddingGenerator implements EmbeddingGeneratorI
         if ($config instanceof VoyageAIConfig && $config->client instanceof ClientContract) {
             throw new \RuntimeException('Passing a client to a VoyageAIConfig is no more admitted.');
         }
-        $apiKey = $config->apiKey ?? getenv('VOYAGE_AI_API_KEY');
+        $apiKey = Utility::readEnvironment('VOYAGE_AI_API_KEY');
         if (! $apiKey) {
             throw new Exception('You have to provide a VOYAGE_API_KEY env var to request VoyageAI.');
         }
-        $url = $config->url ?? (getenv('VOYAGE_AI_BASE_URL') ?: 'https://api.voyageai.com/v1');
+        $url = $config->url ?? Utility::readEnvironment('VOYAGE_AI_BASE_URL', 'https://api.voyageai.com/v1');
         $this->uri = $url.'/embeddings';
         $this->apiKey = $apiKey;
         $this->client = $client ?? Psr18ClientDiscovery::find();

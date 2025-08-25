@@ -8,11 +8,10 @@ use LLPhant\Image\Enums\OpenAIImageModel;
 use LLPhant\Image\Enums\OpenAIImageSize;
 use LLPhant\Image\Enums\OpenAIImageStyle;
 use LLPhant\OpenAIConfig;
+use LLPhant\Utility;
 use OpenAI;
 use OpenAI\Contracts\ClientContract;
 use OpenAI\Responses\Images\CreateResponse;
-
-use function getenv;
 
 class OpenAIImage implements ImageInterface
 {
@@ -28,7 +27,7 @@ class OpenAIImage implements ImageInterface
         if ($config instanceof OpenAIConfig && $config->client instanceof ClientContract) {
             $this->client = $config->client;
         } else {
-            $apiKey = $config->apiKey ?? getenv('OPENAI_API_KEY');
+            $apiKey = $config->apiKey ?? Utility::readEnvironment('OPENAI_API_KEY');
             if (! $apiKey) {
                 throw new Exception('You have to provide a OPENAI_API_KEY env var to request OpenAI .');
             }

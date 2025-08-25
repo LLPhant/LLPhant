@@ -9,6 +9,7 @@ use LLPhant\Chat\OpenAIChat;
 use LLPhant\Render\CLIOutputUtils;
 use LLPhant\Render\OutputAgentInterface;
 use LLPhant\Render\StringParser;
+use LLPhant\Utility;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
@@ -37,7 +38,7 @@ class SerpApiSearch extends ToolBase
     ) {
         parent::__construct($verbose);
 
-        $apiKey ??= getenv('SERP_API_KEY');
+        $apiKey ??= Utility::readEnvironment('SERP_API_KEY');
         if (! $apiKey) {
             throw new Exception('You have to provide a SERP_API_KEY env var to request SerpApi .');
         }

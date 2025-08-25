@@ -60,7 +60,8 @@ class AnthropicChat implements ChatInterface
         $this->modelOptions = $config->modelOptions;
         $this->model = $config->model;
         $this->maxTokens = $config->maxTokens;
-        $this->apiKey = $config->apiKey ?? (getenv('ANTHROPIC_API_KEY') ?: '');
+        $this->apiKey = $config->apiKey
+            ?? (string) Utility::readEnvironment('ANTHROPIC_API_KEY', '');
         $this->logger = $logger ?: new NullLogger();
 
         $this->client = $config->client ?: Psr18ClientDiscovery::find();

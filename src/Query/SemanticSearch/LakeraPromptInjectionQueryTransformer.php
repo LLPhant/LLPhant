@@ -5,6 +5,7 @@ namespace LLPhant\Query\SemanticSearch;
 use Http\Discovery\Psr17Factory;
 use Http\Discovery\Psr18ClientDiscovery;
 use LLPhant\Exception\SecurityException;
+use LLPhant\Utility;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\StreamFactoryInterface;
@@ -24,14 +25,10 @@ class LakeraPromptInjectionQueryTransformer implements QueryTransformer
         ?string $apiKey = null,
         ?ClientInterface $client = null)
     {
-        if ($endpoint === null && is_string(getenv('LAKERA_ENDPOINT'))) {
-            $endpoint = getenv('LAKERA_ENDPOINT');
-        }
+        $endpoint ??= Utility::readEnvironment('LAKERA_ENDPOINT');
         $this->endpoint = $endpoint ?? throw new \Exception('You have to provide a LAKERA_ENDPOINT env var to connect to LAKERA.');
 
-        if ($apiKey === null && is_string(getenv('LAKERA_API_KEY'))) {
-            $apiKey = getenv('LAKERA_API_KEY');
-        }
+        $apiKey ??= Utility::readEnvironment('LAKERA_API_KEY');
         $this->apiKey = $apiKey ?? throw new \Exception('You have to provide a LAKERA_API_KEY env var to connect to LAKERA.');
 
         $this->client = $client instanceof ClientInterface ? $client : Psr18ClientDiscovery::find();

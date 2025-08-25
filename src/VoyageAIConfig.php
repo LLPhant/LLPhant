@@ -22,6 +22,8 @@ class VoyageAIConfig extends OpenAIConfig
      */
     public function __construct(?string $apiKey = null, string $url = 'https://api.voyageai.com/v1', array $modelOptions = [])
     {
-        parent::__construct($apiKey ?? (getenv('VOYAGE_AI_API_KEY') ?: null), $url, modelOptions: $modelOptions);
+        $apiKey ??= Utility::readEnvironment('VOYAGE_AI_API_KEY');
+
+        parent::__construct($apiKey, $url, modelOptions: $modelOptions);
     }
 }
