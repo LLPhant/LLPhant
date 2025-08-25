@@ -27,7 +27,7 @@ class TokenLimitEvaluator extends AbstractEvaluator
         $provider = new EncoderProvider();
         $encoder = $provider->get($this->provider); // @phpstan-ignore-line
         $tokens = $encoder->encode($candidate);
-        $numTokens = is_countable($tokens) ? count($tokens) : 0;
+        $numTokens = count($tokens);
 
         $result = (int) ($numTokens < $this->tokenLimit);
 
