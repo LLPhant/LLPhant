@@ -255,6 +255,10 @@ use Psr\Log\NullLogger;
         $generator = function (StreamResponse $stream) use ($messages) {
             $toolsToCall = [];
             foreach ($stream as $partialResponse) {
+                if (count($partialResponse->choices) === 0) {
+                    continue;
+                }
+
                 $toolCalls = $partialResponse->choices[0]->delta->toolCalls ?? [];
                 /** @var CreateStreamedResponseToolCall $toolCall */
                 foreach ($toolCalls as $toolCall) {
