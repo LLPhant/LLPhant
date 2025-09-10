@@ -4,6 +4,7 @@ namespace LLPhant\Chat;
 
 use Exception;
 use GuzzleHttp\Client as GuzzleClient;
+use GuzzleHttp\HandlerStack as GuzzleHandlerStack;
 use GuzzleHttp\Psr7\Utils;
 use LLPhant\Chat\CalledFunction\CalledFunction;
 use LLPhant\Chat\Enums\ChatRole;
@@ -68,15 +69,20 @@ use Psr\Log\NullLogger;
                 ->withApiKey($config->apiKey)
                 ->withBaseUri($config->url);
 
+            $httpClientOptions = [];
+
             if ($config->timeout !== null) {
-                $options = [
+                $httpClientOptions = [
                     'timeout' => $config->timeout,
                     'connect_timeout' => $config->timeout,
                     'read_timeout' => $config->timeout,
                 ];
-                $factory->withHttpClient(new GuzzleClient($options));
             }
 
+            $guzzleStack = GuzzleHandlerStack::create();
+            $guzzleStack->push(OpenAIResponseErrorsProcessor::createResponseModifier());
+            $httpClientOptions['handler'] = $guzzleStack;
+            $factory->withHttpClient(new GuzzleClient($httpClientOptions));
             $this->client = $factory->make();
         }
         $this->model = $config->model ?? throw new MissingParameterException('You have to provide a model');
