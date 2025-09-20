@@ -14,25 +14,9 @@ use LLPhant\Query\SemanticSearch\LakeraPromptInjectionQueryTransformer;
 it('can detect malicious prompts', function () {
     $body = <<<'JSON'
     {
-      "model": "lakera-guard-1",
-      "results": [
-        {
-          "categories": {
-            "prompt_injection": true,
-            "jailbreak": false
-          },
-          "category_scores": {
-            "prompt_injection": 0.878,
-            "jailbreak": 0
-          },
-          "flagged": true,
-          "payload": {}
-        }
-      ],
-      "dev_info": {
-        "git_revision": "25650360",
-        "git_timestamp": "2024-08-08T17:13:40+00:00",
-        "version": "1.3.44"
+      "flagged": true,
+      "metadata": {
+        "request_uuid": "111d172a-d15f-4a1b-805c-75163d3f58d0"
       }
     }
     JSON;
@@ -54,25 +38,9 @@ it('can detect malicious prompts', function () {
 it('can detect good prompts', function () {
     $body = <<<'JSON'
     {
-      "model": "lakera-guard-1",
-      "results": [
-        {
-          "categories": {
-            "prompt_injection": false,
-            "jailbreak": false
-          },
-          "category_scores": {
-            "prompt_injection": 0,
-            "jailbreak": 0
-          },
-          "flagged": false,
-          "payload": {}
-        }
-      ],
-      "dev_info": {
-        "git_revision": "25650360",
-        "git_timestamp": "2024-08-08T17:13:40+00:00",
-        "version": "1.3.44"
+      "flagged": false,
+      "metadata": {
+        "request_uuid": "111d172a-d15f-4a1b-805c-75163d3f58d0"
       }
     }
     JSON;
