@@ -11,6 +11,7 @@ use LLPhant\OllamaConfig;
 it('can embed some stuff', function () {
     $config = new OllamaConfig();
     $config->model = 'nomic-embed-text';
+    $config->modelOptions = ['num_ctx' => 1000000];
     $config->url = getenv('OLLAMA_URL') ?: 'http://localhost:11434/api/';
 
     $embeddingGenerator = new OllamaEmbeddingGenerator($config);

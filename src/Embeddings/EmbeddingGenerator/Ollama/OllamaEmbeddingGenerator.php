@@ -84,7 +84,7 @@ final class OllamaEmbeddingGenerator implements EmbeddingGeneratorInterface
         $parameters = [
             'model' => $this->model,
             'input' => $text,
-            ...$this->modelOptions,
+            'options' => $this->modelOptions,
         ];
         $request = $request->withBody(
             $this->factory->createStream(
