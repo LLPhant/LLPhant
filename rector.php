@@ -49,5 +49,6 @@ return static function (RectorConfig $rectorConfig): void {
         AddDefaultValueForUndefinedVariableRector::class,
         ChangeAndIfToEarlyReturnRector::class,
         ChangeOrIfReturnToEarlyReturnRector::class,
+        ExplicitBoolCompareRector::class
     ]);
 };
