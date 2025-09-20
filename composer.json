@@ -73,7 +73,7 @@
         "lint": "pint -v src tests",
         "fix-lint": "pint -v --repair src tests",
         "refactor": "rector --debug",
-        "test:lint": "pint --test -v",
+        "test:lint": "pint --test -v src tests",
         "test:refactor": "rector --dry-run ",
         "test:types": "phpstan analyse --ansi --memory-limit 4G",
         "test:type-coverage": "php ./vendor/bin/pest ./tests --type-coverage --min=100 --memory-limit=4G",
