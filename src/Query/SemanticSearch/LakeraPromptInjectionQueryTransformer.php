@@ -40,11 +40,11 @@ class LakeraPromptInjectionQueryTransformer implements QueryTransformer
      */
     public function transformQuery(string $query): array
     {
-        $request = $this->factory->createRequest('POST', sprintf('%s/v1/prompt_injection', rtrim($this->endpoint, '/')))
+        $request = $this->factory->createRequest('POST', sprintf('%s/v2/guard', rtrim($this->endpoint, '/')))
             ->withHeader('Authorization', 'Bearer '.$this->apiKey)
             ->withHeader('Accept', 'application/json')
             ->withHeader('Content-Type', 'application/json')
-            ->withBody($this->factory->createStream(json_encode(['input' => $query], JSON_THROW_ON_ERROR)));
+            ->withBody($this->factory->createStream($this->apiPayloadFor($query)));
 
         $response = $this->client->sendRequest($request);
         $statusCode = $response->getStatusCode();
@@ -55,8 +55,8 @@ class LakeraPromptInjectionQueryTransformer implements QueryTransformer
         $json = $response->getBody()->getContents();
         $responseArray = \json_decode($json, true, 512, JSON_THROW_ON_ERROR);
 
-        if (array_key_exists('results', $responseArray) && array_key_exists(0, $responseArray['results']) && array_key_exists('flagged', $responseArray['results'][0])) {
-            if ($responseArray['results'][0]['flagged'] === true) {
+        if (array_key_exists('flagged', $responseArray)) {
+            if ($responseArray['flagged'] === true) {
                 throw new SecurityException('Prompt flagged as insecure: '.$query);
             }
 
@@ -64,5 +64,10 @@ class LakeraPromptInjectionQueryTransformer implements QueryTransformer
         }
 
         throw new \Exception('Unexpected response from API: '.$json);
+    }
+
+    private function apiPayloadFor(string $query): string|false
+    {
+        return json_encode(['messages' => [['role' => 'user', 'content' => $query]]], JSON_THROW_ON_ERROR);
     }
 }
