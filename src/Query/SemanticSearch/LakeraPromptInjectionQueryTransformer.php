@@ -69,7 +69,7 @@ class LakeraPromptInjectionQueryTransformer implements QueryTransformer
     private function apiPayloadFor(string $query): string
     {
         $result = json_encode(['messages' => [['role' => 'user', 'content' => $query]]], JSON_THROW_ON_ERROR);
-        if (!$result) {
+        if (! $result) {
             throw new \Exception('Failed to encode query: '.$query);
         }
 
