@@ -255,7 +255,7 @@ use Psr\Log\NullLogger;
         $generator = function (StreamResponse $stream) use ($messages) {
             $toolsToCall = [];
             foreach ($stream as $partialResponse) {
-if ((is_countable($partialResponse->choices) ? count($partialResponse->choices) : 0) === 0) {
+                if ((is_countable($partialResponse->choices) ? count($partialResponse->choices) : 0) === 0) {
                     continue;
                 }
 
