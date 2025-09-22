@@ -130,6 +130,6 @@ final class OllamaEmbeddingGenerator implements EmbeddingGeneratorInterface
 
     public function getEmbeddingLength(): int
     {
-        return $this->modelOptions['options']['num_ctx'] ?? 2048;
+        return 1024;
     }
 }
