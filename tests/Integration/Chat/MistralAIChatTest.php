@@ -7,6 +7,7 @@ namespace Tests\Integration\Chat;
 use LLPhant\Chat\FunctionInfo\FunctionBuilder;
 use LLPhant\Chat\Message;
 use LLPhant\Chat\MistralAIChat;
+use LLPhant\Exception\HttpException;
 use LLPhant\MistralAIConfig;
 
 it('can generate some stuff', function () {
@@ -49,3 +50,10 @@ it('calls tool functions during a chat', function () {
     expect($notifier->nrOfCalls)->toBe(1);
     expect($answer)->toBeString();
 });
+
+it('reports errors correctly', function () {
+    $config = new MistralAIConfig();
+    $config->apiKey = 'fake key';
+    $chat = new MistralAIChat($config);
+    $chat->generateText('Hello!');
+})->throws(HttpException::class, '401');

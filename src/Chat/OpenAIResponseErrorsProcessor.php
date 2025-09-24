@@ -20,7 +20,7 @@ class OpenAIResponseErrorsProcessor
             if ($status < 200 || $status >= 300) {
                 throw new HttpException(
                     message: sprintf(
-                        'HTTP error from OpenAI (%d): %s',
+                        'HTTP error from AI engine (%d): %s',
                         $status,
                         $response->getBody()->getContents()
                     ),

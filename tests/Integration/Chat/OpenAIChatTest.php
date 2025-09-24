@@ -10,6 +10,7 @@ use LLPhant\Chat\FunctionInfo\FunctionInfo;
 use LLPhant\Chat\FunctionInfo\Parameter;
 use LLPhant\Chat\Message;
 use LLPhant\Chat\OpenAIChat;
+use LLPhant\Exception\HttpException;
 use LLPhant\OpenAIConfig;
 use Mockery;
 
@@ -189,3 +190,10 @@ it('can call a function with streaming', function () {
 
     expect($chatStreamOutput->getContents())->toContain($testFunction->getFavouritePetName());
 });
+
+it('reports errors correctly', function () {
+    $config = new OpenAIConfig();
+    $config->apiKey = 'fake key';
+    $chat = new OpenAIChat($config);
+    $chat->generateText('Hello!');
+})->throws(HttpException::class, '401');
