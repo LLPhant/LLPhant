@@ -33,7 +33,7 @@ it('tests a full embedding flow with Redis', function () {
         'host' => getenv('REDIS_HOST') ?? 'localhost',
         'port' => 6379,
     ]);
-    $vectorStore = new RedisVectorStore($redisClient);
+    $vectorStore = new RedisVectorStore($redisClient, 'test_idx_'.mt_rand(1, 1000));
 
     $vectorStore->addDocuments($embeddedDocuments);
 

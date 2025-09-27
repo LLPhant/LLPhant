@@ -124,7 +124,7 @@ class RedisVectorStore extends VectorStoreBase
         try {
             $this->client->ftinfo($this->redisIndex);
         } catch (ServerException $e) {
-            if ($e->getMessage() !== 'Unknown index name') {
+            if (!$this->isMissingIndexError($e)){
                 throw $e;
             }
             $this->createIndex($vectorDimension);
@@ -163,5 +163,14 @@ class RedisVectorStore extends VectorStoreBase
             '$',
             json_encode($document, JSON_THROW_ON_ERROR),
         ];
+    }
+
+    /**
+     * @param \Exception|ServerException $e
+     * @return bool
+     */
+    private function isMissingIndexError(\Exception|ServerException $e): bool
+    {
+        return ($e->getMessage() == 'Unknown index name') || (str_ends_with($e->getMessage(), 'no such index'));
     }
 }
