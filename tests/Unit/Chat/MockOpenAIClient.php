@@ -8,6 +8,7 @@ use OpenAI\Contracts\Resources\AudioContract;
 use OpenAI\Contracts\Resources\BatchesContract;
 use OpenAI\Contracts\Resources\ChatContract;
 use OpenAI\Contracts\Resources\CompletionsContract;
+use OpenAI\Contracts\Resources\ConversationsContract;
 use OpenAI\Contracts\Resources\EditsContract;
 use OpenAI\Contracts\Resources\EmbeddingsContract;
 use OpenAI\Contracts\Resources\FilesContract;
@@ -106,5 +107,10 @@ class MockOpenAIClient implements ClientContract
     public function realtime(): RealtimeContract
     {
         // TODO: Implement realtime() method.
+    }
+
+    public function conversations(): ConversationsContract
+    {
+        // TODO: Implement conversations() method.
     }
 }
