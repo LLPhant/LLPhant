@@ -20,5 +20,5 @@ updates:
       - dependency-name: "*"
         update-types: ["version-update:semver-patch"]
     open-pull-requests-limit: 5
-    only:
-      - dependency-type: "dev"
+    allow:
+      - dependency-type: "development"
