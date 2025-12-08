@@ -87,7 +87,7 @@ class ChromaDBVectorStore extends VectorStoreBase
         $result = [];
 
         if ($queryResult->documents !== null && $queryResult->metadatas !== null) {
-            $itemsCount = \count($queryResult->documents[0]);
+            $itemsCount = is_countable($queryResult->documents[0]) ? \count($queryResult->documents[0]) : 0;
 
             for ($i = 0; $i < $itemsCount; $i++) {
                 $newDocument = new Document();
