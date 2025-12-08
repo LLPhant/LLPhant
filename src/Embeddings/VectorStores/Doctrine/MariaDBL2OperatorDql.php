@@ -12,9 +12,9 @@ final class MariaDBL2OperatorDql extends AbstractDBL2OperatorDql
     public function getSql(SqlWalker $sqlWalker): string
     {
         return 'VEC_DISTANCE_EUCLIDEAN('.
-            $this->vectorOne->dispatch($sqlWalker).', '.
+            $this->dispatchVectorOne($sqlWalker).', '.
             'VEC_FROMTEXT('.
-            $this->vectorTwo->dispatch($sqlWalker).
+            $this->dispatchVectorTwo($sqlWalker).
             ')'.
             ')';
     }

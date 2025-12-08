@@ -2,8 +2,8 @@
 
 namespace LLPhant\Embeddings\VectorStores\Doctrine;
 
-use Doctrine\DBAL\Exception;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
+use Doctrine\DBAL\Platforms\Exception\NotSupported;
 use Doctrine\DBAL\Types\Type;
 
 class VectorType extends Type
@@ -19,19 +19,19 @@ class VectorType extends Type
         // BUT it is the most stable way to check if the platform is PostgreSQLPlatform in a lot of doctrine versions
         // so we will use it and add a check for the class name in case it is removed in the future
         if (method_exists($platform, 'getName') && ! \in_array($platform->getName(), SupportedDoctrineVectorStore::values())) {
-            throw Exception::notSupported('VECTORs not supported by Platform.');
+            throw new NotSupported('VECTORs not supported by Platform.');
         }
 
         if (! isset($column['length'])) {
-            throw Exception::notSupported('VECTORs must have a length.');
+            throw new NotSupported('VECTORs must have a length.');
         }
 
         if ($column['length'] < 1) {
-            throw Exception::notSupported('VECTORs must have a length greater than 0.');
+            throw new NotSupported('VECTORs must have a length greater than 0.');
         }
 
         if (! is_int($column['length'])) {
-            throw Exception::notSupported('VECTORs must have a length that is an integer.');
+            throw new NotSupported('VECTORs must have a length that is an integer.');
         }
 
         return sprintf('vector(%d)', $column['length']);
@@ -49,7 +49,7 @@ class VectorType extends Type
         $value = is_resource($value) ? stream_get_contents($value) : $value;
 
         if (! is_string($value)) {
-            throw Exception::notSupported('Error while converting VECTORs to PHP value.');
+            throw new NotSupported('Error while converting VECTORs to PHP value.');
         }
 
         $convertedValue = explode(',', $value);
@@ -65,7 +65,7 @@ class VectorType extends Type
     {
         //If $value is not a float array throw an exception
         if (! is_array($value)) {
-            throw Exception::notSupported('VECTORs must be an array.');
+            throw new NotSupported('VECTORs must be an array.');
         }
 
         $vectorStoreType = SupportedDoctrineVectorStore::fromPlatform($platform);

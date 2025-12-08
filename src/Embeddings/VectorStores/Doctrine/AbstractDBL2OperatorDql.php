@@ -5,37 +5,44 @@ namespace LLPhant\Embeddings\VectorStores\Doctrine;
 use Doctrine\ORM\Query\AST\Functions\FunctionNode;
 use Doctrine\ORM\Query\AST\Node;
 use Doctrine\ORM\Query\Parser;
+use Doctrine\ORM\Query\SqlWalker;
+use Doctrine\ORM\Query\TokenType;
 
 abstract class AbstractDBL2OperatorDql extends FunctionNode
 {
-    protected Node $vectorTwo;
+    private Node|string $vectorTwo;
 
-    protected Node $vectorOne;
+    private Node|string $vectorOne;
 
     public function parse(Parser $parser): void
     {
-        if (class_exists(\Doctrine\ORM\Query\TokenType::class)) {
-            $parser->match(\Doctrine\ORM\Query\TokenType::T_IDENTIFIER);
-            $parser->match(\Doctrine\ORM\Query\TokenType::T_OPEN_PARENTHESIS);
-        } else {
-            $parser->match(\Doctrine\ORM\Query\Lexer::T_IDENTIFIER);
-            $parser->match(\Doctrine\ORM\Query\Lexer::T_OPEN_PARENTHESIS);
+        $parser->match(TokenType::T_IDENTIFIER);
+        $parser->match(TokenType::T_OPEN_PARENTHESIS);
+
+        $this->vectorOne = $parser->ArithmeticFactor();
+
+        $parser->match(TokenType::T_COMMA);
+
+        $this->vectorTwo = $parser->ArithmeticFactor();
+
+        $parser->match(TokenType::T_CLOSE_PARENTHESIS);
+    }
+
+    public function dispatchVectorOne(SqlWalker $walker): string
+    {
+        if ($this->vectorOne instanceof Node) {
+            return $this->vectorOne->dispatch($walker);
         }
 
-        $this->vectorOne = $parser->ArithmeticFactor(); // Fix that, should be vector
+        return $this->vectorOne;
+    }
 
-        if (class_exists(\Doctrine\ORM\Query\TokenType::class)) {
-            $parser->match(\Doctrine\ORM\Query\TokenType::T_COMMA);
-        } else {
-            $parser->match(\Doctrine\ORM\Query\Lexer::T_COMMA);
+    public function dispatchVectorTwo(SqlWalker $walker): string
+    {
+        if ($this->vectorTwo instanceof Node) {
+            return $this->vectorTwo->dispatch($walker);
         }
 
-        $this->vectorTwo = $parser->ArithmeticFactor(); // Fix that, should be vector
-
-        if (class_exists(\Doctrine\ORM\Query\TokenType::class)) {
-            $parser->match(\Doctrine\ORM\Query\TokenType::T_CLOSE_PARENTHESIS);
-        } else {
-            $parser->match(\Doctrine\ORM\Query\Lexer::T_CLOSE_PARENTHESIS);
-        }
+        return $this->vectorTwo;
     }
 }

@@ -2,7 +2,7 @@
 
 namespace LLPhant\Embeddings\VectorStores\ChromaDB;
 
-use Codewithkyrian\ChromaDB\Resources\CollectionResource;
+use Codewithkyrian\ChromaDB\Models\Collection;
 
 class ChromaDBApiBuffer
 {
@@ -26,7 +26,7 @@ class ChromaDBApiBuffer
      */
     private array $contents = [];
 
-    public function __construct(private readonly CollectionResource $currentCollection, private readonly int $batchSize = 5)
+    public function __construct(private readonly Collection $currentCollection, private readonly int $batchSize = 5)
     {
     }
 
