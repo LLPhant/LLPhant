@@ -37,7 +37,7 @@
         "doctrine/dbal": "^4",
         "elasticsearch/elasticsearch": "^8.15",
         "hkulekci/qdrant": "^v0.5.7",
-        "laravel/pint": "v1.15.3",
+        "laravel/pint": "v1.26.0",
         "mockery/mockery": "^1.6.12",
         "opensearch-project/opensearch-php": "^2.3",
         "pestphp/pest": "^v2.36.0",
