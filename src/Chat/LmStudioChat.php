@@ -1,313 +1,42 @@
 <?php
 
-declare(strict_types=1);
+    declare(strict_types=1);
 
-namespace LLPhant\Chat;
+    namespace LLPhant;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\Psr7\Utils;
-use LLPhant\Chat\CalledFunction\CalledFunction;
-use LLPhant\Chat\FunctionInfo\FunctionInfo;
-use LLPhant\Chat\FunctionInfo\ToolFormatter;
-use LLPhant\Chat\Vision\VisionMessage;
-use LLPhant\Exception\HttpException;
-use LLPhant\Exception\MissingParameterException;
-use LLPhant\LmStudioConfig;
-use LLPhant\Utility;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\StreamInterface;
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
+    class LmStudioConfig
+    {
+        /**
+         * The name of the model to use. Must match a model loaded in LM Studio.
+         * Examples: 'llama-2-7b-chat', 'mistral-7b-instruct', 'phi-2', etc.
+         */
+        public string $model = '';
 
-class LmStudioChat implements ChatInterface
-{
-  private ?Message $systemMessage = null;
+        /**
+         * The base URL of the LM Studio API, often /api/v0/ for endpoints
+         * compatible with OpenAI (v1/chat/completions, v1/embeddings, etc.).
+         */
+        public string $url = 'http://localhost:1234/api/v0/';
 
-  private readonly bool $formatJson;
-  private array $modelOptions = [];
-  public Client $client;
+        public bool $stream = false;
 
-  /** @var FunctionInfo[] */
-  private array $tools = [];
+        public bool $formatJson = false;
 
-  /** @var CalledFunction[] */
-  public array $functionsCalled = [];
+        public ?float $timeout = null;
 
-  // CORRECTION: Assure la cohérence de l'utilisation de LmStudioConfig
-  public function __construct(protected LmStudioConfig $config, private readonly LoggerInterface $logger = new NullLogger())
-  {
-    if (! isset($config->model)) {
-      throw new MissingParameterException('You need to specify a model for LMStudio');
+        public ?string $apiKey = null;
+
+        /**
+         * model options, example:
+         * - temperature: Controls creativity (0.0 to 1.0)
+         * - max_tokens: Maximum number of tokens to generate
+         * - top_p: Nucleus sampling
+         * - frequency_penalty: Repetition penalty
+         * - presence_penalty: Presence penalty
+         *
+         * @see https://github.com/ollama/ollama/blob/main/docs/api.md#generate-a-completion
+         *
+         * @var array<string, mixed>
+         */
+        public array $modelOptions = [];
     }
-
-    $options = [
-      'base_uri' => $config->url,
-      'timeout' => $config->timeout,
-      'connect_timeout' => $config->timeout,
-      'read_timeout' => $config->timeout,
-    ];
-
-    if (! empty($config->apiKey)) {
-      $options['headers'] = ['Authorization' => 'Bearer '.$config->apiKey];
-    }
-
-    $this->client = new Client($options);
-    $this->formatJson = $config->formatJson;
-    $this->modelOptions = $config->modelOptions;
-  }
-
-  // =================================================================================================================
-  // CORE METHODS
-  // =================================================================================================================
-
-  public function generateText(string $prompt): string
-  {
-    $result = $this->generateTextOrReturnFunctionCalled($prompt);
-    if (is_array($result)) {
-      throw new \Exception('Function call returned from generateText. Use generateChat for tool use.');
-    }
-    return $result;
-  }
-
-  public function generateTextOrReturnFunctionCalled(string $prompt): array|string
-  {
-    return $this->generateChatOrReturnFunctionCalled([Message::user($prompt)]);
-  }
-
-  /**
-   * @param Message[] $messages
-   */
-  public function generateChat(array $messages): string
-  {
-    $result = $this->generateChatOrReturnFunctionCalled($messages);
-
-    if (is_array($result)) {
-      $functionName = $result['function_name'];
-      $arguments = $result['arguments'];
-
-      $functionToCall = $this->getFunctionInfoFromName($functionName);
-      $toolResult = $functionToCall->callWithArguments($arguments);
-
-      $this->functionsCalled[] = new CalledFunction($functionToCall, $arguments, $toolResult);
-
-      $toolResultMessage = Message::toolResult($toolResult, $functionToCall->name);
-      $messages[] = $toolResultMessage;
-
-      return $this->generateChat($messages);
-    }
-
-    return $result;
-  }
-
-  /**
-   * @param Message[] $messages
-   */
-  public function generateChatOrReturnFunctionCalled(array $messages): array|string
-  {
-    $params = [
-      ...$this->modelOptions,
-      'model' => $this->config->model,
-      'messages' => $this->prepareMessages($messages),
-      'stream' => false,
-      'tools' => ToolFormatter::formatFunctionsToOpenAITools($this->tools),
-    ];
-
-    $response = $this->sendRequest('POST', 'v1/chat/completions', $params);
-    $contents = $response->getBody()->getContents();
-    $this->logger->debug($contents);
-    $json = Utility::decodeJson($contents);
-
-    $message = $json['choices'][0]['message'] ?? ['content' => ''];
-
-    if (\array_key_exists('tool_calls', $message)) {
-      $toolCall = $message['tool_calls'][0];
-      $functionName = $toolCall['function']['name'];
-      $arguments = Utility::decodeJson($toolCall['function']['arguments']);
-
-      return [
-        'function_name' => $functionName,
-        'arguments' => $arguments, // PHP array
-      ];
-    }
-
-    return $message['content'];
-  }
-
-  // =================================================================================================================
-  // STREAMING METHODS (Implémentation basique/stub pour satisfaire l'interface)
-  // =================================================================================================================
-
-  public function generateStreamOfText(string $prompt): StreamInterface
-  {
-    $result = $this->generateText($prompt);
-    return Utils::streamFor($result);
-  }
-
-  /**
-   * @param Message[] $messages
-   */
-  public function generateStreamOfChat(array $messages): StreamInterface
-  {
-    $result = $this->generateChat($messages);
-    return Utils::streamFor($result);
-  }
-
-  /**
-   * @param Message[] $messages
-   */
-  public function generateChatStream(array $messages): StreamInterface
-  {
-    // Implémentation simplifiée en mode non-streaming pour satisfaire l'interface
-    $result = $this->generateChat($messages);
-    return Utils::streamFor($result);
-  }
-
-  /**
-   * @param Message[] $messages
-   */
-  public function generateStreamOfChatOrReturnFunctionCalled(array $messages): array|StreamInterface
-  {
-    $result = $this->generateChatOrReturnFunctionCalled($messages);
-
-    if (is_array($result)) {
-      return $result;
-    }
-
-    return Utils::streamFor($result);
-  }
-
-
-  // =================================================================================================================
-  // EMBEDDING METHOD
-  // =================================================================================================================
-
-  public function getEmbedding(string $text, string $model = 'default-embed'): array
-  {
-    $params = [
-      'model' => $model,
-      'input' => $text,
-    ];
-
-    $response = $this->sendRequest('POST', 'v1/embeddings', $params);
-    $json = Utility::decodeJson($response->getBody()->getContents());
-
-    return $json['data'][0]['embedding'] ?? [];
-  }
-
-
-  // =================================================================================================================
-  // CONFIGURATION & UTILITY METHODS
-  // =================================================================================================================
-
-  public function setSystemMessage(string $message): void
-  {
-    $this->systemMessage = Message::system($message);
-  }
-
-  // CORRECTION: Rétablissement de ChatInterface::setTools
-  public function setTools(array $tools): void
-  {
-    $this->tools = $tools;
-  }
-
-  // CORRECTION: Rétablissement de ChatInterface::addTool
-  public function addTool(FunctionInfo $functionInfo): void
-  {
-    $this->tools[] = $functionInfo;
-  }
-
-  // ADDED: Backward compatibility methods for ChatInterface
-  /**
-   * @param FunctionInfo[] $functions
-   */
-  public function setFunctions(array $functions): void
-  {
-    $this->setTools($functions);
-  }
-
-  public function addFunction(FunctionInfo $functionInfo): void
-  {
-    $this->addTool($functionInfo);
-  }
-
-  public function setModelOption(string $option, mixed $value): void
-  {
-    $this->modelOptions[$option] = $value;
-  }
-
-  public function lastFunctionCalled(): ?CalledFunction
-  {
-    if ($this->functionsCalled === []) {
-      return null;
-    }
-
-    return $this->functionsCalled[count($this->functionsCalled) - 1];
-  }
-
-  // =================================================================================================================
-  // PROTECTED METHODS
-  // =================================================================================================================
-
-  protected function sendRequest(string $method, string $path, array $json): ResponseInterface
-  {
-    $this->logger->debug('Calling '.$method.' '.$path, ['chat' => self::class, 'params' => $json]);
-
-    $requestOptions = ['json' => $json];
-    if (isset($json['stream']) && $json['stream']) {
-      $requestOptions['stream'] = true;
-    }
-    unset($json['stream']);
-
-    $response = $this->client->request($method, $path, $requestOptions);
-    $status = $response->getStatusCode();
-    if ($status < 200 || $status >= 300) {
-      throw new HttpException(sprintf(
-        'HTTP error from LMStudio (%d): %s',
-        $status,
-        $response->getBody()->getContents()
-      ));
-    }
-
-    return $response;
-  }
-
-  protected function prepareMessages(array $messages): array
-  {
-    $responseMessages = [];
-    if (isset($this->systemMessage->role)) {
-      $responseMessages[] = [
-        'role' => $this->systemMessage->role,
-        'content' => $this->systemMessage->content,
-      ];
-    }
-
-    foreach ($messages as $msg) {
-      $responseMessage = [
-        'role' => $msg->role,
-        'content' => $msg->content,
-      ];
-
-      if ($msg instanceof VisionMessage) {
-        $responseMessage['images'] = [];
-        foreach ($msg->images as $image) {
-          $responseMessage['images'][] = $image->getBase64($this->client);
-        }
-      }
-
-      $responseMessages[] = $responseMessage;
-    }
-
-    return $responseMessages;
-  }
-
-  private function getFunctionInfoFromName(string $functionName): FunctionInfo
-  {
-    foreach ($this->tools as $function) {
-      if ($function->name === $functionName) {
-        return $function;
-      }
-    }
-
-    throw new \Exception("AI tried to call $functionName which doesn't exist");
-  }
-}
