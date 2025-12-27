@@ -25,9 +25,7 @@ class LmStudioChat implements ChatInterface
 
     private readonly bool $formatJson;
 
-    private array $modelOptions = [];
-
-    public Client $client;
+    private readonly array $modelOptions;
 
     /** @var FunctionInfo[] */
     private array $tools = [];
@@ -35,26 +33,30 @@ class LmStudioChat implements ChatInterface
     /** @var CalledFunction[] */
     public array $functionsCalled = [];
 
-    public function __construct(
-        protected LmStudioConfig $config,
-        private readonly LoggerInterface|NullLogger $logger = new NullLogger()
-    ) {
-        if (! isset($config->model)) {
+  public function __construct(
+      protected LmStudioConfig $config,
+      private readonly LoggerInterface|NullLogger $logger = new NullLogger(),
+      public ?Client $client = null
+  ) {
+        if ($config->model === '') {
             throw new MissingParameterException('You need to specify a model for LMStudio');
         }
 
-        $options = [
-            'base_uri' => $config->url,
-            'timeout' => $config->timeout,
-            'connect_timeout' => $config->timeout,
-            'read_timeout' => $config->timeout,
-        ];
+        if ($this->client === null) {
+          $options = [
+              'base_uri' => $config->url,
+              'timeout' => $config->timeout,
+              'connect_timeout' => $config->timeout,
+              'read_timeout' => $config->timeout,
+          ];
 
-        if (! empty($config->apiKey)) {
-            $options['headers'] = ['Authorization' => 'Bearer '.$config->apiKey];
+          if (! empty($config->apiKey)) {
+              $options['headers'] = ['Authorization' => 'Bearer '.$config->apiKey];
+          }
+
+          $this->client = new Client($options);
         }
 
-        $this->client = new Client($options);
         $this->formatJson = $config->formatJson;
         $this->modelOptions = $config->modelOptions;
     }
