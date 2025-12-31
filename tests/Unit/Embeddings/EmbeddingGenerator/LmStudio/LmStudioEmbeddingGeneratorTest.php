@@ -10,7 +10,7 @@ use LLPhant\Embeddings\Document;
 use LLPhant\Embeddings\EmbeddingGenerator\LmStudio\LmStudioEmbeddingGenerator;
 use LLPhant\LmStudioConfig;
 
-it('embed a text', function () {
+it('can embed a text', function () {
     $config = new LmStudioConfig();
     $config->model = 'fake-model';
     $config->url = 'http://fakeurl';

@@ -127,8 +127,8 @@ class LmStudioChat implements ChatInterface
         $json = Utility::decodeJson($contents);
 
         if (! isset($json['choices']) || empty($json['choices'])) {
-            error_log('❌ LM Studio response missing choices array');
-            error_log('   Response: '.$contents);
+            $this->logger->error('❌ LM Studio response missing choices array');
+            $this->logger->error('   Response: '.$contents);
             throw new \Exception('Invalid LM Studio response: no choices returned');
         }
 
