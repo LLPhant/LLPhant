@@ -114,3 +114,11 @@ it('ignores overlap if <= 0', function () {
     expect($result[0]->content)->toBe('This is a');
     expect($result[1]->content)->toBe('test');
 });
+
+it('keeps separator when keepSeparator is true', function () {
+    $document = new Document();
+    $document->content = 'This is a test';
+    $result = DocumentSplitter::splitDocument($document, 10, 'a', keepSeparator: true);
+    expect($result[0]->content)->toBe('This is a');
+    expect($result[1]->content)->toBe('test');
+});
