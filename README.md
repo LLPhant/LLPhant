@@ -7,7 +7,7 @@
 We designed this framework to be as simple as possible, while still providing you with the tools you need to build powerful apps.
 It is compatible with Symfony and Laravel.
 
-We are working to expand the support of different LLMs. Right now, we are supporting [OpenAI](https://openai.com/blog/openai-api), [Anthropic](https://www.anthropic.com/), [Mistral](https://mistral.ai/), [Ollama](https://ollama.ai/), and services compatible with the OpenAI API such as [LocalAI](https://localai.io/).
+We are working to expand the support of different LLMs. Right now, we are supporting [OpenAI](https://openai.com/blog/openai-api), [Anthropic](https://www.anthropic.com/), [Mistral](https://mistral.ai/), [Ollama](https://ollama.ai/), [LM Studio](https://lmstudio.ai/) and services compatible with the OpenAI API such as [LocalAI](https://localai.io/).
 Ollama that can be used to run LLM locally such as [Llama 2](https://llama.meta.com/).
 
 We want to thank few amazing projects that we use here or inspired us:

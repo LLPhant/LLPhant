@@ -90,7 +90,7 @@ final class LmStudioEmbeddingGenerator implements EmbeddingGeneratorInterface
         $json = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
 
         if (! isset($json['data'][0]['embedding'])) {
-            throw new Exception("Request to LM Studio didn't return expected format: ".json_encode($json));
+            throw new Exception("Request to LM Studio didn't return expected format: ".json_encode($json, JSON_THROW_ON_ERROR));
         }
 
         return $json['data'][0]['embedding'];
