@@ -534,6 +534,8 @@ There are currently these vectorStore classes:
 -   AstraDBVectorStore stores the embeddings in a [AstraDBB](https://docs.datastax.com/en/astra-db-serverless/index.html) database.
 -   OpenSearchVectorStore stores the embeddings in a [OpenSearch](https://opensearch.org/) database, which is a fork of Elasticsearch.
 -   TypesenseVectorStore stores the embeddings in a [Typesense](https://typesense.org/) database.
+-   MongoDBVectorStore stores the embeddings in [MongoDB Atlas](https://www.mongodb.com/products/platform). (require
+    mongodb/mongodb and ext-mongodb)
 
 Example of usage with the `DoctrineVectorStore` class to store the embeddings in a database:
 
@@ -729,6 +731,22 @@ Then create a new TypesenseDB vector store (`LLPhant\Embeddings\VectorStores\Typ
 // Default connection properties come from env vars TYPESENSE_API_KEY and TYPESENSE_NODE
 $vectorStore = new TypesenseVectorStore('test_collection');
 ```
+
+### MongoDB VectorStore
+
+Prerequisites : a MongoDB Atlas cluster (see [MongoDB Atlas docs](https://www.mongodb.com/docs/atlas/getting-started/)).
+
+You can run it locally using this [docker compose file](https://github.com/theodo-group/LLPhant/blob/main/devx/docker-compose-mongodb.yml).
+If you want to set up authentication for your local cluster, set the `MONGODB_USERNAME` and `MONGODB_PASSWORD` environment variables.
+Wait for the service's status to be "Healthy" before using it.
+
+Then create a new MongoDB vector store (`LLPhant\Embeddings\VectorStores\MongoDB\MongoDBVectorStore`), for example:
+
+```php
+$client = new Client(uri: 'your-connection-string');
+$vectorStore = new MongoDBVectorStore($client, database: 'your-database-name');
+```
+
 
 ##### FileSystem VectorStore
 
