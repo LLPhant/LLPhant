@@ -32,13 +32,15 @@
         "opensearch-project/opensearch-php": "This is required for the OpenSearchVectorStore."
     },
     "require-dev": {
-        "codewithkyrian/chromadb-php":"1.0.0",
-        "doctrine/orm": "^3",
+        "codewithkyrian/chromadb-php": "1.0.0",
         "doctrine/dbal": "^4",
+        "doctrine/orm": "^3",
         "elasticsearch/elasticsearch": "^8.15",
+        "ext-mongodb": "*",
         "hkulekci/qdrant": "^v0.5.7",
         "laravel/pint": "v1.15.3",
         "mockery/mockery": "^1.6.12",
+        "mongodb/mongodb": "^2.1",
         "opensearch-project/opensearch-php": "^2.3",
         "pestphp/pest": "^v2.36.0",
         "pestphp/pest-plugin-arch": "^2.7.0",

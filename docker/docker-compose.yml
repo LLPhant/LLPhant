@@ -13,6 +13,10 @@ services:
             - "host.docker.internal:host-gateway"
         volumes:
             - ${APP_PATH}:/var/${COMPOSE_PROJECT_NAME}
+        depends_on:
+          mongodb_atlas:
+            condition: service_healthy
+
         environment:
             PHP_IDE_CONFIG: serverName=PHPSTORM
             OPENAI_API_KEY: ${OPENAI_API_KEY}
@@ -36,6 +40,7 @@ services:
             VOYAGE_AI_API_KEY: ${VOYAGE_AI_API_KEY}
             MARIADB_HOST: mariadb
             SERP_API_KEY: ${SERP_API_KEY}
+            MONGODB_CONNECTION_STRING: ${MONGODB_CONNECTION_STRING}
 
     opensearch:
       image: opensearchproject/opensearch:2.17.1
@@ -126,6 +131,18 @@ services:
         MARIADB_ROOT_PASSWORD: example
         MARIADB_DATABASE: llphant
 
+    mongodb_atlas:
+      # In production, you may want to use your cloud hosted Atlas cluster instead
+      container_name: ${COMPOSE_PROJECT_NAME}-mongodb-atlas
+      image: mongodb/mongodb-atlas-local:8
+      ports:
+        - "27017:27017"
+      environment:
+        MONGODB_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME}
+        MONGODB_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
+      volumes:
+        - mongodb-data:/data/db
+
 volumes:
     typesense-data:
     esdata:
@@ -135,5 +152,4 @@ volumes:
       driver: local
     qdrant-data:
       driver: local
-
-
+    mongodb-data:

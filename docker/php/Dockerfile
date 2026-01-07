@@ -28,7 +28,7 @@ RUN groupadd -g $GID llphant \
 COPY --from=composer /usr/bin/composer /usr/bin/composer
 
 # Install xdebug-3.2.2 This fixed version solves problems developing on Apple Silicon. Check for future versions
-RUN pecl install xdebug-3.2.2 \
+RUN pecl install xdebug-3.5.0 mongodb \
 && docker-php-ext-enable xdebug
 
 RUN docker-php-ext-install pdo pdo_pgsql pdo_mysql zip intl bcmath ffi
