@@ -13,9 +13,6 @@ services:
             - "host.docker.internal:host-gateway"
         volumes:
             - ${APP_PATH}:/var/${COMPOSE_PROJECT_NAME}
-        depends_on:
-          mongodb_atlas:
-            condition: service_healthy
 
         environment:
             PHP_IDE_CONFIG: serverName=PHPSTORM
@@ -143,6 +140,7 @@ services:
         MONGODB_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
       volumes:
         - mongodb-data:/data/db
+        - mongodb-config:/data/configdb
 
 volumes:
     typesense-data:
@@ -154,3 +152,4 @@ volumes:
     qdrant-data:
       driver: local
     mongodb-data:
+    mongodb-config:
