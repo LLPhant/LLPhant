@@ -1,0 +1,38 @@
+body {
+    font-family: Helvetica, Geneva, Tahoma, sans-serif;
+    margin: 50px;
+}
+
+.search {
+    display: inline-flex;
+}
+
+.description {
+    padding-right:50px;
+}
+
+form {
+    margin-top:16px;
+    display: inline-flex;
+    flex-direction: column;
+}
+
+form label {
+    font-size: 0.8em;
+    margin-bottom: 4px;
+}
+
+form div {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 10px;
+}
+
+input[type="submit"] {
+    padding: 5px;
+    font-size: 16px;
+    background-color: #0f5f94;
+    border:1px solid #0f5f94;
+    border-radius: 4px;
+    color: white;
+}
