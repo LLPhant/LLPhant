@@ -41,7 +41,7 @@
         "laravel/pint": "v1.15.3",
         "mockery/mockery": "^1.6.12",
         "mongodb/mongodb": "^2.1",
-        "opensearch-project/opensearch-php": "^2.3",
+        "opensearch-project/opensearch-php": "^2.5",
         "pestphp/pest": "^v2.36.0",
         "pestphp/pest-plugin-arch": "^2.7.0",
         "pestphp/pest-plugin-type-coverage": "2.8.0",
