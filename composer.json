@@ -24,6 +24,7 @@
     },
     "suggest": {
         "doctrine/orm": "This is required for the DoctrineVectoreStore. This should be working with any version ^2.13.0",
+        "doctrine/mongodb-odm": "This is required for the DoctrineODMVectoreStore. This should be working with any version ^2.16.1",
         "symfony/cache": "This is one of the possible types of psr/cache needed by doctrine/orm",
         "hkulekci/qdrant": "This is required for the QdrantVectoreStore.",
         "predis/predis": "This is required for the RedisVectoreStore.",
@@ -35,6 +36,7 @@
         "codewithkyrian/chromadb-php": "1.0.0",
         "doctrine/dbal": "^4",
         "doctrine/orm": "^3",
+        "doctrine/mongodb-odm": "^2.16.1",
         "elasticsearch/elasticsearch": "^8.15",
         "ext-mongodb": "*",
         "hkulekci/qdrant": "^v0.5.7",
