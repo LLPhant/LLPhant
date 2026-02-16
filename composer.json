@@ -40,7 +40,7 @@
         "hkulekci/qdrant": "^v0.5.7",
         "laravel/pint": "v1.15.3",
         "mockery/mockery": "^1.6.12",
-        "mongodb/mongodb": "^2.1",
+        "mongodb/mongodb": "^2.2",
         "opensearch-project/opensearch-php": "^2.3",
         "pestphp/pest": "^v2.36.0",
         "pestphp/pest-plugin-arch": "^2.7.0",
