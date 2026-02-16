@@ -38,7 +38,7 @@
         "elasticsearch/elasticsearch": "^8.15",
         "ext-mongodb": "*",
         "hkulekci/qdrant": "^v0.5.7",
-        "laravel/pint": "v1.15.3",
+        "laravel/pint": "v1.27.1",
         "mockery/mockery": "^1.6.12",
         "mongodb/mongodb": "^2.1",
         "opensearch-project/opensearch-php": "^2.3",
