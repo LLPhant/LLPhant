@@ -259,6 +259,35 @@ We can use it to simply generate image from a prompt.
 $response = $image->generateImage('A cat in the snow', OpenAIImageStyle::Vivid); // will return a LLPhant\Image\Image object
 ```
 
+You can also use `ModelsLabImage` to generate images via the [ModelsLab API](https://docs.modelslab.com/image-generation/overview), which supports Flux, SDXL, Stable Diffusion, and 10,000+ community fine-tuned models.
+
+Set your API key as an environment variable:
+
+```bash
+export MODELSLAB_API_KEY=your-api-key
+```
+
+Then generate an image from a prompt:
+
+```php
+$image = new ModelsLabImage();          // reads MODELSLAB_API_KEY from env
+$image->model = 'flux';                 // default: 'flux'
+$image->width = 1024;                   // default: 1024
+$image->height = 1024;                  // default: 1024
+$image->numInferenceSteps = 30;         // default: 30
+$image->guidanceScale = 7.5;            // default: 7.5
+$image->negativePrompt = 'blurry';      // optional
+
+$response = $image->generateImage('A cozy cabin in the woods at dusk, watercolor style');
+echo $response->url;                    // CDN URL of the generated image
+```
+
+Or pass the API key directly:
+
+```php
+$image = new ModelsLabImage(apiKey: 'your-api-key');
+```
+
 ### Speech to text
 
 You can use `OpenAIAudio` to transcript audio files.
