@@ -28,9 +28,9 @@ use LLPhant\Image\Enums\OpenAIImageStyle;
  */
 class ModelsLabImage implements ImageInterface
 {
-    private const API_BASE_URL = 'https://modelslab.com/api/v6';
+    private const API_BASE_URL = 'https://modelslab.com/api/v6/';
 
-    private const ENDPOINT_TEXT2IMG = '/images/text2img';
+    private const ENDPOINT_TEXT2IMG = 'images/text2img';
 
     private readonly GuzzleClient $client;
 
