@@ -41,6 +41,7 @@ services:
             SERP_API_KEY: ${SERP_API_KEY}
             MONGODB_CONNECTION_STRING: ${MONGODB_CONNECTION_STRING}
             LMSTUDIO_URL: ${LMSTUDIO_URL}
+            MODELSLAB_API_KEY: ${MODELSLAB_API_KEY}
 
     opensearch:
       image: opensearchproject/opensearch:2.17.1

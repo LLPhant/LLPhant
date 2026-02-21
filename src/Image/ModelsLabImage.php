@@ -85,15 +85,15 @@ class ModelsLabImage implements ImageInterface
     public function generateImage(string $prompt, OpenAIImageStyle $style = OpenAIImageStyle::Vivid): Image
     {
         $payload = [
-            'key'                  => $this->apiKey,
-            'prompt'               => $prompt,
-            'model_id'             => $this->model,
-            'width'                => (string) $this->width,
-            'height'               => (string) $this->height,
-            'samples'              => '1',
-            'num_inference_steps'  => (string) $this->numInferenceSteps,
-            'guidance_scale'       => $this->guidanceScale,
-            'safety_checker'       => 'no',
+            'key' => $this->apiKey,
+            'prompt' => $prompt,
+            'model_id' => $this->model,
+            'width' => (string) $this->width,
+            'height' => (string) $this->height,
+            'samples' => '1',
+            'num_inference_steps' => (string) $this->numInferenceSteps,
+            'guidance_scale' => $this->guidanceScale,
+            'safety_checker' => 'no',
         ];
 
         if ($this->negativePrompt !== null) {
@@ -109,7 +109,7 @@ class ModelsLabImage implements ImageInterface
         ]);
 
         /** @var array<string, mixed> $data */
-        $data = json_decode((string) $response->getBody(), true);
+        $data = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
 
         return $this->responseToImage($data, $prompt);
     }
