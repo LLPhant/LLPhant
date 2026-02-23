@@ -166,7 +166,7 @@ final class DoctrineODMVectorStore extends VectorStoreBase implements DocumentSt
 
         $indexes = array_filter(
             $indexes,
-            fn ($index): bool => $index['name'] === $this->vectorSearchIndex && $index['type'] === 'vectorSearch'
+            fn (array $index): bool => $index['name'] === $this->vectorSearchIndex && $index['type'] === 'vectorSearch'
         );
 
         if (empty($indexes)) {
