@@ -37,7 +37,7 @@
         "doctrine/dbal": "^4",
         "doctrine/orm": "^3",
         "doctrine/mongodb-odm": "^2.16.1",
-        "elasticsearch/elasticsearch": "^8.15",
+        "elasticsearch/elasticsearch": "^9.3",
         "ext-mongodb": "*",
         "hkulekci/qdrant": "^v0.5.7",
         "laravel/pint": "v1.15.3",
