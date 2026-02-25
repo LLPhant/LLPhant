@@ -38,6 +38,7 @@ If the response from OpenAI contains a tools' name and parameters, LLPhant will 
 .. image:: assets/function-flow.png
    :alt: Function flow
    :align: center
+   :width: 100%
 
 This PHP script will most likely call the sendMail method that we pass to OpenAI.
 

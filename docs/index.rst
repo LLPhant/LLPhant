@@ -9,7 +9,7 @@ LLPhant Documentation
 Welcome to LLPhant, a comprehensive PHP Generative AI Framework designed to be as simple
 as possible while providing you with the tools you need to build powerful applications.
 
-LLPhant is compatible with framework agnostic, and supports multiple LLM providers
+LLPhant is framework agnostic and supports multiple LLM providers
 including OpenAI, Anthropic, Mistral, Ollama, and services compatible with the OpenAI API.
 
 .. toctree::
@@ -45,12 +45,6 @@ including OpenAI, Anthropic, Mistral, Ollama, and services compatible with the O
    :caption: Related Projects
 
    autophp
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`search`
 
 
 .. role:: raw-html(raw)

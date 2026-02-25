@@ -13,6 +13,7 @@ The creation of an embedding follow the following flow:
 .. image:: assets/embeddings-flow.png
    :align: center
    :alt: Embeddings flow
+   :width: 100%
 
 Read data
 ---------

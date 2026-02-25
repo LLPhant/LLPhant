@@ -8,6 +8,7 @@ It leverages the vector store to perform a similarity search to get the most rel
 .. image:: assets/qa-flow.png
    :align: center
    :alt: Question Answering flow
+   :width: 100%
 
 Here is one example using the ``MemoryVectorStore``:
 
