@@ -1,4 +1,4 @@
-.. image:: assets/llphant-logo.png
+.. image:: assets/llphant-logo-transparent.png
    :align: center
    :alt: LLPhant Logo
 
@@ -47,6 +47,12 @@ including OpenAI, Anthropic, Mistral, Ollama, and services compatible with the O
    :caption: Related Projects
 
    autophp
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Contributors and Sponsors
+
+   contributors-sponsors
 
 
 .. role:: raw-html(raw)
