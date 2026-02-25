@@ -1,0 +1,19 @@
+# Exclude files from export (composer install)
+# This reduces package size when installed via Packagist
+
+# Development and testing
+/tests                  export-ignore
+/.github                export-ignore
+/devx                   export-ignore
+/docker                 export-ignore
+/examples               export-ignore
+phpstan.neon.dist       export-ignore
+phpunit.xml.dist        export-ignore
+rector.php              export-ignore
+
+# IDE and editor config
+.editorconfig           export-ignore
+
+# Git files
+.gitignore              export-ignore
+.gitattributes          export-ignore
