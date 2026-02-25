@@ -6,7 +6,7 @@ Comparison Table of all supported Language Models
 
 .. list-table::
    :header-rows: 1
-   :widths: 30 10 10 15 15 15 15
+   :widths: 30 15 15 15 15 15 15
 
    * - Model
      - Text
@@ -65,7 +65,7 @@ Comparison Table of all supported Language Models
      - ✅
      - ✅
 
-ℹ️- Some models of the provider support this feature, but not all. Please check the documentation of the provider for more details.
+ℹ️ - Some models of the provider support this feature, but not all. Please check the documentation of the provider for more details.
 
 Supported Vector Stores
 ------------------------
