@@ -20,29 +20,29 @@ Comparison Table of all supported Language Models
      - ✅
      - ✅
      - ✅
-     -
-     -
+     - ❌
+     - ❌
    * - Mistral
      - ✅
      - ✅
      - ✅
-     -
-     -
-     -
+     - ❌
+     - ❌
+     - ❌
    * - LM Studio
      - ✅
      - ✅
-     - Some models
-     - Some models
-     -
-     -
+     - ℹ️
+     - ℹ️
+     - ❌
+     - ❌
    * - Ollama
      - ✅
      - ✅
-     - Some models
-     - Some models
-     -
-     -
+     - ℹ️
+     - ℹ️
+     - ❌
+     - ❌
    * - OpenAI
      - ✅
      - ✅
@@ -64,6 +64,8 @@ Comparison Table of all supported Language Models
      - ✅
      - ✅
      - ✅
+
+ℹ️- Some models of the provider support this feature, but not all. Please check the documentation of the provider for more details.
 
 Supported Vector Stores
 ------------------------

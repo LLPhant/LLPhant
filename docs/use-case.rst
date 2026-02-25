@@ -1,9 +1,10 @@
 Use Case
 ========
 
-There are plenty use cases for Generative AI and new ones are creating every day. Let's see the most common ones.
+There are plenty of use cases for Generative AI, and new ones are created every day.  Here are some common ones.
+
 Based on a `survey from the MLOPS community <https://mlops.community/surveys/llm/>`_ and `this survey from Mckinsey <https://www.mckinsey.com/capabilities/quantumblack/our-insights/the-state-of-ai-in-2023-generative-ais-breakout-year>`_
-the most common use case of AI are the following:
+the most common use cases for AI are the following:
 
 -  Create semantic search that can find relevant information in a lot of data. Example: `Slite <https://slite.com/>`_
 -  Create chatbots / augmented FAQ that use semantic search and text summarization to answer customer questions. Example: `Quivr <https://www.quivr.app/>`_ is using such similar technology.
