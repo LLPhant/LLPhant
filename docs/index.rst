@@ -18,6 +18,8 @@ including OpenAI, Anthropic, Mistral, Ollama, and services compatible with the O
 
    get-started
    use-case
+   features
+   faq
 
 .. toctree::
    :maxdepth: 1

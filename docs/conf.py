@@ -15,7 +15,7 @@ copyright = u'MIT License'
 version = '9'
 html_title = "A comprehensive PHP Generative AI Framework for building AI agents, chatbots, and more."
 html_short_title = "A comprehensive PHP Generative AI Framework"
-html_favicon = 'assets/llphant-logo.png'
+html_favicon = 'assets/favicon.ico'
 
 exclude_patterns = ['_build']
 html_static_path = ['_static']

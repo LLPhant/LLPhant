@@ -107,6 +107,10 @@ Chat
 
     This class can be used to generate content, to create a chatbot or to create a text summarizer.
 
+The API to generate text using OpenAI will only be from the chat API.
+So even if you want to generate a completion for a simple question under the hood it will use the chat API.
+This is why this class is called OpenAIChat.
+
 You can use the ``OpenAIChat``, ``MistralAIChat`` or ``OllamaChat`` to generate text or to create a chat.
 
 We can use it to simply generate text from a prompt.
@@ -114,20 +118,119 @@ This will ask directly an answer from the LLM.
 
 .. code-block:: php
 
+    $chat = new OpenAIChat();
     $response = $chat->generateText('what is one + one ?'); // will return something like "Two"
 
 If you want to display in your frontend a stream of text like in ChatGPT you can use the following method.
 
 .. code-block:: php
 
+    $chat = new OpenAIChat();
     return $chat->generateStreamOfText('can you write me a poem of 10 lines about life ?');
 
 You can add instruction so the LLM will behave in a specific manner.
 
 .. code-block:: php
 
+    $chat = new OpenAIChat();
     $chat->setSystemMessage('Whatever we ask you, you MUST answer "ok"');
     $response = $chat->generateText('what is one + one ?'); // will return "ok"
+
+You can also provide an entire conversation to the LLM.
+
+.. code-block:: php
+
+    $messages = [
+        Message::system('You are an experienced PHP developer.'),
+        Message::user('What is the purpose of array_map?'),
+        Message::assistant('The function `array_map` applies a callback to each element ...'),
+        Message::user('Can you please provide an example?'),
+    ];
+
+    $response = $chat->generateChat($messages);
+
+Get the token usage
+-------------------
+
+When using OpenAI is important to know how many token are you using
+since the `model pricing <https://openai.com/api/pricing/>`_ is token based.
+
+You can retrieve the total token usage using the ``OpenAIChat::getTotalTokens()``
+function, as follows:
+
+.. code-block:: php
+
+    $chat = new OpenAIChat();
+
+    $answer = $chat->generateText('what is one + one ?');
+    printf("%s\n", $answer); # One plus one equals two
+    printf("Total tokens usage: %d\n", $chat->getTotalTokens()); # 19
+
+    $answer = $chat->generateText('And what is two + two ?');
+    printf("%s\n", $answer); # Two plus two equals four
+    printf("Total tokens usage: %d\n", $chat->getTotalTokens()); # 39
+
+The ``getTotalTokens()`` is an incremental value that is increased on each
+API call. For instance, in the previous example the first ``what is one + one ?``
+generated 19 tokens and the second call 20 tokens. The total number of
+tokens is than 19 + 20 = 39 tokens.
+
+Get the last response from OpenAI
+----------------------------------
+
+If you want to inspect the last API response from OpenAI you can use the function
+``OpenAIChat::getLastReponse()`` function.
+
+This function returns an `OpenAI\\Responses\\Chat\\CreateResponse <https://github.com/openai-php/client/blob/main/src/Responses/Chat/CreateResponse.php>`_
+that contains the following properties:
+
+.. code-block:: php
+
+    namespace OpenAI\Responses\Chat;
+
+    class CreateResponse
+    {
+            public readonly string $id;
+            public readonly string $object;
+            public readonly int $created;
+            public readonly string $model;
+            public readonly ?string $systemFingerprint;
+            public readonly array $choices;
+            public readonly CreateResponseUsage $usage;
+    }
+
+The ``usage`` property is an object of the following `CreateResponseUsage <https://github.com/openai-php/client/blob/main/src/Responses/Chat/CreateResponseUsage.php>`_
+class:
+
+.. code-block:: php
+
+    namespace OpenAI\Responses\Chat;
+
+    final class CreateResponseUsage
+    {
+        public readonly int $promptTokens;
+        public readonly ?int $completionTokens;
+        public readonly int $totalTokens;
+    }
+
+For instance, if you want to have specific information for the token usage,
+you can then access the ``usage`` properties and then the sub-property, as follows:
+
+.. code-block:: php
+
+    $chat = new OpenAIChat();
+
+    $answer = $chat->generateText('what is the capital of Italy ?');
+    $response = $chat->getLastResponse();
+
+    printf("Prompt tokens: %d\n", $response->usage->promptTokens);
+    printf("Completion tokens: %d\n", $response->usage->completionTokens);
+    printf("Total tokens: %d\n", $response->usage->totalTokens);
+
+The value of the last ``printf`` is the total usage of the last response
+(promptTokens + completionTokens) and should not be confused with the
+``$chat->getTotalTokens()`` function that is the sum of the previous totalTokens calls,
+including the last one ``what is the capital of Italy ?``.
 
 Images
 ------
