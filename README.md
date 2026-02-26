@@ -1,7 +1,7 @@
 # LLPhant - A comprehensive PHP Generative AI Framework
 
 <div align="center">
-    <img src="doc/assets/llphant-logo.png" alt="LLPhant" style="border-radius: 50%; padding-bottom: 20px"/>
+    <img src="docs/assets/llphant-logo.png" alt="LLPhant" style="border-radius: 50%; padding-bottom: 20px"/>
 </div>
 
 We designed this framework to be as simple as possible, while still providing you with the tools you need to build powerful apps.
@@ -21,6 +21,32 @@ We can find great external resource on LLPhant (ping us to add yours):
 -   🇫🇷 [Retour d'expérience sur la création d'un agent autonome](https://www.youtube.com/watch?v=ZnYUxTtS6IU)
 -   🇬🇧 [Exploring AI riding an LLPhant](https://www.slideshare.net/slideshow/exploring-ai-riding-an-llphant-an-open-source-library-to-use-llms-and-vector-dbs-in-php/272059145)
 -   🇬🇧 [Evaluating LLM and AI agents Outputs with String Comparison, Criteria & Trajectory Approaches](https://medium.com/towards-artificial-intelligence/evaluating-large-language-model-outputs-with-string-comparison-criteria-trajectory-approaches-c42d43c0cdc3)
+
+# Get Started
+
+> **Note**  
+> **Requires** [PHP 8.1+](https://php.net/releases/)
+
+First, install LLPhant via the [Composer](https://getcomposer.org/) package manager:
+
+```bash
+composer require theodo-group/llphant
+```
+
+In case you have not installed the GD extension, and you do not want to add it to your PHP setup,
+you can use the `--ignore-platform-req=ext-gd` option
+
+```bash
+composer require theodo-group/llphant --ignore-platform-req=ext-gd
+```
+
+If you want to try the latest features of this library, you can use:
+
+```bash
+composer require theodo-group/llphant:dev-main
+```
+
+You may also want to check the requirements for [OpenAI PHP SDK](https://github.com/openai-php/client) as it is the main client.
 
 ## Documentation
 
