@@ -10,4 +10,11 @@ interface DataReader
      * @return Document[]
      */
     public function getDocuments(): array;
+
+    /**
+     * Extract metadata from content.
+     *
+     * @return array<string, mixed>
+     */
+    public function extractMetadata(string $content): array;
 }
