@@ -32,13 +32,6 @@ In the [docker](/docker) folder you can find a complete environment for running 
 * You may need to [rebase](https://git-scm.com/book/en/v2/Git-Branching-Rebasing) to avoid merge conflicts.
 * Please remember that we follow [SemVer](http://semver.org/).
 
-## Refactor
-
-Refactor your code:
-```bash
-composer refactor
-```
-
 ## Lint
 
 Lint your code:
@@ -53,9 +46,9 @@ Run all tests:
 composer test
 ```
 
-Check code quality:
+Check type coverage:
 ```bash
-composer test:refactor
+composer test:type-coverage
 ```
 
 Check types:

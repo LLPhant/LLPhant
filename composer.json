@@ -77,16 +77,13 @@
     "scripts": {
         "lint": "pint -v src tests",
         "fix-lint": "pint -v --repair src tests",
-        "refactor": "rector --debug",
         "test:lint": "pint --test -v src tests",
-        "test:refactor": "rector --dry-run ",
         "test:types": "phpstan analyse --ansi --memory-limit 4G",
         "test:type-coverage": "php ./vendor/bin/pest ./tests --type-coverage --min=100 --memory-limit=4G",
         "test:unit": "pest ./tests/Unit --colors=always",
         "test:int": "pest ./tests/Integration --colors=always",
         "test": [
             "@test:lint",
-            "@test:refactor",
             "@test:types",
             "@test:type-coverage",
             "@test:unit"
