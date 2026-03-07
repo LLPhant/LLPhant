@@ -22,6 +22,7 @@ class RedisVectorStore extends VectorStoreBase
 
     public function addDocument(Document $document): void
     {
+        //@phpstan-ignore argument.named
         $this->client->jsonmset(...$this->generateRedisJsonSetArguments($document));
     }
 

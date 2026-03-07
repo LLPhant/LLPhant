@@ -5,7 +5,6 @@ parameters:
         - types
     excludePaths:
             analyse:
-                - src/Testing
-                - src/Experimental
 
+    treatPhpDocTypesAsCertain: false
     reportUnmatchedIgnoredErrors: true

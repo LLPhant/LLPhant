@@ -55,7 +55,7 @@ use Psr\Log\NullLogger;
 
     public function __construct(OpenAIConfig $config = new OpenAIConfig(), private readonly LoggerInterface $logger = new NullLogger())
     {
-        if ($config instanceof OpenAIConfig && $config->client instanceof ClientContract) {
+        if ($config->client instanceof ClientContract) {
             $this->client = $config->client;
         } else {
             if (! $config->apiKey) {

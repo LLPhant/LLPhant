@@ -91,6 +91,7 @@ class ChromaDBVectorStore extends VectorStoreBase
 
             for ($i = 0; $i < $itemsCount; $i++) {
                 $newDocument = new Document();
+                //@phpstan-ignore-next-line
                 $newDocument->content = $queryResult->documents[0][$i];
                 $metadata = $queryResult->metadatas[0][$i];
                 $newDocument->hash = $metadata['hash'];

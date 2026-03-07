@@ -56,6 +56,7 @@ final class DoctrineODMVectorStore extends VectorStoreBase implements DocumentSt
     }
 
     /**
+     * @param  list<float>  $embedding  The embedding used to search closest neighbors
      * @param  array{'path'?: string, 'filter'?: array<string, mixed>}  $additionalArguments
      * @return DoctrineEmbeddingEntityBase[]
      */

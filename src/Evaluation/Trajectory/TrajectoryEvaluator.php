@@ -311,7 +311,7 @@ final class TrajectoryEvaluator extends AbstractEvaluator
     }
 
     /**
-     * Evaluate completeness of the response relative to the prompt
+     * Evaluate the completeness of the response relative to the prompt
      *
      * @param  string  $prompt  User prompt
      * @param  string  $response  AI response
@@ -321,13 +321,17 @@ final class TrajectoryEvaluator extends AbstractEvaluator
     {
         // Extract question patterns from prompt
         preg_match_all('/\b(who|what|when|where|why|how)\b/i', $prompt, $questions);
-        $questionCount = is_countable($questions[0] ?? null) ? count($questions[0]) : 0;
+        try {
+            $questionCount = count($questions[0]);
+        } catch (\Throwable) {
+            $questionCount = 0;
+        }
 
         if ($questionCount === 0) {
             return 0.8; // Default fairly complete for non-questions
         }
 
-        // Check if response length is proportional to number of questions
+        // Check if the response length is proportional to the number of questions
         $expectedMinLength = $questionCount * 20; // Rough heuristic
         $actualLength = strlen($response);
 

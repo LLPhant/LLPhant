@@ -35,6 +35,7 @@ class MongoDBVectorStore extends VectorStoreBase
     public function addDocuments(array $documents): void
     {
         $this->collection->insertMany(
+            // @phpstan-ignore-next-line
             array_map(
                 fn (Document $document): array => [
                     '_id' => $this->getId($document),
