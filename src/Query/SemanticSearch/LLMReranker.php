@@ -12,7 +12,7 @@ class LLMReranker implements RetrievedDocumentsTransformer
      */
     private const SYSTEM_MESSAGE = <<<'TEXT'
         Your task is to sort documents by relevance in relation to a set of questions. You will receive a list of questions and a list of documents
-        labelled with a number. You must return a list of such numbers sorted from the most relevant document to the least one.
+        labeled with a number. You must return a list of such numbers sorted from the most relevant document to the least one.
 
         Example input format:
 
@@ -69,6 +69,9 @@ class LLMReranker implements RetrievedDocumentsTransformer
     private function sortArrayByRelevanceOrder(string $inputString, array $documents): array
     {
         preg_match('/Relevance order:\s*(.*)/', $inputString, $matches);
+        if (\count($matches) !== 2) {
+            throw new \Exception('Invalid input format. Expected "Relevance order: <numbers>"');
+        }
         $relevanceOrder = array_map('intval', explode(', ', $matches[1]));
 
         if (count($relevanceOrder) !== count($documents)) {

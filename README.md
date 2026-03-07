@@ -53,6 +53,10 @@ You may also want to check the requirements for [OpenAI PHP SDK](https://github.
 Find documentation in [the docs directory](docs) or 
 online at [https://llphant.readthedocs.org](https://llphant.readthedocs.org)
 
+## Contributing
+
+See [CONTRIBUTING](CONTRIBUTING.md) for details.
+
 ## Contributors
 
 Thanks to our contributors:

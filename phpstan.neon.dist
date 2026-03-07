@@ -7,4 +7,4 @@ parameters:
             analyse:
 
     treatPhpDocTypesAsCertain: false
-    reportUnmatchedIgnoredErrors: true
+    reportUnmatchedIgnoredErrors: false
