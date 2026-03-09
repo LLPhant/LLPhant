@@ -48,7 +48,7 @@
         "pestphp/pest-plugin-arch": "^3.0",
         "pestphp/pest-plugin-type-coverage": "^3.0",
         "phpstan/phpstan": "^2",
-        "predis/predis": "^2.2",
+        "predis/predis": "^2.4",
         "rector/rector": "^2",
         "symfony/cache": "^7.2",
         "symfony/var-dumper": "^7.2",
