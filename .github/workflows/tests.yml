@@ -2,9 +2,15 @@ name: Tests
 
 on:
   push:
+    paths: &on-paths-filter
+      - 'composer.json'
+      - 'src/**'
+      - 'tests/**'
+      - '.github/workflows/**'
     branches:
       - main
   pull_request:
+    paths: *on-paths-filter
 
 jobs:
   ci:
