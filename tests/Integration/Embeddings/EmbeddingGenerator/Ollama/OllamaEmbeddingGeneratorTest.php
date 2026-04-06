@@ -35,3 +35,16 @@ it('can embed batch stuff', function () {
     $docs = $embeddingGenerator->embedDocuments([$doc1, $doc2]);
     expect($docs[0]->embedding[0])->toBeFloat();
 });
+
+it('returns the real embedding length for the loaded model', function (string $model, int $expectedLength) {
+    $config = new OllamaConfig();
+    $config->model = $model;
+    $config->url = getenv('OLLAMA_URL') ?: 'http://localhost:11434/api/';
+
+    $embeddingGenerator = new OllamaEmbeddingGenerator($config);
+    expect($embeddingGenerator->getEmbeddingLength())->toBe($expectedLength);
+})->with([
+    'nomic-embed-text' => ['nomic-embed-text', 768],
+    'mxbai-embed-large' => ['mxbai-embed-large', 1024],
+    'all-minilm' => ['all-minilm', 384],
+]);

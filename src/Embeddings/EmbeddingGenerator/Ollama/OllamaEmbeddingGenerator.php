@@ -32,6 +32,8 @@ final class OllamaEmbeddingGenerator implements EmbeddingGeneratorInterface
     /** @var array<string, mixed> */
     private array $modelOptions = [];
 
+    private ?int $embeddingLength = null;
+
     public function __construct(
         OllamaConfig $config,
         ?ClientInterface $client = null,
@@ -134,6 +136,42 @@ final class OllamaEmbeddingGenerator implements EmbeddingGeneratorInterface
 
     public function getEmbeddingLength(): int
     {
-        return 1024;
+        if ($this->embeddingLength !== null) {
+            return $this->embeddingLength;
+        }
+
+        $request = $this->factory->createRequest(
+            'POST',
+            rtrim($this->baseUri, '/').'/show'
+        );
+        $request = $request->withHeader('Content-Type', 'application/json');
+
+        if ($this->apiKey) {
+            $request = $request->withHeader('Authorization', 'Bearer '.$this->apiKey);
+        }
+
+        $request = $request->withBody(
+            $this->factory->createStream(
+                json_encode(['model' => $this->model], JSON_THROW_ON_ERROR)
+            )
+        );
+
+        $response = $this->client->sendRequest($request);
+        $data = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
+
+        if (! is_array($data)) {
+            throw new Exception("Request to Ollama /show didn't return an array");
+        }
+
+        $modelInfo = $data['model_info'] ?? [];
+        $architecture = $modelInfo['general.architecture'] ?? null;
+
+        if ($architecture !== null && isset($modelInfo[$architecture.'.embedding_length'])) {
+            $this->embeddingLength = (int) $modelInfo[$architecture.'.embedding_length'];
+
+            return $this->embeddingLength;
+        }
+
+        throw new Exception("Could not determine embedding length for model '{$this->model}' from Ollama /show response");
     }
 }
