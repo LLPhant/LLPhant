@@ -52,7 +52,7 @@
         "rector/rector": "^2",
         "symfony/cache": "^7.2",
         "symfony/var-dumper": "^7.2",
-        "symfony/process": "^v7.1.8"
+        "symfony/process": "^v8.0.8"
     },
     "autoload": {
         "psr-4": {
