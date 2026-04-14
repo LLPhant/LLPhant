@@ -114,6 +114,7 @@ class QdrantVectorStore extends VectorStoreBase
     /**
      * @param  float[]  $embedding
      * @param  array<string, ConditionInterface[]>  $additionalArguments
+     * @param float $scoreThreshold - Will only return result with a score greater than the value provided.
      * @return array<int, Document>
      */
     public function similaritySearch(array $embedding, int $k = 4, array $additionalArguments = [], $scoreThreshold = 0.00): array
