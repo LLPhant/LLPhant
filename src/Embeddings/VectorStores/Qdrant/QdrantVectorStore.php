@@ -148,11 +148,8 @@ class QdrantVectorStore extends VectorStoreBase
                 'hnsw_ef' => 128,
                 'exact' => true,
             ])
+            ->setScoreThreshold($scoreThreshold)
             ->setWithPayload(true);
-
-        if (bccomp($scoreThreshold, 0) === 1) {
-            $searchRequest->setScoreThreshold($scoreThreshold);
-        }
 
         $response = $this->client->collections($this->collectionName)->points()->search($searchRequest);
         $arrayResponse = $response->__toArray();
