@@ -116,7 +116,7 @@ class QdrantVectorStore extends VectorStoreBase
      * @param  array<string, ConditionInterface[]>  $additionalArguments
      * @return array<int, Document>
      */
-    public function similaritySearch(array $embedding, int $k = 4, array $additionalArguments = []): array
+    public function similaritySearch(array $embedding, int $k = 4, array $additionalArguments = [], $scoreThreshold = 0.00): array
     {
         $vectorStruct = new VectorStruct($embedding, $this->vectorName);
         $filter = new Filter();
@@ -147,6 +147,10 @@ class QdrantVectorStore extends VectorStoreBase
                 'exact' => true,
             ])
             ->setWithPayload(true);
+
+        if (bccomp($scoreThreshold, 0) === 1) {
+            $searchRequest->setScoreThreshold($scoreThreshold);
+        }
 
         $response = $this->client->collections($this->collectionName)->points()->search($searchRequest);
         $arrayResponse = $response->__toArray();
