@@ -80,8 +80,7 @@ it('can delete a collection successfully', function () {
 it('handles deleting a non-existent collection gracefully', function () {
     $collectionName = 'non_existent_collection';
 
-    $mockPsrResponse = Mockery::mock(ResponseInterface::class); // Still needed for the Qdrant\Response constructor if used
-    // Mock the Qdrant client to throw an exception when delete is called
+    // Mock the collections client to throw an exception when delete is called
     $mockCollectionClient = Mockery::mock(Collections::class);
     $mockCollectionClient->shouldReceive('delete')->once()->andThrow(new \Exception('Collection not found')); // Simulate error
 
