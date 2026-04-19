@@ -23,10 +23,10 @@ beforeEach(function () {
     $config->setApiKey($apiKey);
 
     $vectorStorePlaces2 = new QdrantVectorStore($config, 'places2');
-    $vectorStorePlaces2->deleteCollection('places2');
+    $vectorStorePlaces2->deleteCollection();
 
     $vectorStorePlaces3 = new QdrantVectorStore($config, 'places3');
-    $vectorStorePlaces3->deleteCollection('places3');
+    $vectorStorePlaces3->deleteCollection();
 });
 
 function createEmbeddingGenerator(): EmbeddingGeneratorInterface
