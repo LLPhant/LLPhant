@@ -19,12 +19,15 @@ class HumanInTheLoopTool extends ToolBase
             echo $question.PHP_EOL;
             $handle = fopen('php://stdin', 'r');
             if ($handle === false) {
-                return '';
+                throw new \RuntimeException('Could not open STDIN for reading.');
             }
             $line = fgets($handle);
             fclose($handle);
+            if ($line === false) {
+                throw new \RuntimeException('Could not read a line from STDIN.');
+            }
 
-            return trim((string) $line);
+            return trim($line);
         };
     }
 
