@@ -97,6 +97,75 @@ This method gets in input a string describing the location and returns a string 
     $answer = $chat->generateText('What is the weather in Venice?');
 
 
+Human-in-the-Loop
+-----------------
+
+Sometimes an LLM agent needs to pause and ask the user for clarification before proceeding.
+LLPhant supports this pattern through the ``HumanInTheLoopTool`` and ``generateChatOrReturnFunctionCalled``.
+
+How it works:
+
+1. Register a ``HumanInTheLoopTool`` as a tool the LLM can call.
+2. Run your agentic loop using ``generateChatOrReturnFunctionCalled``.
+3. When the LLM returns a list of ``FunctionInfo`` objects instead of a string, check whether it
+   has requested the ``askUser`` tool.
+4. Present the question to the human, feed the answer back as a tool-result message, and continue
+   the loop.
+
+.. code-block:: php
+
+    use LLPhant\Chat\FunctionInfo\FunctionBuilder;
+    use LLPhant\Chat\Message;
+    use LLPhant\Chat\OpenAIChat;
+    use LLPhant\Tool\HumanInTheLoopTool;
+
+    $chat = new OpenAIChat();
+    $chat->setSystemMessage(
+        'You are a helpful travel assistant. '.
+        'If you need additional information from the user, call the askUser tool.'
+    );
+
+    // By default HumanInTheLoopTool reads from STDIN.
+    // You can inject a custom callable to read from any source (web request, queue, …).
+    $humanTool = new HumanInTheLoopTool();
+    $askUserFunction = FunctionBuilder::buildFunctionInfo($humanTool, 'askUser');
+    $chat->addTool($askUserFunction);
+
+    $messages = [Message::user('I want to book a holiday.')];
+
+    // Agentic loop
+    while (true) {
+        $result = $chat->generateChatOrReturnFunctionCalled($messages);
+
+        // The LLM produced a final text answer — we are done.
+        if (is_string($result)) {
+            echo $result.PHP_EOL;
+            break;
+        }
+
+        // The LLM wants to call one or more tools.
+        foreach ($result as $functionInfo) {
+            // Resolve the tool call and collect messages to send back.
+            $toolMessages = $functionInfo->callAndReturnAsOpenAIMessages();
+            $messages = array_merge($messages, $toolMessages);
+        }
+    }
+
+When the injected callable is not suitable for your environment (e.g. a web application), pass
+your own input provider to the constructor:
+
+.. code-block:: php
+
+    $humanTool = new HumanInTheLoopTool(
+        verbose: false,
+        inputProvider: function (string $question): string {
+            // Retrieve the pending question from a session or queue,
+            // then return the user's answer once it is available.
+            return MyApp::getUserAnswer($question);
+        }
+    );
+
+
 .. role:: raw-html(raw)
    :format: html
 
