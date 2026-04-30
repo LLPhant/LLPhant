@@ -28,7 +28,7 @@ We support Gemini through its OpenAI API compatibility. Here is an example:
 .. code-block:: php
 
     $config = new GeminiOpenAIConfig();
-    $config->apiKey = "your_api_key"
+    $config->apiKey = "your_api_key";
     $config->model = 'gemini-2.0-flash';
     $chat = new OpenAIChat($config);
     $response = $chat->generateText('what is one + one ?');
