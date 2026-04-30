@@ -74,6 +74,9 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true,
             "php-http/discovery": false
+        },
+        "platform": {
+            "ext-gd": "1.0.0"
         }
     },
     "scripts": {
