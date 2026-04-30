@@ -9,7 +9,7 @@ class HumanInTheLoopTool extends ToolBase
 
     /**
      * @param  callable(string): string|null  $inputProvider  A callable that receives the question and returns the human's answer.
-     *                                                         Defaults to reading from STDIN.
+     *                                                        Defaults to reading from STDIN.
      */
     public function __construct(bool $verbose = false, ?callable $inputProvider = null)
     {
