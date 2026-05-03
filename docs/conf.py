@@ -13,8 +13,8 @@ master_doc = 'index'
 project = u'LLPhant'
 copyright = u'MIT License'
 version = '9'
-html_title = "A comprehensive PHP generative AI framework for building AI agents, chatbots, and more."
-html_short_title = "A Comprehensive PHP Generative AI Framework"
+html_title = "LLPhant - The PHP library for handling LLMs and Vector Databases"
+html_short_title = "LLPhant — PHP library for LLMs and Vector DBs"
 html_favicon = 'assets/favicon.ico'
 
 exclude_patterns = ['_build']
