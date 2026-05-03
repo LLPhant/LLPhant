@@ -38,7 +38,6 @@ class MistralAIChat extends OpenAIChat
     private function createMistralClient(): ClientInterface
     {
         $stack = HandlerStack::create();
-        $stack->push(MistralJsonResponseModifier::createResponseModifier());
         $stack->push(OpenAIResponseErrorsProcessor::createResponseModifier());
 
         return new GuzzleClient([
