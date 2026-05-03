@@ -6,6 +6,7 @@ This project is LLPhant, which is a PHP library for interacting with LLMs and ve
 
 Besides the [README](README.md) you can find the documentation in the [docs](docs) folder.
 This documentation is published on [https://llphant.readthedocs.org](https://llphant.readthedocs.org).
+To run the documentation locally, follow the instructions in [Documentation.md](Documentation.md).
 
 ## Development environment
 

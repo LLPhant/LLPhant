@@ -14,3 +14,4 @@ script.php
 /docusaurus/.pnp.cjs
 /docusaurus/.pnp.loader.mjs
 /docker/.env
+/docs/.venv/
