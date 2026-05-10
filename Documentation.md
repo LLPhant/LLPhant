@@ -1,6 +1,6 @@
 # Running Documentation Locally
 
-The documentation is built with [Sphinx](https://www.sphinx-doc.org/) and uses the `guzzle_sphinx_theme`. It is published at [https://llphant.readthedocs.org](https://llphant.readthedocs.org).
+The documentation is built with [Sphinx](https://www.sphinx-doc.org/) and uses the `furo` theme. It is published at [https://llphant.readthedocs.org](https://llphant.readthedocs.org).
 
 ## Prerequisites
 
