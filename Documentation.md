@@ -4,7 +4,7 @@ The documentation is built with [Sphinx](https://www.sphinx-doc.org/) and uses t
 
 ## Prerequisites
 
-Python 3.11 is recommended (as specified in `.readthedocs.yaml`).
+Python 3.11 is recommended (as specified in `docs/.readthedocs.yaml`).
 
 ## Setup
 
