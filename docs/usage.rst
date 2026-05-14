@@ -1,7 +1,7 @@
 Usage
 =====
 
-You can use OpenAI, Mistral, Ollama or Anthropic as LLM engines. Here you can find a list of `supported features for each AI engine </docusaurus/docs/features.md>`_.
+You can use OpenAI, Atlas Cloud, Mistral, Ollama or Anthropic as LLM engines. Here you can find a list of `supported features for each AI engine </docusaurus/docs/features.md>`_.
 
 OpenAI
 ------
@@ -34,6 +34,20 @@ We support Gemini through its OpenAI API compatibility. Here is an example:
     $response = $chat->generateText('what is one + one ?');
 
 If you do not specify an api key, the ``GeminiOpenAIConfig`` tries to read it from the ``GEMINI_API_KEY`` environment variable.
+
+Atlas Cloud
+-----------
+
+We support `Atlas Cloud <https://www.atlascloud.ai/?utm_source=github&utm_medium=link&utm_campaign=LLPhant>`_ through its OpenAI-compatible chat API. Here is an example:
+
+.. code-block:: php
+
+    $config = new AtlasCloudOpenAIConfig();
+    $config->apiKey = 'your_api_key';
+    $chat = new OpenAIChat($config);
+    $response = $chat->generateText('what is one + one ?');
+
+If you do not specify an api key, the ``AtlasCloudOpenAIConfig`` tries to read it from the ``ATLASCLOUD_API_KEY`` environment variable.
 
 Mistral
 -------
