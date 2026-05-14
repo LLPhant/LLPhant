@@ -50,6 +50,13 @@ Comparison Table of all supported Language Models
      - ✅
      - ✅
      - ✅
+   * - Atlas Cloud (via OpenAI API)
+     - ✅
+     - ✅
+     - ✅
+     - ℹ️
+     - ❌
+     - ❌
    * - Gemini (via OpenAI API)
      - ✅
      - ✅

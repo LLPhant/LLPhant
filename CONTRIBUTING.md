@@ -129,6 +129,7 @@ composer test:int
 You can set host names and keys for the various services involved in integration tests using these environment variables:
 ```
 OPENAI_API_KEY
+ATLASCLOUD_API_KEY
 MISTRAL_API_KEY
 ANTHROPIC_API_KEY
 ASTRADB_ENDPOINT
@@ -146,4 +147,3 @@ TYPESENSE_API_KEY
 TYPESENSE_NODE
 MARIADB_HOST
 ```
-

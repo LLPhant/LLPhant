@@ -20,6 +20,25 @@ You can also create an OpenAIConfig object and pass it to the constructor of the
     $config->apiKey = 'fakeapikey';
     $chat = new OpenAIChat($config);
 
+Atlas Cloud
+-----------
+
+Atlas Cloud exposes an OpenAI-compatible LLM API, so you can use it through
+``OpenAIChat`` with the dedicated ``AtlasCloudConfig`` helper.
+
+.. code-block:: php
+
+    $config = new AtlasCloudConfig();
+    $config->apiKey = 'your_atlascloud_api_key';
+    $config->model = 'owl';
+    $chat = new OpenAIChat($config);
+    $response = $chat->generateText('what is one + one ?');
+
+If you do not specify an api key, the ``AtlasCloudConfig`` tries to read it from
+the ``ATLASCLOUD_API_KEY`` environment variable. The default base URL is
+``https://api.atlascloud.ai/v1`` and the default model is ``owl``. You can
+replace it with any Atlas Cloud model identifier available in your account.
+
 Gemini
 ------
 
