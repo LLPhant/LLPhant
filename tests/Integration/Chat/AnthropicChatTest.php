@@ -20,9 +20,9 @@ it('can generate some stuff', function () {
 
 it('can generate some stuff with a system prompt', function () {
     $chat = new AnthropicChat();
-    $chat->setSystemMessage('Whatever we ask you, you MUST answer "ok"');
+    $chat->setSystemMessage('My questions will be in English. Please answer with a word in Italian');
     $response = $chat->generateText('what is one + one?');
-    expect(strtolower($response))->toStartWith('ok');
+    expect(strtolower($response))->toStartWith('due');
 });
 
 it('can generate some stuff using a stream', function () {
