@@ -71,29 +71,7 @@ class OllamaChat implements ChatInterface
      */
     public function generateText(string $prompt): string
     {
-        $params = [
-            ...$this->modelOptions,
-            'model' => $this->config->model,
-            'prompt' => $prompt,
-            'stream' => false,
-        ];
-
-        if ($this->formatJson) { // force output to be in a json format (in opposition to a text)
-            $params['format'] = 'json';
-        }
-
-        if ($this->systemMessage instanceof Message) {
-            $params['system'] = $this->systemMessage->content;
-        }
-
-        $response = $this->sendRequest(
-            'POST',
-            'generate',
-            $params,
-        );
-        $json = Utility::decodeJson($response->getBody()->getContents());
-
-        return $json['response'];
+        return $this->generateChat([Message::user($prompt)]);
     }
 
     /**

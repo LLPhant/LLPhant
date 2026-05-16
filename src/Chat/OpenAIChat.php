@@ -91,11 +91,7 @@ use Psr\Log\NullLogger;
 
     public function generateText(string $prompt): string
     {
-        $answer = $this->generate($prompt);
-
-        $this->handleTools($answer);
-
-        return $this->responseToString($answer);
+        return $this->generateChat([Message::user($prompt)]);
     }
 
     public function getLastResponse(): ?CreateResponse

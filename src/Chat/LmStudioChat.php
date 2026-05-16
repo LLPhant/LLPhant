@@ -71,12 +71,7 @@ class LmStudioChat implements ChatInterface
 
     public function generateText(string $prompt): string
     {
-        $result = $this->generateTextOrReturnFunctionToCall($prompt);
-        if (is_array($result)) {
-            throw new \Exception('Function call returned from generateText. Use generateChat for tool use.');
-        }
-
-        return $result;
+        return $this->generateChat([Message::user($prompt)]);
     }
 
     public function generateTextOrReturnFunctionToCall(string $prompt): array|string
