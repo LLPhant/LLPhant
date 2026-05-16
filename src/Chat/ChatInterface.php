@@ -12,7 +12,7 @@ interface ChatInterface
     /**
      * @return string|FunctionInfo[]
      */
-    public function generateTextOrReturnFunctionCalled(string $prompt): string|array;
+    public function generateTextOrReturnFunctionToCall(string $prompt): string|array;
 
     public function generateStreamOfText(string $prompt): StreamInterface;
 
@@ -23,7 +23,7 @@ interface ChatInterface
      * @param  Message[]  $messages
      * @return string|FunctionInfo[]
      */
-    public function generateChatOrReturnFunctionCalled(array $messages): string|array;
+    public function generateChatOrReturnFunctionToCall(array $messages): string|array;
 
     /** @param  Message[]  $messages */
     public function generateChatStream(array $messages): StreamInterface;

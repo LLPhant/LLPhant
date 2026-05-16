@@ -111,7 +111,7 @@ use Psr\Log\NullLogger;
     /**
      * @return string|FunctionInfo[]
      */
-    public function generateTextOrReturnFunctionCalled(string $prompt): string|array
+    public function generateTextOrReturnFunctionToCall(string $prompt): string|array
     {
         $this->functionsCalled = [];
         $this->lastFunctionCalled = null;
@@ -159,8 +159,11 @@ use Psr\Log\NullLogger;
      *
      * @throws \JsonException
      */
-    public function generateChatOrReturnFunctionCalled(array $messages): string|array
+    public function generateChatOrReturnFunctionToCall(array $messages): string|array
     {
+        $this->functionsCalled = [];
+        $this->lastFunctionCalled = null;
+
         $answer = $this->generateResponseFromMessages($messages);
         $tools = $this->getToolsToCall($answer);
 

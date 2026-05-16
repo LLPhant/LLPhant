@@ -47,7 +47,7 @@ it('can process system, user, assistant and functionResult messages', function (
             'currentWeatherForLocation'
         ),
     ];
-    $response = $chat->generateChatOrReturnFunctionCalled($messages);
+    $response = $chat->generateChatOrReturnFunctionToCall($messages);
 
     expect($response)->toBeString();
     expect($logger->logs)->toHaveCount(2);
@@ -119,7 +119,7 @@ it('returns last response using generateText()', function () {
     expect($lastResponse->usage->totalTokens)->toBe(21);
 });
 
-it('returns last response using generateTextOrReturnFunctionCalled()', function () {
+it('returns last response using generateTextOrReturnFunctionToCall()', function () {
     $response = TransporterResponse::from(
         fixture('OpenAI/chat-response'),
         ['x-request-id' => '1']
@@ -148,7 +148,7 @@ it('returns empty (null) last response if no usage', function () {
     expect($chat->getLastResponse())->toBe(null);
 });
 
-it('returns total token usage generate() or generateTextOrReturnFunctionCalled()', function () {
+it('returns total token usage generate() or generateTextOrReturnFunctionToCall()', function () {
     $response = TransporterResponse::from(
         fixture('OpenAI/chat-response'),
         ['x-request-id' => '1']
@@ -163,7 +163,7 @@ it('returns total token usage generate() or generateTextOrReturnFunctionCalled()
     $response = $chat->generateText('here the question');
     expect($chat->getTotalTokens())->toBe(21);
 
-    $response = $chat->generateTextOrReturnFunctionCalled('here the second question with function');
+    $response = $chat->generateTextOrReturnFunctionToCall('here the second question with function');
     expect($chat->getTotalTokens())->toBe(42);
 });
 

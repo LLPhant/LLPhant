@@ -71,7 +71,7 @@ class LmStudioChat implements ChatInterface
 
     public function generateText(string $prompt): string
     {
-        $result = $this->generateTextOrReturnFunctionCalled($prompt);
+        $result = $this->generateTextOrReturnFunctionToCall($prompt);
         if (is_array($result)) {
             throw new \Exception('Function call returned from generateText. Use generateChat for tool use.');
         }
@@ -79,9 +79,9 @@ class LmStudioChat implements ChatInterface
         return $result;
     }
 
-    public function generateTextOrReturnFunctionCalled(string $prompt): array|string
+    public function generateTextOrReturnFunctionToCall(string $prompt): array|string
     {
-        return $this->generateChatOrReturnFunctionCalled([Message::user($prompt)]);
+        return $this->generateChatOrReturnFunctionToCall([Message::user($prompt)]);
     }
 
     /**
@@ -89,7 +89,7 @@ class LmStudioChat implements ChatInterface
      */
     public function generateChat(array $messages): string
     {
-        $result = $this->generateChatOrReturnFunctionCalled($messages);
+        $result = $this->generateChatOrReturnFunctionToCall($messages);
 
         if (is_array($result)) {
             $messages[] = $this->assistantAskingFunctions($result);
@@ -109,8 +109,10 @@ class LmStudioChat implements ChatInterface
      * @param  Message[]  $messages
      * @return string|FunctionInfo[]
      */
-    public function generateChatOrReturnFunctionCalled(array $messages): array|string
+    public function generateChatOrReturnFunctionToCall(array $messages): array|string
     {
+        $this->functionsCalled = [];
+
         $stream = false;
 
         $params = $this->createParameters($messages, $stream);

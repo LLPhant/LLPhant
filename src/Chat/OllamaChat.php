@@ -99,39 +99,51 @@ class OllamaChat implements ChatInterface
     /**
      * @return string|FunctionInfo[]
      */
-    public function generateTextOrReturnFunctionCalled(string $prompt): string|array
+    public function generateTextOrReturnFunctionToCall(string $prompt): string|array
     {
-        $answer = $this->generateText($prompt);
-
-        if ($this->functionsCalled) {
-            $allFunctions = [];
-            foreach ($this->functionsCalled as $functionCalled) {
-                $allFunctions[] = $functionCalled->definition;
-            }
-
-            return $allFunctions;
-        }
-
-        return $answer;
+        return $this->generateChatOrReturnFunctionToCall([Message::user($prompt)]);
     }
 
     /**
      * @return string|FunctionInfo[]
      */
-    public function generateChatOrReturnFunctionCalled(array $messages): string|array
+    public function generateChatOrReturnFunctionToCall(array $messages): string|array
     {
-        $answer = $this->generateChat($messages);
+        $this->functionsCalled = [];
 
-        if ($this->functionsCalled) {
-            $allFunctions = [];
-            foreach ($this->functionsCalled as $functionCalled) {
-                $allFunctions[] = $functionCalled->definition;
+        $params = [
+            ...$this->modelOptions,
+            'model' => $this->config->model,
+            'messages' => $this->prepareMessages($messages),
+            'stream' => false,
+            'tools' => ToolFormatter::formatFunctionsToOpenAITools($this->tools),
+        ];
+
+        $response = $this->sendRequest(
+            'POST',
+            'chat',
+            $params
+        );
+
+        $contents = $response->getBody()->getContents();
+        $this->logger->debug($contents);
+        $json = Utility::decodeJson($contents);
+
+        $message = $json['message'];
+
+        if (\array_key_exists('tool_calls', $message) && ! empty($message['tool_calls'])) {
+            $result = [];
+            foreach ($message['tool_calls'] as $toolCall) {
+                $functionName = $toolCall['function']['name'];
+                $functionInfo = $this->getFunctionInfoFromName($functionName);
+                $functionInfo->jsonArgs = json_encode($toolCall['function']['arguments'] ?? [], JSON_THROW_ON_ERROR);
+                $result[] = $functionInfo;
             }
 
-            return $allFunctions;
+            return $result;
         }
 
-        return $answer;
+        return $message['content'] ?? '';
     }
 
     public function generateStreamOfText(string $prompt): StreamInterface
