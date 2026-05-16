@@ -7,7 +7,6 @@ use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 use LLPhant\Chat\FunctionInfo\FunctionInfo;
-use LLPhant\Chat\FunctionInfo\Parameter;
 use LLPhant\Chat\Message;
 use LLPhant\Chat\OllamaChat;
 use LLPhant\OllamaConfig;
@@ -54,9 +53,16 @@ it('OllamaChat generateChat loops for MULTIPLE rounds of tool calls and maintain
     $chat = new OllamaChat($config);
     $chat->client = $client;
 
-    $obj = new class {
+    $obj = new class
+    {
         public int $calls = 0;
-        public function tool1() { $this->calls++; return "res1"; }
+
+        public function tool1()
+        {
+            $this->calls++;
+
+            return 'res1';
+        }
     };
 
     $chat->addTool(new FunctionInfo('tool1', $obj, 'desc', []));
@@ -73,7 +79,7 @@ it('OllamaChat generateChat loops for MULTIPLE rounds of tool calls and maintain
 
     // Expected messages: system (if any), user, assistant (tool call), tool (result)
     // OllamaChat adds system message automatically if set.
-    
+
     $assistantMessageFound = false;
     $toolMessageFound = false;
     foreach ($messages as $msg) {

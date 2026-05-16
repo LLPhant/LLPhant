@@ -7,12 +7,10 @@ use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 use LLPhant\Chat\FunctionInfo\FunctionInfo;
-use LLPhant\Chat\FunctionInfo\Parameter;
 use LLPhant\Chat\Message;
 use LLPhant\Chat\OpenAIChat;
 use LLPhant\OpenAIConfig;
 use OpenAI;
-use Tests\Integration\Chat\WeatherExample;
 
 it('OpenAIChat generateChat loops for MULTIPLE rounds of tool calls', function () {
     $openAIAnswer1 = <<<'JSON'
@@ -86,10 +84,23 @@ it('OpenAIChat generateChat loops for MULTIPLE rounds of tool calls', function (
     $config->client = $openAIClient;
     $chat = new OpenAIChat($config);
 
-    $obj = new class {
+    $obj = new class
+    {
         public int $calls = 0;
-        public function tool1() { $this->calls++; return "res1"; }
-        public function tool2() { $this->calls++; return "res2"; }
+
+        public function tool1()
+        {
+            $this->calls++;
+
+            return 'res1';
+        }
+
+        public function tool2()
+        {
+            $this->calls++;
+
+            return 'res2';
+        }
     };
 
     $chat->addTool(new FunctionInfo('tool1', $obj, 'desc', []));
