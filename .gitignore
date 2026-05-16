@@ -16,3 +16,4 @@ script.php
 /docker/.env
 /docs/.venv/
 /docs/_build/
+.tokensave

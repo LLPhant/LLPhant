@@ -96,9 +96,9 @@ it('can call a function and provide the result to the assistant', function () {
     $messages = [
         Message::user('What is the weather in Venice?'),
     ];
-    $toolsCalled = $chat->generateChatOrReturnFunctionCalled($messages);
+    $toolsToCall = $chat->generateChatOrReturnFunctionToCall($messages);
 
-    $firstTool = $toolsCalled[0];
+    $firstTool = $toolsToCall[0];
 
     expect($firstTool->name)->toBe('currentWeatherForLocation');
 
@@ -112,7 +112,7 @@ it('can call a function and provide the result to the assistant', function () {
         $firstTool->name
     );
 
-    $response = $chat->generateChatOrReturnFunctionCalled($messages);
+    $response = $chat->generateChatOrReturnFunctionToCall($messages);
 
     expect($response)->toBeString()
         ->and($response)->toContain('sunny')
@@ -140,8 +140,8 @@ it('can call a tool and provide the result to the assistant', function () {
     $messages = [
         Message::user('What is the weather in Venice?'),
     ];
-    $toolsCalled = $chat->generateChatOrReturnFunctionCalled($messages);
-    $firstTool = $toolsCalled[0];
+    $toolsToCall = $chat->generateChatOrReturnFunctionToCall($messages);
+    $firstTool = $toolsToCall[0];
 
     expect($firstTool->name)->toBe('currentWeatherForLocation');
 
@@ -152,7 +152,7 @@ it('can call a tool and provide the result to the assistant', function () {
 
     $messages = array_merge($messages, $firstTool->callAndReturnAsOpenAIMessages());
 
-    $response = $chat->generateChatOrReturnFunctionCalled($messages);
+    $response = $chat->generateChatOrReturnFunctionToCall($messages);
 
     expect($response)->toBeString()
         ->and($response)->toContain('sunny')

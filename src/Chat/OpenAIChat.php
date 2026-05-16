@@ -91,11 +91,7 @@ use Psr\Log\NullLogger;
 
     public function generateText(string $prompt): string
     {
-        $answer = $this->generate($prompt);
-
-        $this->handleTools($answer);
-
-        return $this->responseToString($answer);
+        return $this->generateChat([Message::user($prompt)]);
     }
 
     public function getLastResponse(): ?CreateResponse
@@ -111,7 +107,7 @@ use Psr\Log\NullLogger;
     /**
      * @return string|FunctionInfo[]
      */
-    public function generateTextOrReturnFunctionCalled(string $prompt): string|array
+    public function generateTextOrReturnFunctionToCall(string $prompt): string|array
     {
         $this->functionsCalled = [];
         $this->lastFunctionCalled = null;
@@ -138,17 +134,58 @@ use Psr\Log\NullLogger;
      */
     public function generateChat(array $messages): string
     {
-        $answer = $this->generateResponseFromMessages($messages);
-        $this->handleTools($answer);
+        $this->functionsCalled = [];
+        $this->lastFunctionCalled = null;
 
-        if ($this->functionsCalled) {
-            $newMessages = $this->getNewMessagesFromTools($messages);
+        return $this->generateChatRecursive($messages);
+    }
+
+    /**
+     * @param  Message[]  $messages
+     */
+    private function generateChatRecursive(array $messages): string
+    {
+        $answer = $this->generateResponseFromMessages($messages);
+
+        $currentFunctionsCount = count($this->functionsCalled);
+        $this->handleTools($answer);
+        $newFunctionsCalled = array_slice($this->functionsCalled, $currentFunctionsCount);
+
+        if ($newFunctionsCalled !== []) {
+            $newMessages = $this->getNewMessagesFromTurn($messages, $newFunctionsCalled);
             if ($newMessages !== []) {
-                $answer = $this->generateResponseFromMessages($newMessages);
+                return $this->generateChatRecursive($newMessages);
             }
         }
 
         return $this->responseToString($answer);
+    }
+
+    /**
+     * @param  Message[]  $messages
+     * @param  CalledFunction[]  $newFunctionsCalled
+     * @return Message[]
+     */
+    private function getNewMessagesFromTurn(array $messages, array $newFunctionsCalled): array
+    {
+        $toolsCalls = [];
+        $toolsOutput = [];
+        foreach ($newFunctionsCalled as $functionCalled) {
+            if ($functionCalled->return !== null) {
+                $toolsOutput[] = Message::toolResult($functionCalled->return, $functionCalled->tool_call_id);
+            }
+            if ($functionCalled->tool_call_id) {
+                $toolsCalls[] = new ToolCall($functionCalled->tool_call_id, $functionCalled->definition->name, json_encode($functionCalled->arguments, JSON_THROW_ON_ERROR));
+            }
+        }
+
+        if ($toolsOutput === []) {
+            return [];
+        }
+
+        $messages[] = Message::assistantAskingTools($toolsCalls);
+
+        return array_merge($messages, $toolsOutput);
     }
 
     /**
@@ -159,8 +196,11 @@ use Psr\Log\NullLogger;
      *
      * @throws \JsonException
      */
-    public function generateChatOrReturnFunctionCalled(array $messages): string|array
+    public function generateChatOrReturnFunctionToCall(array $messages): string|array
     {
+        $this->functionsCalled = [];
+        $this->lastFunctionCalled = null;
+
         $answer = $this->generateResponseFromMessages($messages);
         $tools = $this->getToolsToCall($answer);
 

@@ -2,12 +2,16 @@
 
 namespace Tests\Unit\Chat;
 
+use GuzzleHttp\Client as GuzzleClient;
+use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
+use LLPhant\Chat\FunctionInfo\FunctionInfo;
 use LLPhant\Chat\Message;
 use LLPhant\Chat\OpenAIChat;
 use LLPhant\OpenAIConfig;
 use Mockery;
-use OpenAI\Client;
+use OpenAI;
 use OpenAI\Contracts\TransporterContract;
 use OpenAI\ValueObjects\Transporter\Response as TransporterResponse;
 use Psr\Http\Message\ResponseInterface;
@@ -47,7 +51,7 @@ it('can process system, user, assistant and functionResult messages', function (
             'currentWeatherForLocation'
         ),
     ];
-    $response = $chat->generateChatOrReturnFunctionCalled($messages);
+    $response = $chat->generateChatOrReturnFunctionToCall($messages);
 
     expect($response)->toBeString();
     expect($logger->logs)->toHaveCount(2);
@@ -70,7 +74,7 @@ it('returns a stream response using generateStreamOfText()', function () {
     ]);
 
     $config = new OpenAIConfig();
-    $config->client = new Client($transport);
+    $config->client = new \OpenAI\Client($transport);
     $chat = new OpenAIChat($config);
 
     $response = $chat->generateStreamOfText('this is the prompt question');
@@ -89,7 +93,7 @@ it('returns a stream response using generateChatStream()', function () {
     ]);
 
     $config = new OpenAIConfig();
-    $config->client = new Client($transport);
+    $config->client = new \OpenAI\Client($transport);
     $chat = new OpenAIChat($config);
 
     $response = $chat->generateChatStream([Message::user('here the question')]);
@@ -105,7 +109,7 @@ it('returns last response using generateText()', function () {
     $transport->allows()->requestObject(anyArgs())->andReturns($response);
 
     $config = new OpenAIConfig();
-    $config->client = new Client($transport);
+    $config->client = new \OpenAI\Client($transport);
     $chat = new OpenAIChat($config);
 
     $response = $chat->generateText('here the question');
@@ -119,7 +123,7 @@ it('returns last response using generateText()', function () {
     expect($lastResponse->usage->totalTokens)->toBe(21);
 });
 
-it('returns last response using generateTextOrReturnFunctionCalled()', function () {
+it('returns last response using generateTextOrReturnFunctionToCall()', function () {
     $response = TransporterResponse::from(
         fixture('OpenAI/chat-response'),
         ['x-request-id' => '1']
@@ -128,7 +132,7 @@ it('returns last response using generateTextOrReturnFunctionCalled()', function 
     $transport->allows()->requestObject(anyArgs())->andReturns($response);
 
     $config = new OpenAIConfig();
-    $config->client = new Client($transport);
+    $config->client = new \OpenAI\Client($transport);
     $chat = new OpenAIChat($config);
 
     $response = $chat->generateText('here the question');
@@ -142,13 +146,13 @@ it('returns empty (null) last response if no usage', function () {
     $transport = Mockery::mock(TransporterContract::class);
 
     $config = new OpenAIConfig();
-    $config->client = new Client($transport);
+    $config->client = new \OpenAI\Client($transport);
     $chat = new OpenAIChat($config);
 
     expect($chat->getLastResponse())->toBe(null);
 });
 
-it('returns total token usage generate() or generateTextOrReturnFunctionCalled()', function () {
+it('returns total token usage generate() or generateTextOrReturnFunctionToCall()', function () {
     $response = TransporterResponse::from(
         fixture('OpenAI/chat-response'),
         ['x-request-id' => '1']
@@ -157,13 +161,13 @@ it('returns total token usage generate() or generateTextOrReturnFunctionCalled()
     $transport->allows()->requestObject(anyArgs())->andReturns($response);
 
     $config = new OpenAIConfig();
-    $config->client = new Client($transport);
+    $config->client = new \OpenAI\Client($transport);
     $chat = new OpenAIChat($config);
 
     $response = $chat->generateText('here the question');
     expect($chat->getTotalTokens())->toBe(21);
 
-    $response = $chat->generateTextOrReturnFunctionCalled('here the second question with function');
+    $response = $chat->generateTextOrReturnFunctionToCall('here the second question with function');
     expect($chat->getTotalTokens())->toBe(42);
 });
 
@@ -220,10 +224,110 @@ it('does not throw away "0" strings when creating streamed response', function (
     $transport->shouldReceive('requestObject');
 
     $config = new OpenAIConfig();
-    $config->client = new Client($transport);
+    $config->client = new \OpenAI\Client($transport);
     $chat = new OpenAIChat($config);
 
     $response = $chat->generateChatStream([Message::user('here the question')]);
     expect($response)->toBeInstanceof(StreamInterface::class);
     expect($response->read(100))->toBe('0');
+});
+
+it('OpenAIChat generateChat loops for MULTIPLE rounds of tool calls', function () {
+    $openAIAnswer1 = <<<'JSON'
+    {
+      "id": "chatcmpl-1",
+      "object": "chat.completion",
+      "created": 1677652288,
+      "model": "gpt-3.5-turbo",
+      "choices": [{
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [{ "id": "call_1", "type": "function", "function": { "name": "tool1", "arguments": "{}" } }]
+        },
+        "finish_reason": "tool_calls"
+      }]
+    }
+    JSON;
+
+    $openAIAnswer2 = <<<'JSON'
+    {
+      "id": "chatcmpl-2",
+      "object": "chat.completion",
+      "created": 1677652289,
+      "model": "gpt-3.5-turbo",
+      "choices": [{
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [{ "id": "call_2", "type": "function", "function": { "name": "tool2", "arguments": "{}" } }]
+        },
+        "finish_reason": "tool_calls"
+      }]
+    }
+    JSON;
+
+    $openAIAnswer3 = <<<'JSON'
+    {
+      "id": "chatcmpl-3",
+      "object": "chat.completion",
+      "created": 1677652290,
+      "model": "gpt-3.5-turbo",
+      "choices": [{
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "Final Answer"
+        },
+        "finish_reason": "stop"
+      }]
+    }
+    JSON;
+
+    $mock = new MockHandler([
+        new Response(200, ['Content-Type' => 'application/json'], $openAIAnswer1),
+        new Response(200, ['Content-Type' => 'application/json'], $openAIAnswer2),
+        new Response(200, ['Content-Type' => 'application/json'], $openAIAnswer3),
+    ]);
+    $handlerStack = HandlerStack::create($mock);
+    $httpClient = new GuzzleClient(['handler' => $handlerStack]);
+
+    $openAIClient = OpenAI::factory()
+        ->withApiKey('fake-key')
+        ->withHttpClient($httpClient)
+        ->make();
+
+    $config = new OpenAIConfig();
+    $config->model = 'gpt-3.5-turbo';
+    $config->client = $openAIClient;
+    $chat = new OpenAIChat($config);
+
+    $obj = new class
+    {
+        public int $calls = 0;
+
+        public function tool1()
+        {
+            $this->calls++;
+
+            return 'res1';
+        }
+
+        public function tool2()
+        {
+            $this->calls++;
+
+            return 'res2';
+        }
+    };
+
+    $chat->addTool(new FunctionInfo('tool1', $obj, 'desc', []));
+    $chat->addTool(new FunctionInfo('tool2', $obj, 'desc', []));
+
+    $response = $chat->generateChat([Message::user('trigger tools')]);
+
+    expect($response)->toBe('Final Answer');
+    expect($obj->calls)->toBe(2);
 });

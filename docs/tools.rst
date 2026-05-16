@@ -101,12 +101,12 @@ Human-in-the-Loop
 -----------------
 
 Sometimes an LLM agent needs to pause and ask the user for clarification before proceeding.
-LLPhant supports this pattern through the ``HumanInTheLoopTool`` and ``generateChatOrReturnFunctionCalled``.
+LLPhant supports this pattern through the ``HumanInTheLoopTool`` and ``generateChatOrReturnFunctionToCall``.
 
 How it works:
 
 1. Register a ``HumanInTheLoopTool`` as a tool the LLM can call.
-2. Run your agentic loop using ``generateChatOrReturnFunctionCalled``.
+2. Run your agentic loop using ``generateChatOrReturnFunctionToCall``.
 3. When the LLM returns a list of ``FunctionInfo`` objects instead of a string, check whether it
    has requested the ``askUser`` tool.
 4. Present the question to the human, feed the answer back as a tool-result message, and continue
@@ -135,7 +135,7 @@ How it works:
 
     // Agentic loop
     while (true) {
-        $result = $chat->generateChatOrReturnFunctionCalled($messages);
+        $result = $chat->generateChatOrReturnFunctionToCall($messages);
 
         // The LLM produced a final text answer — we are done.
         if (is_string($result)) {

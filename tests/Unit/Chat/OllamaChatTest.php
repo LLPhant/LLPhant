@@ -183,6 +183,20 @@ it('sends correct payload for tools', function () {
           "content": "Should I wear a fur cap and a wool scarf for my trip to Venice?"
         },
         {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "function": {
+                "name": "currentWeatherForLocation",
+                "arguments": {
+                  "location": "Venice"
+                }
+              }
+            }
+          ]
+        },
+        {
           "role": "tool",
           "content": "Weather in Venice is sunny, temperature is 26 Celsius"
         }
@@ -212,4 +226,218 @@ it('sends correct payload for tools', function () {
 
     expect(Utility::decodeJson(($mock->getLastRequest()->getBody()->getContents())))->toMatchArray(Utility::decodeJson($expectedPayload))
         ->and($answer)->toBe('In that case, you might want to consider wearing something lighter like a hat and sunglasses. Enjoy your time in Venice!');
+});
+
+it('stops at tool call in generateChatOrReturnFunctionToCall', function () {
+    $ollamaAnswerWithTool = <<<'JSON'
+    {
+      "message": {
+        "role": "assistant",
+        "content": "",
+        "tool_calls": [
+          {
+            "function": {
+              "name": "currentWeatherForLocation",
+              "arguments": {
+                "location": "Venice"
+              }
+            }
+          }
+        ]
+      },
+      "done": true
+    }
+    JSON;
+
+    $mock = new MockHandler([
+        new Response(200, [], $ollamaAnswerWithTool),
+    ]);
+    $handlerStack = HandlerStack::create($mock);
+    $client = new Client(['handler' => $handlerStack]);
+
+    $config = new OllamaConfig();
+    $config->model = 'test';
+    $chat = new OllamaChat($config);
+    $chat->client = $client;
+
+    $weatherExample = new WeatherExample();
+    $function = new FunctionInfo(
+        'currentWeatherForLocation',
+        $weatherExample,
+        'description',
+        [new Parameter('location', 'string', 'desc')]
+    );
+    $chat->addFunction($function);
+
+    $result = $chat->generateChatOrReturnFunctionToCall([Message::user('weather in Venice?')]);
+
+    expect($result)->toBeArray();
+    expect($result[0])->toBeInstanceOf(FunctionInfo::class);
+    expect($result[0]->name)->toBe('currentWeatherForLocation');
+    // It should NOT have executed the function
+    expect($weatherExample->lastMessage)->toBe('');
+});
+
+it('sends format json parameter when enabled', function () {
+    $ollamaAnswer = <<<'JSON'
+    {
+      "message": {
+        "role": "assistant",
+        "content": "{\"answer\": \"json\"}"
+      },
+      "done": true
+    }
+    JSON;
+
+    $mock = new MockHandler([
+        new Response(200, [], $ollamaAnswer),
+    ]);
+    $handlerStack = HandlerStack::create($mock);
+    $client = new Client(['handler' => $handlerStack]);
+
+    $config = new OllamaConfig();
+    $config->model = 'test';
+    $config->formatJson = true;
+    $chat = new OllamaChat($config);
+    $chat->client = $client;
+
+    $chat->generateChat([Message::user('test')]);
+
+    $lastRequest = $mock->getLastRequest();
+    $payload = Utility::decodeJson($lastRequest->getBody()->getContents());
+
+    expect($payload['format'])->toBe('json');
+});
+
+it('OllamaChat generateChat loops for MULTIPLE rounds of tool calls and maintains history', function () {
+    $ollamaAnswer1 = <<<'JSON'
+    {
+      "message": {
+        "role": "assistant",
+        "content": "",
+        "tool_calls": [
+          {
+            "function": {
+              "name": "tool1",
+              "arguments": {}
+            }
+          }
+        ]
+      },
+      "done": true
+    }
+    JSON;
+
+    $ollamaAnswer2 = <<<'JSON'
+    {
+      "message": {
+        "role": "assistant",
+        "content": "Final Answer"
+      },
+      "done": true
+    }
+    JSON;
+
+    $mock = new MockHandler([
+        new Response(200, [], $ollamaAnswer1),
+        new Response(200, [], $ollamaAnswer2),
+    ]);
+    $handlerStack = HandlerStack::create($mock);
+    $client = new Client(['handler' => $handlerStack]);
+
+    $config = new OllamaConfig();
+    $config->model = 'test';
+    $chat = new OllamaChat($config);
+    $chat->client = $client;
+
+    $obj = new class
+    {
+        public int $calls = 0;
+
+        public function tool1()
+        {
+            $this->calls++;
+
+            return 'res1';
+        }
+    };
+
+    $chat->addTool(new FunctionInfo('tool1', $obj, 'desc', []));
+
+    $response = $chat->generateChat([Message::user('trigger tools')]);
+
+    expect($response)->toBe('Final Answer');
+    expect($obj->calls)->toBe(1);
+
+    // Verify the second request payload contains the assistant message AND the tool result
+    $lastRequest = $mock->getLastRequest();
+    $payload = Utility::decodeJson($lastRequest->getBody()->getContents());
+    $messages = $payload['messages'];
+
+    // Expected messages: system (if any), user, assistant (tool call), tool (result)
+    // OllamaChat adds system message automatically if set.
+
+    $assistantMessageFound = false;
+    $toolMessageFound = false;
+    foreach ($messages as $msg) {
+        if ($msg['role'] === 'assistant' && isset($msg['tool_calls'])) {
+            $assistantMessageFound = true;
+        }
+        if ($msg['role'] === 'tool') {
+            $toolMessageFound = true;
+        }
+    }
+
+    expect($assistantMessageFound)->toBeTrue('Assistant message with tool_calls is missing from history');
+    expect($toolMessageFound)->toBeTrue('Tool result message is missing from history');
+});
+
+it('stops at tool call in generateTextOrReturnFunctionToCall', function () {
+    $ollamaAnswerWithTool = <<<'JSON'
+    {
+      "message": {
+        "role": "assistant",
+        "content": "",
+        "tool_calls": [
+          {
+            "function": {
+              "name": "currentWeatherForLocation",
+              "arguments": {
+                "location": "Venice"
+              }
+            }
+          }
+        ]
+      },
+      "done": true
+    }
+    JSON;
+
+    $mock = new MockHandler([
+        new Response(200, [], $ollamaAnswerWithTool),
+    ]);
+    $handlerStack = HandlerStack::create($mock);
+    $client = new Client(['handler' => $handlerStack]);
+
+    $config = new OllamaConfig();
+    $config->model = 'test';
+    $chat = new OllamaChat($config);
+    $chat->client = $client;
+
+    $weatherExample = new WeatherExample();
+    $function = new FunctionInfo(
+        'currentWeatherForLocation',
+        $weatherExample,
+        'description',
+        [new Parameter('location', 'string', 'desc')]
+    );
+    $chat->addFunction($function);
+
+    $result = $chat->generateTextOrReturnFunctionToCall('weather in Venice?');
+
+    expect($result)->toBeArray();
+    expect($result[0])->toBeInstanceOf(FunctionInfo::class);
+    expect($result[0]->name)->toBe('currentWeatherForLocation');
+    // It should NOT have executed the function
+    expect($weatherExample->lastMessage)->toBe('');
 });
