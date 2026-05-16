@@ -171,7 +171,7 @@ use Psr\Log\NullLogger;
         $toolsCalls = [];
         $toolsOutput = [];
         foreach ($newFunctionsCalled as $functionCalled) {
-            if ($functionCalled->return) {
+            if ($functionCalled->return !== null) {
                 $toolsOutput[] = Message::toolResult($functionCalled->return, $functionCalled->tool_call_id);
             }
             if ($functionCalled->tool_call_id) {
