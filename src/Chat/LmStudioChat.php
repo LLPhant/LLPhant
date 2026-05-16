@@ -84,17 +84,28 @@ class LmStudioChat implements ChatInterface
      */
     public function generateChat(array $messages): string
     {
-        $result = $this->generateChatOrReturnFunctionToCall($messages);
+        $this->functionsCalled = [];
+
+        return $this->generateChatRecursive($messages);
+    }
+
+    /**
+     * @param  Message[]  $messages
+     */
+    private function generateChatRecursive(array $messages): string
+    {
+        $result = $this->generateResponse($messages);
 
         if (is_array($result)) {
             $messages[] = $this->assistantAskingFunctions($result);
             foreach ($result as $functionToCall) {
                 $toolResult = $functionToCall->call();
+                $this->functionsCalled[] = new CalledFunction($functionToCall, json_decode($functionToCall->jsonArgs, true, 512, JSON_THROW_ON_ERROR), $toolResult, $functionToCall->getToolCallId());
                 $toolResultMessage = Message::toolResult($toolResult, $functionToCall->getToolCallId());
                 $messages[] = $toolResultMessage;
             }
 
-            return $this->generateChat($messages);
+            return $this->generateChatRecursive($messages);
         }
 
         return $result;
@@ -108,6 +119,15 @@ class LmStudioChat implements ChatInterface
     {
         $this->functionsCalled = [];
 
+        return $this->generateResponse($messages);
+    }
+
+    /**
+     * @param  Message[]  $messages
+     * @return string|FunctionInfo[]
+     */
+    private function generateResponse(array $messages): array|string
+    {
         $stream = false;
 
         $params = $this->createParameters($messages, $stream);

@@ -183,6 +183,20 @@ it('sends correct payload for tools', function () {
           "content": "Should I wear a fur cap and a wool scarf for my trip to Venice?"
         },
         {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "function": {
+                "name": "currentWeatherForLocation",
+                "arguments": {
+                  "location": "Venice"
+                }
+              }
+            }
+          ]
+        },
+        {
           "role": "tool",
           "content": "Weather in Venice is sunny, temperature is 26 Celsius"
         }

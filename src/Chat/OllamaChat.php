@@ -7,6 +7,7 @@ namespace LLPhant\Chat;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Utils;
 use LLPhant\Chat\CalledFunction\CalledFunction;
+use LLPhant\Chat\Enums\ChatRole;
 use LLPhant\Chat\FunctionInfo\FunctionInfo;
 use LLPhant\Chat\FunctionInfo\ToolFormatter;
 use LLPhant\Chat\Vision\VisionMessage;
@@ -150,6 +151,16 @@ class OllamaChat implements ChatInterface
      */
     public function generateChat(array $messages): string
     {
+        $this->functionsCalled = [];
+
+        return $this->generateChatRecursive($messages);
+    }
+
+    /**
+     * @param  Message[]  $messages
+     */
+    private function generateChatRecursive(array $messages): string
+    {
         $params = [
             ...$this->modelOptions,
             'model' => $this->config->model,
@@ -173,7 +184,7 @@ class OllamaChat implements ChatInterface
         /** @var Message[] $toolsOutput */
         $toolsOutput = [];
 
-        if (\array_key_exists('tool_calls', $message)) {
+        if (\array_key_exists('tool_calls', $message) && ! empty($message['tool_calls'])) {
             foreach ($message['tool_calls'] as $toolCall) {
                 $functionName = $toolCall['function']['name'];
                 $toolResult = $this->callFunction($functionName, $toolCall['function']['arguments']);
@@ -184,10 +195,13 @@ class OllamaChat implements ChatInterface
         }
 
         if ($toolsOutput !== []) {
-            return $this->generateChat(\array_merge($messages, $toolsOutput));
+            $assistantMessage = Message::assistant($message['content'] ?? null);
+            $assistantMessage->tool_calls = $message['tool_calls'];
+
+            return $this->generateChatRecursive(\array_merge($messages, [$assistantMessage], $toolsOutput));
         }
 
-        return $message['content'];
+        return $message['content'] ?? '';
     }
 
     /** @param Message[] $messages */
@@ -372,6 +386,14 @@ class OllamaChat implements ChatInterface
                 'role' => $msg->role,
                 'content' => $msg->content,
             ];
+
+            if ($msg->role === ChatRole::Assistant && isset($msg->tool_calls) && ! empty($msg->tool_calls)) {
+                $responseMessage['tool_calls'] = $msg->tool_calls;
+            }
+
+            if ($msg->role === ChatRole::Tool && isset($msg->tool_call_id)) {
+                $responseMessage['tool_call_id'] = $msg->tool_call_id;
+            }
 
             if ($msg instanceof VisionMessage) {
                 $responseMessage['images'] = [];

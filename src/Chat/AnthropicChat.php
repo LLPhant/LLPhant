@@ -79,6 +79,14 @@ class AnthropicChat implements ChatInterface
     /** @param Message[] $messages */
     public function generateChat(array $messages): string
     {
+        $this->lastFunctionCalled = null;
+
+        return $this->generateChatRecursive($messages);
+    }
+
+    /** @param Message[] $messages */
+    private function generateChatRecursive(array $messages): string
+    {
         $params = $this->createParams($messages, false);
 
         $json = $this->getJsonMessagesResponse($params);
@@ -106,7 +114,7 @@ class AnthropicChat implements ChatInterface
         }
 
         if ($json['stop_reason'] === 'tool_use') {
-            return $this->generateChat(\array_merge($messages, [AnthropicMessage::fromAssistantAnswer($responses), AnthropicMessage::toolResultMessage($toolsOutput)]));
+            return $this->generateChatRecursive(\array_merge($messages, [AnthropicMessage::fromAssistantAnswer($responses), AnthropicMessage::toolResultMessage($toolsOutput)]));
         }
 
         $this->addUsedTokens($json);
