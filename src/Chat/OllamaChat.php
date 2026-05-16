@@ -169,6 +169,10 @@ class OllamaChat implements ChatInterface
             'tools' => ToolFormatter::formatFunctionsToOpenAITools($this->tools),
         ];
 
+        if ($this->formatJson) {
+            $params['format'] = 'json';
+        }
+
         $response = $this->sendRequest(
             'POST',
             'chat',
