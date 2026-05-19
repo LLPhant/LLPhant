@@ -40,7 +40,7 @@
         "doctrine/mongodb-odm": "^2.16.1",
         "doctrine/orm": "^3",
         "elasticsearch/elasticsearch": "^8.15",
-        "hkulekci/qdrant": "^v0.5.7",
+        "hkulekci/qdrant": "^v1.0.0",
         "laravel/pint": "v1.15.3",
         "mockery/mockery": "^1.6.12",
         "mongodb/mongodb": "^2.1",
