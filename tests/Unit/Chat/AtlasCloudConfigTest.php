@@ -16,7 +16,7 @@ it('uses atlas cloud defaults', function () {
 
     expect($config->apiKey)->toBe('test-key')
         ->and($config->url)->toBe('https://api.atlascloud.ai/v1')
-        ->and($config->model)->toBe('owl');
+        ->and($config->model)->toBe('deepseek-ai/DeepSeek-V3-0324');
 });
 
 it('reads api key from environment', function () {
