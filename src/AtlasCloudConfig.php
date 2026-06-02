@@ -28,7 +28,7 @@ class AtlasCloudConfig extends OpenAIConfig
         parent::__construct(
             apiKey: $apiKey ?? Utility::readEnvironment('ATLASCLOUD_API_KEY'),
             url: $url,
-            model: $model ?? 'owl',
+            model: $model ?? Utility::readEnvironment('ATLASCLOUD_MODEL', 'qwen/qwen3.5-flash'),
             client: $client,
             modelOptions: $modelOptions,
         );

@@ -8,7 +8,13 @@ use LLPhant\AtlasCloudConfig;
 
 afterEach(function () {
     putenv('ATLASCLOUD_API_KEY');
-    unset($_ENV['ATLASCLOUD_API_KEY'], $_SERVER['ATLASCLOUD_API_KEY']);
+    putenv('ATLASCLOUD_MODEL');
+    unset(
+        $_ENV['ATLASCLOUD_API_KEY'],
+        $_ENV['ATLASCLOUD_MODEL'],
+        $_SERVER['ATLASCLOUD_API_KEY'],
+        $_SERVER['ATLASCLOUD_MODEL']
+    );
 });
 
 it('uses atlas cloud defaults', function () {
@@ -16,7 +22,7 @@ it('uses atlas cloud defaults', function () {
 
     expect($config->apiKey)->toBe('test-key')
         ->and($config->url)->toBe('https://api.atlascloud.ai/v1')
-        ->and($config->model)->toBe('owl');
+        ->and($config->model)->toBe('qwen/qwen3.5-flash');
 });
 
 it('reads api key from environment', function () {
@@ -25,6 +31,14 @@ it('reads api key from environment', function () {
     $config = new AtlasCloudConfig();
 
     expect($config->apiKey)->toBe('env-key');
+});
+
+it('reads model from environment', function () {
+    putenv('ATLASCLOUD_MODEL=deepseek-ai/deepseek-v4-flash');
+
+    $config = new AtlasCloudConfig('test-key');
+
+    expect($config->model)->toBe('deepseek-ai/deepseek-v4-flash');
 });
 
 it('allows overriding url, model and model options', function () {

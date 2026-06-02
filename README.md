@@ -10,6 +10,23 @@ It is compatible with Symfony and Laravel.
 We are working to expand the support of different LLMs. Right now, we are supporting [OpenAI](https://openai.com/blog/openai-api), [Anthropic](https://www.anthropic.com/), [Mistral](https://mistral.ai/), [Ollama](https://ollama.ai/), [LM Studio](https://lmstudio.ai/), [Atlas Cloud](https://www.atlascloud.ai/docs) and services compatible with the OpenAI API such as [LocalAI](https://localai.io/).
 Ollama that can be used to run LLM locally such as [Llama 2](https://llama.meta.com/).
 
+## Atlas Cloud
+
+LLPhant's `AtlasCloudConfig` targets the OpenAI-compatible Atlas Cloud endpoint
+at `https://api.atlascloud.ai/v1` and now defaults to the validated chat model
+`qwen/qwen3.5-flash`.
+
+The configuration also accepts any Atlas model slug exposed by your account via
+the optional `ATLASCLOUD_MODEL` environment variable. Examples from the current
+public Text model list include:
+
+- `qwen/qwen3.5-flash`
+- `qwen/qwen3.6-plus`
+- `deepseek-ai/deepseek-v4-flash`
+- `deepseek-ai/deepseek-v4-pro`
+- `google/gemini-3.5-flash`
+- `zai-org/glm-4.7`
+
 We want to thank few amazing projects that we use here or inspired us:
 
 -   the learnings from using [LangChain](https://www.langchain.com/) and [LLamaIndex](https://www.llamaindex.ai/)
