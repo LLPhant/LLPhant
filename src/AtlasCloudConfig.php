@@ -28,7 +28,7 @@ class AtlasCloudConfig extends OpenAIConfig
         parent::__construct(
             apiKey: $apiKey ?? Utility::readEnvironment('ATLASCLOUD_API_KEY'),
             url: $url,
-            model: $model ?? 'owl',
+            model: $model ?? 'deepseek-ai/DeepSeek-V3-0324',
             client: $client,
             modelOptions: $modelOptions,
         );

@@ -10,6 +10,27 @@ It is compatible with Symfony and Laravel.
 We are working to expand the support of different LLMs. Right now, we are supporting [OpenAI](https://openai.com/blog/openai-api), [Anthropic](https://www.anthropic.com/), [Mistral](https://mistral.ai/), [Ollama](https://ollama.ai/), [LM Studio](https://lmstudio.ai/), [Atlas Cloud](https://www.atlascloud.ai/docs) and services compatible with the OpenAI API such as [LocalAI](https://localai.io/).
 Ollama that can be used to run LLM locally such as [Llama 2](https://llama.meta.com/).
 
+## Atlas Cloud
+
+LLPhant's `AtlasCloudConfig` targets the OpenAI-compatible Atlas Cloud endpoint
+at `https://api.atlascloud.ai/v1` and now defaults to the validated chat model
+`deepseek-ai/DeepSeek-V3-0324`.
+
+The configuration also accepts any Atlas model slug exposed by your account via
+the optional `ATLASCLOUD_MODEL` environment variable. Recommended validated
+Atlas chat model pool examples include:
+
+- `deepseek-ai/DeepSeek-V3-0324`
+- `deepseek-ai/deepseek-r1-0528`
+- `moonshotai/Kimi-K2-Instruct`
+- `Qwen/Qwen3-Coder`
+- `google/gemini-2.5-flash`
+- `openai/gpt-5.2-chat`
+- `anthropic/claude-opus-4.5-20251101`
+- `zai-org/glm-4.7`
+- `minimaxai/minimax-m2.1`
+- `xai/grok-4-0709`
+
 We want to thank few amazing projects that we use here or inspired us:
 
 -   the learnings from using [LangChain](https://www.langchain.com/) and [LLamaIndex](https://www.llamaindex.ai/)
