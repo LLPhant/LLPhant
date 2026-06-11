@@ -58,6 +58,18 @@ it('generates a correct assistant answer message for Anthropic', function () {
     expect(\json_encode(AnthropicMessage::fromAssistantAnswer($assistantAnswer), JSON_PRETTY_PRINT))->toBe($expectedJson);
 });
 
+// Without the fix, a parameterless tool call decodes `input: {}` as an empty PHP array,
+// which re-serializes as `[]` instead of `{}`. Anthropic rejects it with 400
+// "tool_use.input: Input should be an object".
+it('serializes an empty tool_use input as an object for Anthropic', function () {
+    $assistantAnswer = [
+        ['type' => 'tool_use', 'id' => 'toolu_01A09q90qw90lq917835lq9', 'name' => 'list_products', 'input' => []],
+    ];
+
+    expect(\json_encode(AnthropicMessage::fromAssistantAnswer($assistantAnswer)))
+        ->toContain('"input":{}');
+});
+
 it('generates a correct vison message for Anthropic', function () {
 
     $expectedJson = <<<'JSON'

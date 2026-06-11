@@ -4,6 +4,7 @@ namespace LLPhant\Chat\Anthropic;
 
 use LLPhant\Chat\Enums\ChatRole;
 use LLPhant\Chat\Message;
+use stdClass;
 
 class AnthropicMessage extends Message implements \JsonSerializable
 {
@@ -49,9 +50,17 @@ class AnthropicMessage extends Message implements \JsonSerializable
      */
     public function jsonSerialize(): array
     {
+        $contents = $this->contentsArray;
+        foreach ($contents as &$item) {
+            if (($item['type'] ?? null) === 'tool_use' && ($item['input'] ?? null) === []) {
+                $item['input'] = new stdClass();
+            }
+        }
+        unset($item);
+
         return [
             'role' => $this->role->value,
-            'content' => $this->contentsArray,
+            'content' => $contents,
         ];
     }
 }
