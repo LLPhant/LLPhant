@@ -6,6 +6,7 @@ use LLPhant\Chat\Anthropic\AnthropicImage;
 use LLPhant\Chat\Anthropic\AnthropicImageType;
 use LLPhant\Chat\Anthropic\AnthropicMessage;
 use LLPhant\Chat\Anthropic\AnthropicVisionMessage;
+use stdClass;
 
 it('generates a correct tool result message for Anthropic', function () {
 
@@ -61,13 +62,14 @@ it('generates a correct assistant answer message for Anthropic', function () {
 // Without the fix, a parameterless tool call decodes `input: {}` as an empty PHP array,
 // which re-serializes as `[]` instead of `{}`. Anthropic rejects it with 400
 // "tool_use.input: Input should be an object".
+// The coercion must be in fromAssistantAnswer() because getContentFrom() reads
+// contentsArray directly without going through jsonSerialize().
 it('serializes an empty tool_use input as an object for Anthropic', function () {
-    $assistantAnswer = [
-        ['type' => 'tool_use', 'id' => 'toolu_01A09q90qw90lq917835lq9', 'name' => 'list_products', 'input' => []],
-    ];
+    $message = AnthropicMessage::fromAssistantAnswer([
+        ['type' => 'tool_use', 'id' => 'toolu_x', 'name' => 'list_products', 'input' => []],
+    ]);
 
-    expect(\json_encode(AnthropicMessage::fromAssistantAnswer($assistantAnswer)))
-        ->toContain('"input":{}');
+    expect($message->contentsArray[0]['input'])->toBeInstanceOf(stdClass::class);
 });
 
 it('generates a correct vison message for Anthropic', function () {
