@@ -7,6 +7,7 @@ namespace Tests\Unit\Chat\Function;
 use LLPhant\Chat\FunctionInfo\FunctionFormatter;
 use LLPhant\Chat\FunctionInfo\FunctionInfo;
 use LLPhant\Chat\FunctionInfo\Parameter;
+use stdClass;
 use Tests\Integration\Chat\MailerExample;
 
 it('can format function info with basic types to OpenAI format', function () {
@@ -160,6 +161,20 @@ it('can format function info with array of objects types to OpenAI format', func
     ];
 
     expect(FunctionFormatter::formatOneFunctionToOpenAI($functionInfo))->toBe($expected);
+});
+
+// Without the fix, empty parameters serialize properties as [] (JSON array) instead of {} (JSON object).
+// Anthropic rejects this with: 400 invalid_request_error:
+// tools.N.custom.input_schema.properties: Input should be an object
+it('serializes empty tool properties as an object not an array', function () {
+    $function = new FunctionInfo('no_args_tool', new stdClass(), 'A tool with no parameters', [], []);
+
+    $anthropic = FunctionFormatter::formatFunctionsToAnthropic([$function]);
+    $openai = FunctionFormatter::formatFunctionsToOpenAI([$function]);
+
+    expect($anthropic[0]['input_schema']['properties'])->toEqual(new stdClass());
+    expect($openai[0]['parameters']['properties'])->toEqual(new stdClass());
+    expect(json_encode($anthropic[0]))->toContain('"properties":{}');
 });
 
 it('can format function info for Anthropic', function () {
