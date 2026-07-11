@@ -92,6 +92,12 @@
             "@test:types",
             "@test:type-coverage",
             "@test:unit"
+        ],
+        "quality": [
+            "@fix-lint",
+            "@test:types",
+            "@test:type-coverage",
+            "@test:unit"
         ]
     },
     "archive": {

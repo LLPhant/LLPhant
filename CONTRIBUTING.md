@@ -61,6 +61,9 @@ Unit tests:
 composer test:unit
 ```
 
+#### Tip
+A brief composer script you can run before committing your changes in order to be sure that base checks are OK is `composer quality`.
+
 ### Integration tests
 
 You'll need a API key from OPENAI and export it as a env var.
