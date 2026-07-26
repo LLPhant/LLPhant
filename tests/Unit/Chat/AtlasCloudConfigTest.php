@@ -41,6 +41,13 @@ it('reads model from environment', function () {
     expect($config->model)->toBe('deepseek-ai/deepseek-v4-flash');
 });
 
+it('falls back to the default model when ATLASCLOUD_MODEL is set but empty', function () {
+    putenv('ATLASCLOUD_MODEL=');
+
+    $config = new AtlasCloudConfig('test-key');
+
+    expect($config->model)->toBe('qwen/qwen3.5-flash');
+});
 it('allows overriding url, model and model options', function () {
     $config = new AtlasCloudConfig(
         apiKey: 'test-key',
