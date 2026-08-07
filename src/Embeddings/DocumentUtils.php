@@ -9,34 +9,30 @@ class DocumentUtils
         return $document->sourceType.':'.$document->sourceName.':'.$document->chunkNumber;
     }
 
-    /**
-     * Qdrant needs to have uuid format for their ids.
-     * As we want deterministic IDs for idempotency we use this barbaric function
-     * that has a *very* low probability of collision (50% chance every 2^64 inputs)
-     */
     public static function formatUUIDFromUniqueId(string $data): string
     {
-        // 1. Generate a SHA-256 hash of the data.
         $hash = hash('sha256', $data);
 
-        // 2. Extract portions of the hash to form the UUID.
         $part1 = substr($hash, 0, 8);
         $part2 = substr($hash, 8, 4);
-
-        // For parts 3 and 4, we're making adjustments to ensure the UUID is a valid version 5 UUID.
         $part3 = (hexdec(substr($hash, 12, 4)) & 0x0FFF) | 0x5000;
         $part4 = (hexdec(substr($hash, 16, 4)) & 0x3FFF) | 0x8000;
-
         $part5 = substr($hash, 20, 12);
 
-        // 3. Combine the parts to form the UUID.
-        $uuid = sprintf('%08s-%04s-%04x-%04x-%12s', $part1, $part2, $part3, $part4, $part5);
-
-        return $uuid;
+        return sprintf('%08s-%04s-%04x-%04x-%12s', $part1, $part2, $part3, $part4, $part5);
     }
 
     /**
-     * @param  array{content: string, formattedContent: string, sourceType: string, sourceName: string, hash: string, embedding: float[], chunkNumber: int}[]  $documentDataArray
+     * @param  array{
+     *     content: string,
+     *     formattedContent: string|null,
+     *     sourceType: string,
+     *     sourceName: string,
+     *     hash: string,
+     *     embedding: float[]|null,
+     *     chunkNumber: int,
+     *     metadata: array<string, mixed>
+     * }[] $documentDataArray
      * @return Document[]
      */
     public static function createDocumentsFromArray(array $documentDataArray): array
@@ -50,7 +46,16 @@ class DocumentUtils
     }
 
     /**
-     * @param  array{content: string, formattedContent: string, sourceType: string, sourceName: string, hash: string, embedding: float[], chunkNumber: int}  $documentData
+     * @param  array{
+     *     content: string,
+     *     formattedContent: string|null,
+     *     sourceType: string,
+     *     sourceName: string,
+     *     hash: string,
+     *     embedding: float[]|null,
+     *     chunkNumber: int,
+     *     metadata: array<string, mixed>
+     * } $documentData
      */
     public static function createDocumentFromArray(array $documentData): Document
     {
@@ -62,6 +67,7 @@ class DocumentUtils
         $document->sourceName = $documentData['sourceName'];
         $document->hash = $documentData['hash'];
         $document->chunkNumber = $documentData['chunkNumber'];
+        $document->metadata = $documentData['metadata'] ?? [];
 
         return $document;
     }
@@ -82,7 +88,9 @@ class DocumentUtils
     }
 
     /**
-     * @return array<Document>
+     * Create a list of documents from raw content strings.
+     *
+     * @return Document[]
      */
     public static function documents(string ...$contents): array
     {
