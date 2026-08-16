@@ -7,7 +7,7 @@
 We designed this framework to be as simple as possible, while still providing you with the tools you need to build powerful apps.
 It is compatible with Symfony and Laravel.
 
-We are working to expand the support of different LLMs. Right now, we are supporting [OpenAI](https://openai.com/blog/openai-api), [Anthropic](https://www.anthropic.com/), [Mistral](https://mistral.ai/), [Ollama](https://ollama.ai/), [LM Studio](https://lmstudio.ai/), [Atlas Cloud](https://www.atlascloud.ai/docs) and services compatible with the OpenAI API such as [LocalAI](https://localai.io/).
+We are working to expand the support of different LLMs. Right now, we are supporting [OpenAI](https://openai.com/blog/openai-api), [Anthropic](https://www.anthropic.com/), [Mistral](https://mistral.ai/), [Ollama](https://ollama.ai/), [LM Studio](https://lmstudio.ai/), [Atlas Cloud](https://www.atlascloud.ai/docs), [OrcaRouter](https://www.orcarouter.ai) and services compatible with the OpenAI API such as [LocalAI](https://localai.io/).
 Ollama that can be used to run LLM locally such as [Llama 2](https://llama.meta.com/).
 
 ## Atlas Cloud
@@ -26,6 +26,19 @@ public Text model list include:
 - `deepseek-ai/deepseek-v4-pro`
 - `google/gemini-3.5-flash`
 - `zai-org/glm-4.7`
+
+## OrcaRouter
+
+LLPhant's `OrcaRouterConfig` targets the OpenAI-compatible OrcaRouter endpoint
+at `https://api.orcarouter.ai/v1` with the fully namespaced chat model
+`openai/gpt-4o-mini`.
+
+The configuration also accepts any OrcaRouter model slug via the optional
+`ORCAROUTER_MODEL` environment variable. Examples include:
+
+- `openai/gpt-4o-mini`
+- `openai/gpt-4o`
+- `deepseek/deepseek-v4-flash-0731`
 
 We want to thank few amazing projects that we use here or inspired us:
 
