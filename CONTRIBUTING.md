@@ -133,6 +133,7 @@ You can set host names and keys for the various services involved in integration
 ```
 OPENAI_API_KEY
 ATLASCLOUD_API_KEY
+EVOLINK_API_KEY
 MISTRAL_API_KEY
 ANTHROPIC_API_KEY
 ASTRADB_ENDPOINT
