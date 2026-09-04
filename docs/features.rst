@@ -43,6 +43,13 @@ Comparison Table of all supported Language Models
      - ℹ️
      - ❌
      - ❌
+   * - llmman (via Ollama API)
+     - ✅
+     - ✅
+     - ℹ️
+     - ℹ️
+     - ❌
+     - ❌
    * - OpenAI
      - ✅
      - ✅
