@@ -77,6 +77,23 @@ If you want to use Ollama, you can just specify the model to use using the ``Oll
     $config->model = 'llama2';
     $chat = new OllamaChat($config);
 
+llmman
+------
+
+`llmman <https://github.com/llmmanorg/llmman>`_ is a local model runner that serves the Ollama API
+on port 17434, so you can use it through ``OllamaChat`` and ``OllamaEmbeddingGenerator`` with
+``LlmmanConfig``.
+
+.. code-block:: php
+
+    $config = new LlmmanConfig();
+    $config->model = 'gemma4';
+    $chat = new OllamaChat($config);
+    $embeddings = new OllamaEmbeddingGenerator(new LlmmanConfig());
+
+The default base URL is ``http://localhost:17434/api/``; override the host with the
+``LLMMAN_HOST`` environment variable (``[host][:port]``).
+
 Anthropic
 ---------
 
