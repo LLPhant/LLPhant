@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Query\SemanticSearch;
 
-use LLPhant\Chat\ChatInterface;
+use LLPhant\Classification\ChatInterface;
 use LLPhant\Embeddings\Document;
 use LLPhant\Embeddings\EmbeddingGenerator\EmbeddingGeneratorInterface;
 use LLPhant\Embeddings\VectorStores\VectorStoreBase;

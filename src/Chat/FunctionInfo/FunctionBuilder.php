@@ -1,6 +1,6 @@
 <?php
 
-namespace LLPhant\Chat\FunctionInfo;
+namespace LLPhant\Classification\FunctionInfo;
 
 use ReflectionMethod;
 use ReflectionNamedType;

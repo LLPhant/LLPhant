@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Chat;
 
-use LLPhant\Chat\FunctionInfo\FunctionInfo;
-use LLPhant\Chat\FunctionInfo\Parameter;
-use LLPhant\Chat\Message;
-use LLPhant\Chat\OllamaChat;
+use LLPhant\Classification\FunctionInfo\FunctionInfo;
+use LLPhant\Classification\FunctionInfo\Parameter;
+use LLPhant\Classification\Message;
+use LLPhant\Classification\OllamaChat;
 use LLPhant\OllamaConfig;
 use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\ConsoleOutput;

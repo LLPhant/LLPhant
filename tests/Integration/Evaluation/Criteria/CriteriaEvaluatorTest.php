@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Chat;
 
-use LLPhant\Chat\Message;
-use LLPhant\Chat\OpenAIChat;
+use LLPhant\Classification\Message;
+use LLPhant\Classification\OpenAIChat;
 use LLPhant\Embeddings\EmbeddingGenerator\OpenAI\OpenAI3SmallEmbeddingGenerator;
 use LLPhant\Embeddings\VectorStores\Memory\MemoryVectorStore;
 use LLPhant\Evaluation\Criteria\CriteriaEvaluator;

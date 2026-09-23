@@ -1,8 +1,8 @@
 <?php
 
-namespace LLPhant\Chat\FunctionInfo;
+namespace LLPhant\Classification\FunctionInfo;
 
-use LLPhant\Chat\Message;
+use LLPhant\Classification\Message;
 
 class FunctionInfo
 {

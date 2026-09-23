@@ -2,8 +2,8 @@
 
 namespace LLPhant\Query\SemanticSearch;
 
-use LLPhant\Chat\ChatInterface;
-use LLPhant\Chat\Message;
+use LLPhant\Classification\ChatInterface;
+use LLPhant\Classification\Message;
 use LLPhant\Embeddings\Document;
 use LLPhant\Embeddings\EmbeddingGenerator\EmbeddingGeneratorInterface;
 use LLPhant\Embeddings\VectorStores\VectorStoreBase;

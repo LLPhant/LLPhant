@@ -1,6 +1,6 @@
 <?php
 
-namespace LLPhant\Chat\Vision;
+namespace LLPhant\Classification\Vision;
 
 enum ImageQuality: string
 {

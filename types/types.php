@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use LLPhant\Chat\OpenAIChat;
+use LLPhant\Classification\OpenAIChat;
 use LLPhant\Embeddings\EmbeddingGenerator\OpenAI\OpenAI3SmallEmbeddingGenerator;
 use LLPhant\Embeddings\VectorStores\Memory\MemoryVectorStore;
 use LLPhant\OpenAIConfig;

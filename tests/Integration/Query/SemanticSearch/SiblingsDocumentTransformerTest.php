@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Query\SemanticSearch;
 
-use LLPhant\Chat\OpenAIChat;
+use LLPhant\Classification\OpenAIChat;
 use LLPhant\Embeddings\DataReader\FileDataReader;
 use LLPhant\Embeddings\DocumentSplitter\DocumentSplitter;
 use LLPhant\Embeddings\EmbeddingGenerator\OpenAI\OpenAI3SmallEmbeddingGenerator;

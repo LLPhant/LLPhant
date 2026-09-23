@@ -3,7 +3,7 @@
 namespace LLPhant\Query\SemanticSearch;
 
 use JsonSerializable;
-use LLPhant\Chat\Message;
+use LLPhant\Classification\Message;
 use Psr\Http\Message\StreamInterface;
 
 class ChatSession implements ChatSessionInterface, JsonSerializable

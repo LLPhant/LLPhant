@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Query\SemanticSearch;
 
-use LLPhant\Chat\ChatInterface;
+use LLPhant\Classification\ChatInterface;
 use LLPhant\Embeddings\DocumentUtils;
 use LLPhant\Query\SemanticSearch\LLMReranker;
 use Mockery;

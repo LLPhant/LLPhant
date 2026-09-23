@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Chat;
 
-use LLPhant\Chat\FunctionInfo\FunctionInfo;
-use LLPhant\Chat\FunctionInfo\Parameter;
-use LLPhant\Chat\LmStudioChat;
-use LLPhant\Chat\Message;
+use LLPhant\Classification\FunctionInfo\FunctionInfo;
+use LLPhant\Classification\FunctionInfo\Parameter;
+use LLPhant\Classification\LmStudioChat;
+use LLPhant\Classification\Message;
 use LLPhant\LmStudioConfig;
 use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\ConsoleOutput;

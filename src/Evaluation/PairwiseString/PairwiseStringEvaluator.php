@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace LLPhant\Evaluation\PairwiseString;
 
-use LLPhant\Chat\Message;
+use LLPhant\Classification\Message;
 use LLPhant\Evaluation\EvaluationResults;
 use LLPhant\Evaluation\EvaluatorInterface;
 

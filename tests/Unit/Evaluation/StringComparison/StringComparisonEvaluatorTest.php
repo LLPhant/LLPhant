@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Evaluation\StringComparison;
 
-use LLPhant\Chat\Enums\ChatRole;
-use LLPhant\Chat\Message;
+use LLPhant\Classification\Enums\ChatRole;
+use LLPhant\Classification\Message;
 use LLPhant\Evaluation\StringComparison\StringComparisonEvaluator;
 
 it('can count ROUGE metric precision recall and F1 score', function (): void {

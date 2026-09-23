@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Chat;
 
-use LLPhant\Chat\OpenAIChat;
-use LLPhant\Chat\Vision\ImageSource;
-use LLPhant\Chat\Vision\VisionMessage;
+use LLPhant\Classification\OpenAIChat;
+use LLPhant\Classification\Vision\ImageSource;
+use LLPhant\Classification\Vision\VisionMessage;
 use LLPhant\OpenAIConfig;
 
 it('can describe images with urls', function () {

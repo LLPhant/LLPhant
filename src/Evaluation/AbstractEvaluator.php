@@ -2,7 +2,7 @@
 
 namespace LLPhant\Evaluation;
 
-use LLPhant\Chat\Message;
+use LLPhant\Classification\Message;
 use LLPhant\Query\SemanticSearch\ChatSession;
 
 abstract class AbstractEvaluator implements EvaluatorInterface

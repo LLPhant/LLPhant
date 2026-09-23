@@ -5,7 +5,7 @@ namespace LLPhant\Tool;
 use Exception;
 use Http\Discovery\Psr17Factory;
 use Http\Discovery\Psr18ClientDiscovery;
-use LLPhant\Chat\OpenAIChat;
+use LLPhant\Classification\OpenAIChat;
 use LLPhant\Render\CLIOutputUtils;
 use LLPhant\Render\OutputAgentInterface;
 use LLPhant\Render\StringParser;

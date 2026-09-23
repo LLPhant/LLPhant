@@ -2,9 +2,9 @@
 
 namespace Tests\Unit\Chat\Vision;
 
-use LLPhant\Chat\Vision\ImageQuality;
-use LLPhant\Chat\Vision\ImageSource;
-use LLPhant\Chat\Vision\VisionMessage;
+use LLPhant\Classification\Vision\ImageQuality;
+use LLPhant\Classification\Vision\ImageSource;
+use LLPhant\Classification\Vision\VisionMessage;
 
 it('generates a correct user message for OpenAI', function () {
 

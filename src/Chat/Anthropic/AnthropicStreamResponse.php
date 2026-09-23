@@ -1,6 +1,6 @@
 <?php
 
-namespace LLPhant\Chat\Anthropic;
+namespace LLPhant\Classification\Anthropic;
 
 use LLPhant\Exception\FormatException;
 use LLPhant\Exception\HttpException;

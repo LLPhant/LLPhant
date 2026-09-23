@@ -1,6 +1,6 @@
 <?php
 
-namespace LLPhant\Chat\Enums;
+namespace LLPhant\Classification\Enums;
 
 /**
  * see https://docs.mistral.ai/getting-started/models/models_overview/

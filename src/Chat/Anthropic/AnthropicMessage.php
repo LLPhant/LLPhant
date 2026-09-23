@@ -1,9 +1,9 @@
 <?php
 
-namespace LLPhant\Chat\Anthropic;
+namespace LLPhant\Classification\Anthropic;
 
-use LLPhant\Chat\Enums\ChatRole;
-use LLPhant\Chat\Message;
+use LLPhant\Classification\Enums\ChatRole;
+use LLPhant\Classification\Message;
 use stdClass;
 
 class AnthropicMessage extends Message implements \JsonSerializable

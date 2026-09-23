@@ -1,0 +1,10 @@
+<?php
+
+declare(strict_types=1);
+
+namespace LLPhant\Classification;
+
+class ScoreType extends QuestionType
+{
+
+}

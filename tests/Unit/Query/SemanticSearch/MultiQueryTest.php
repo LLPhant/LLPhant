@@ -1,6 +1,6 @@
 <?php
 
-use LLPhant\Chat\ChatInterface;
+use LLPhant\Classification\ChatInterface;
 use LLPhant\Query\SemanticSearch\MultiQuery;
 
 it('Returns an array whose first line is the original query', function () {

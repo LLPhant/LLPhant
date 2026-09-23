@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Query\SemanticSearch;
 
-use LLPhant\Chat\Enums\OpenAIChatModel;
-use LLPhant\Chat\FunctionInfo\FunctionInfo;
-use LLPhant\Chat\FunctionInfo\Parameter;
-use LLPhant\Chat\Message;
-use LLPhant\Chat\OpenAIChat;
+use LLPhant\Classification\Enums\OpenAIChatModel;
+use LLPhant\Classification\FunctionInfo\FunctionInfo;
+use LLPhant\Classification\FunctionInfo\Parameter;
+use LLPhant\Classification\Message;
+use LLPhant\Classification\OpenAIChat;
 use LLPhant\Embeddings\EmbeddingGenerator\OpenAI\OpenAI3SmallEmbeddingGenerator;
 use LLPhant\Embeddings\VectorStores\Memory\MemoryVectorStore;
 use LLPhant\OpenAIConfig;

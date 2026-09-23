@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Chat;
 
-use LLPhant\Chat\Message;
+use LLPhant\Classification\Message;
 use LLPhant\Embeddings\Distances\EuclideanDistanceL2;
 use LLPhant\Embeddings\EmbeddingGenerator\OpenAI\OpenAIADA002EmbeddingGenerator;
 use LLPhant\Evaluation\EmbeddingDistance\EmbeddingDistanceEvaluator;

@@ -1,6 +1,6 @@
 <?php
 
-namespace LLPhant\Chat\Enums;
+namespace LLPhant\Classification\Enums;
 
 enum ChatRole: string
 {

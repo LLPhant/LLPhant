@@ -2,10 +2,10 @@
 
 namespace Tests\Unit\Chat;
 
-use LLPhant\Chat\Anthropic\AnthropicImage;
-use LLPhant\Chat\Anthropic\AnthropicImageType;
-use LLPhant\Chat\Anthropic\AnthropicMessage;
-use LLPhant\Chat\Anthropic\AnthropicVisionMessage;
+use LLPhant\Classification\Anthropic\AnthropicImage;
+use LLPhant\Classification\Anthropic\AnthropicImageType;
+use LLPhant\Classification\Anthropic\AnthropicMessage;
+use LLPhant\Classification\Anthropic\AnthropicVisionMessage;
 use stdClass;
 
 it('generates a correct tool result message for Anthropic', function () {

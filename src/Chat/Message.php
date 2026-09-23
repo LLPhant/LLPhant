@@ -2,8 +2,8 @@
 
 namespace LLPhant\Chat;
 
-use LLPhant\Chat\Enums\ChatRole;
-use LLPhant\Chat\FunctionInfo\ToolCall;
+use LLPhant\Classification\Enums\ChatRole;
+use LLPhant\Classification\FunctionInfo\ToolCall;
 
 class Message implements \JsonSerializable, \Stringable
 {

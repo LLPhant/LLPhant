@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Query\SemanticSearch;
 
-use LLPhant\Chat\ChatInterface;
-use LLPhant\Chat\Enums\OpenAIChatModel;
-use LLPhant\Chat\OpenAIChat;
+use LLPhant\Classification\ChatInterface;
+use LLPhant\Classification\Enums\OpenAIChatModel;
+use LLPhant\Classification\OpenAIChat;
 use LLPhant\Embeddings\DocumentUtils;
 use LLPhant\OpenAIConfig;
 use LLPhant\Query\SemanticSearch\LLMReranker;

@@ -2,7 +2,7 @@
 
 namespace LLPhant\Chat;
 
-use LLPhant\Chat\FunctionInfo\FunctionInfo;
+use LLPhant\Classification\FunctionInfo\FunctionInfo;
 use Psr\Http\Message\StreamInterface;
 
 interface ChatInterface

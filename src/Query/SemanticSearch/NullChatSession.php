@@ -2,7 +2,7 @@
 
 namespace LLPhant\Query\SemanticSearch;
 
-use LLPhant\Chat\Message;
+use LLPhant\Classification\Message;
 use Psr\Http\Message\StreamInterface;
 
 class NullChatSession implements ChatSessionInterface
