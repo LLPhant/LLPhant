@@ -3,6 +3,8 @@
 namespace LLPhant\Classification;
 
 
+use JsonSerializable;
+
 class JevRequestBody
 {
 
@@ -34,6 +36,33 @@ class JevRequestBody
             $flags |= JSON_PRETTY_PRINT;
         }
 
-        return \json_encode($data, $flags);
+        return \json_encode($this->removeNulls($data), $flags);
+    }
+
+    public static function removeNulls(mixed $value): mixed
+    {
+        if (is_array($value)) {
+            return array_filter(
+                array_map(
+                    [self::class, 'removeNulls'],
+                    $value
+                ),
+                static fn ($value) => $value !== null
+            );
+        }
+
+        if (is_object($value)) {
+            $result = [];
+
+            foreach (get_object_vars($value) as $property => $propertyValue) {
+                if ($propertyValue !== null) {
+                    $result[$property] = self::removeNulls($propertyValue);
+                }
+            }
+
+            return $result;
+        }
+
+        return $value;
     }
 }
