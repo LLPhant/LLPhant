@@ -8,4 +8,13 @@ namespace LLPhant\Classification;
 class ChoiceType extends QuestionType
 {
 
+    /**
+     * @param string $instructions
+     * @param array<string, string> $criteria
+     */
+    public function __construct(string $instructions,
+                                public readonly array $criteria)
+    {
+        parent::__construct('choice', $instructions);
+    }
 }

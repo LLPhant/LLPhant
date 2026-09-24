@@ -110,6 +110,11 @@ class JevClassifier implements ClassifierInterface
         $type = $value['type'];
         return match ($type) {
             'noul' => new NoulAnswer($value['noul']),
+            'choice' => new ChoiceAnswer(
+                choice: $value['choice'],
+                probabilities: $value['probabilities'],
+                confidence: $value['confidence'],
+            ),
             default => throw new \Exception('unexpected answer type: ' . $type),
         };
     }
