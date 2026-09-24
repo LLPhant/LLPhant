@@ -41,6 +41,8 @@ class JevClassifier implements ClassifierInterface
      * @param string $state
      * @param array<string, QuestionType> $questions
      * @return array <string, Answer>
+     * @throws \Exception
+     * @throws ClientExceptionInterface
      */
     function askQuestions(string $state, array $questions): array
     {
@@ -101,12 +103,14 @@ class JevClassifier implements ClassifierInterface
     /**
      * @param array<string, mixed> $value
      * @return Answer
+     * @throws \Exception
      */
     private function decodeAnswer(array $value): Answer
     {
-        return match ($value['type']) {
+        $type = $value['type'];
+        return match ($type) {
             'noul' => new NoulAnswer($value['noul']),
-            default => throw new \Exception('unexpected answer type: ' . $value['type']),
+            default => throw new \Exception('unexpected answer type: ' . $type),
         };
     }
 }
