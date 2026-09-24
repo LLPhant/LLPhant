@@ -6,7 +6,7 @@ namespace LLPhant\Classification;
 
 class ChoiceAnswer extends Answer
 {
-    const MAX_DIFFERENCE = 0.1;
+    const MAX_DIFFERENCE = 0.05;
 
     public function __construct(
         public readonly string $choice,
