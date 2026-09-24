@@ -29,7 +29,7 @@ class JevClassifier implements ClassifierInterface
         $this->url = $config->url;
         $this->model = $config->model;
         $this->apiKey = $config->apiKey
-            ?? (string)Utility::readEnvironment('ANTHROPIC_API_KEY');
+            ?? (string)Utility::readEnvironment('JEV_API_KEY');
         $this->client = $config->client ?: Psr18ClientDiscovery::find();
         $this->factory = new Psr17Factory(
             requestFactory: $config->requestFactory,
@@ -40,31 +40,25 @@ class JevClassifier implements ClassifierInterface
     /**
      * @param string $state
      * @param array<string, QuestionType> $questions
-     * @return array <int, NoulAnswer>
+     * @return array <string, Answer>
      */
-    function noul(string $state, array $questions): array
+    function askQuestions(string $state, array $questions): array
     {
-        // TODO: Implement noul() method.
-    }
+        $response = $this->sendRequest($state, $questions);
 
-    /**
-     * @param string $state
-     * @param array<string, ChoiceType> $questions
-     * @return array <int, ChoiceAnswer>
-     */
-    function choice(string $state, array $questions): array
-    {
-        // TODO: Implement choice() method.
-    }
+        $contents = $response->getBody()->getContents();
 
-    /**
-     * @param string $state
-     * @param array<string, ScoreType> $questions
-     * @return array <int, ScoreAnswer>
-     */
-    function score(string $state, array $questions): array
-    {
-        // TODO: Implement score() method.
+        $jsonContents = Utility::decodeJson($contents);
+
+        $answers = $jsonContents['answers'];
+
+        $result = [];
+
+        foreach ($answers as $key => $value) {
+            $result[$key] = $this->decodeAnswer($value);
+        }
+
+        return $result;
     }
 
     /**
@@ -76,7 +70,7 @@ class JevClassifier implements ClassifierInterface
      */
     protected function sendRequest(string $state, array $questions): ResponseInterface
     {
-        $this->logger->debug('Calling POST v1/messages', [
+        $this->logger->debug('Calling POST v1/systemone', [
             'chat' => self::class,
             'params' => $questions,
         ]);
@@ -102,5 +96,17 @@ class JevClassifier implements ClassifierInterface
         }
 
         return $response;
+    }
+
+    /**
+     * @param array<string, mixed> $value
+     * @return Answer
+     */
+    private function decodeAnswer(array $value): Answer
+    {
+        return match ($value['type']) {
+            'noul' => new NoulAnswer($value['noul']),
+            default => throw new \Exception('unexpected answer type: ' . $value['type']),
+        };
     }
 }
