@@ -14,6 +14,8 @@ Ollama that can be used to run LLM locally such as [Llama 2](https://llama.meta.
 
 LLPhant now supports typed Jev classification with **Noul**, **Choice**, and
 the new **Score** rubric-based questions via ``JevClassifier``.
+Returned answers now also expose Jev usage metadata via ``inputTokens`` and
+``outputTokens`` fields.
 
 To use JevClassifier, set your API key:
 

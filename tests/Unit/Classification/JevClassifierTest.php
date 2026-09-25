@@ -58,7 +58,7 @@ it('can generate a noul answer with no criteria', function () {
     $response = $chat->askQuestions('Help! My payouts have been failing for 3 days.', $questions);
 
     $expected = [
-        'is_urgent' => new NoulAnswer(0.95),
+        'is_urgent' => new NoulAnswer(0.95, 296, 20),
     ];
 
     expect($response)->toEqual($expected);
@@ -90,7 +90,7 @@ it('can generate a noul answer with some criteria', function () {
     $response = $chat->askQuestions('Help! My payouts have been failing for 3 days.', $questions);
 
     $expected = [
-        'is_urgent' => new NoulAnswer(0.95),
+        'is_urgent' => new NoulAnswer(0.95, 307, 20),
     ];
 
     expect($response)->toEqual($expected);
@@ -139,7 +139,9 @@ it('can generate a choice answer with some criteria', function () {
                 'technical' => 0.12,
                 'sales' => 0.0,
             ],
-            confidence: 0.81
+            confidence: 0.81,
+            inputTokens: 318,
+            outputTokens: 34,
         ),
     ];
 
@@ -196,6 +198,8 @@ it('can generate a score answer with some criteria', function () {
                 '2' => 0.05,
             ],
             confidence: 0.92,
+            inputTokens: 304,
+            outputTokens: 18,
         ),
     ];
 

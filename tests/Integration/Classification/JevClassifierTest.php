@@ -25,7 +25,9 @@ it('can generate a noul answer with no criteria', function () {
         'is_urgent' => new NoulAnswer(0.95),
     ];
 
-    expect($response)->toEqual($expected);
+    expect($response['is_urgent']->score)->toBe($expected['is_urgent']->score);
+    expect($response['is_urgent']->inputTokens)->toBeGreaterThan(0);
+    expect($response['is_urgent']->outputTokens)->toBeGreaterThan(0);
 });
 
 it('can generate a noul answer with some criteria', function () {
@@ -41,7 +43,9 @@ it('can generate a noul answer with some criteria', function () {
         'is_urgent' => new NoulAnswer(0.95),
     ];
 
-    expect($response)->toEqual($expected);
+    expect($response['is_urgent']->score)->toBe($expected['is_urgent']->score);
+    expect($response['is_urgent']->inputTokens)->toBeGreaterThan(0);
+    expect($response['is_urgent']->outputTokens)->toBeGreaterThan(0);
 });
 
 it('can generate a choice answer with some criteria', function () {
@@ -71,6 +75,8 @@ it('can generate a choice answer with some criteria', function () {
     ];
 
     expect($expected['department']->isSimilarTo($response['department']))->toBeTrue('Got a different response: '.json_encode($response));
+    expect($response['department']->inputTokens)->toBeGreaterThan(0);
+    expect($response['department']->outputTokens)->toBeGreaterThan(0);
 });
 
 it('can generate a score answer with some criteria', function () {
@@ -101,4 +107,6 @@ it('can generate a score answer with some criteria', function () {
     ];
 
     expect($expected['frustration']->isSimilarTo($response['frustration']))->toBeTrue('Got a different response: '.json_encode($response));
+    expect($response['frustration']->inputTokens)->toBeGreaterThan(0);
+    expect($response['frustration']->outputTokens)->toBeGreaterThan(0);
 });

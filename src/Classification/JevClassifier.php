@@ -58,11 +58,14 @@ class JevClassifier implements ClassifierInterface
         $jsonContents = Utility::decodeJson($contents);
 
         $answers = $jsonContents['answers'];
+        $usage = $jsonContents['usage'] ?? [];
+        $inputTokens = (int) ($usage['input_tokens'] ?? 0);
+        $outputTokens = (int) ($usage['output_tokens'] ?? 0);
 
         $result = [];
 
         foreach ($answers as $key => $value) {
-            $result[$key] = $this->decodeAnswer($value);
+            $result[$key] = $this->decodeAnswer($value, $inputTokens, $outputTokens);
         }
 
         return $result;
@@ -109,22 +112,30 @@ class JevClassifier implements ClassifierInterface
      *
      * @throws \Exception
      */
-    private function decodeAnswer(array $value): Answer
+    private function decodeAnswer(array $value, int $inputTokens, int $outputTokens): Answer
     {
         $type = $value['type'];
 
         return match ($type) {
-            'noul' => new NoulAnswer($value['noul']),
+            'noul' => new NoulAnswer(
+                $value['noul'],
+                $inputTokens,
+                $outputTokens,
+            ),
             'choice' => new ChoiceAnswer(
                 choice: $value['choice'],
                 probabilities: $value['probabilities'],
                 confidence: $value['confidence'],
+                inputTokens: $inputTokens,
+                outputTokens: $outputTokens,
             ),
             'score' => new ScoreAnswer(
                 score: $value['score'],
                 legend: $value['legend'],
                 probabilities: $value['probabilities'],
                 confidence: $value['confidence'],
+                inputTokens: $inputTokens,
+                outputTokens: $outputTokens,
             ),
             default => throw new \Exception('unexpected answer type: '.$type),
         };

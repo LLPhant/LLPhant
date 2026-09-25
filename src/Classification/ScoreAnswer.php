@@ -17,8 +17,10 @@ class ScoreAnswer extends Answer
         public readonly array $legend,
         public readonly array $probabilities,
         public readonly float $confidence,
+        int $inputTokens = 0,
+        int $outputTokens = 0,
     ) {
-        parent::__construct('score');
+        parent::__construct('score', $inputTokens, $outputTokens);
     }
 
     public function isSimilarTo(ScoreAnswer $answer): bool

@@ -14,9 +14,11 @@ class ChoiceAnswer extends Answer
     public function __construct(
         public readonly string $choice,
         public readonly array $probabilities,
-        public readonly float $confidence)
+        public readonly float $confidence,
+        int $inputTokens = 0,
+        int $outputTokens = 0)
     {
-        parent::__construct('choice');
+        parent::__construct('choice', $inputTokens, $outputTokens);
     }
 
     public function isSimilarTo(ChoiceAnswer $answer): bool

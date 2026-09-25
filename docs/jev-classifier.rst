@@ -70,6 +70,18 @@ Basic usage
     // $answers['department']  => ChoiceAnswer
     // $answers['frustration'] => ScoreAnswer
 
+Answer token usage
+------------------
+
+Every ``Answer`` object (``NoulAnswer``, ``ChoiceAnswer``, ``ScoreAnswer``)
+includes usage metadata populated from Jev API responses:
+
+- ``inputTokens``: request input token count
+- ``outputTokens``: model output token count
+
+These values come from the top-level ``usage`` field of the Jev response and
+are copied into each returned answer instance.
+
 Score answers
 -------------
 
