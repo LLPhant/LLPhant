@@ -34,6 +34,10 @@ class ChoiceAnswer extends Answer
         }
 
         foreach ($this->probabilities as $key => $value) {
+            if (! isset($answer->probabilities[$key])) {
+                return false;
+            }
+
             if (abs($value - $answer->probabilities[$key]) > self::MAX_DIFFERENCE) {
                 return false;
             }
