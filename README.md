@@ -30,6 +30,8 @@ See the full Jev API reference: [https://docs.typesafe.ai/api](https://docs.type
 and the LLPhant Jev guide in [docs/jev-classifier.rst](docs/jev-classifier.rst).
 
 
+## Similar projects
+
 We want to thank few amazing projects that we use here or inspired us:
 
 -   the learnings from using [LangChain](https://www.langchain.com/) and [LLamaIndex](https://www.llamaindex.ai/)
