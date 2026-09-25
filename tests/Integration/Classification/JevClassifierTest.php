@@ -48,7 +48,7 @@ it('can generate a choice answer with some criteria', function () {
     $chat = new JevClassifier();
     $questions = [
         'department' => new ChoiceType(
-            '"Which team should handle this?',
+            'Which team should handle this?',
             [
                 'billing' => 'Payments, invoicing, refunds',
                 'technical' => 'Bugs, outages, integrations',
