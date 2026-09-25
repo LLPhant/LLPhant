@@ -20,6 +20,12 @@ Not widely spread yet but with increasing adoption:
 If you want to discover more usage from the community, you can see here a list of `GenAI Meetups <https://www.genaidays.org/events/>`_.
 You can also see other use cases on `Qdrant's website <https://qdrant.tech/use-cases/>`_.
 
+Typed classification in customer-support workflows
+--------------------------------------------------
+
+If you want to classify support messages with typed and explainable outputs
+(yes/no, category choice, and graded score), see :doc:`jev-classifier`.
+
 .. role:: raw-html(raw)
    :format: html
 

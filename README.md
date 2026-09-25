@@ -10,6 +10,23 @@ It is compatible with Symfony and Laravel.
 We are working to expand the support of different LLMs. Right now, we are supporting [OpenAI](https://openai.com/blog/openai-api), [Anthropic](https://www.anthropic.com/), [Mistral](https://mistral.ai/), [Ollama](https://ollama.ai/), [llmman](https://github.com/llmmanorg/llmman), [LM Studio](https://lmstudio.ai/), [Atlas Cloud](https://www.atlascloud.ai/docs) and services compatible with the OpenAI API such as [LocalAI](https://localai.io/).
 Ollama that can be used to run LLM locally such as [Llama 2](https://llama.meta.com/).
 
+## 🚀 New: JevClassifier with typed Score classification
+
+LLPhant now supports typed Jev classification with **Noul**, **Choice**, and
+the new **Score** rubric-based questions via ``JevClassifier``.
+
+To use JevClassifier, set your API key:
+
+```bash
+export JEV_API_KEY=your_api_key
+```
+
+Then instantiate ``new JevClassifier()``. If you prefer, you can also pass the
+key explicitly through ``new JevConfig(apiKey: '...')``.
+
+See the full Jev API reference: [https://docs.typesafe.ai/api](https://docs.typesafe.ai/api)
+and the LLPhant Jev guide in [docs/jev-classifier.rst](docs/jev-classifier.rst).
+
 
 We want to thank few amazing projects that we use here or inspired us:
 
@@ -53,6 +70,9 @@ You may also want to check the requirements for [OpenAI PHP SDK](https://github.
 
 Find documentation in [the docs directory](docs) or 
 online at [https://llphant.readthedocs.org](https://llphant.readthedocs.org)
+
+The documentation includes a JevClassifier guide with typed classification
+examples for **Noul**, **Choice**, and the new **Score** rubric-based questions.
 
 ## Contributing
 
