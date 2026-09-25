@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Chat\Function;
 
-use LLPhant\Classification\FunctionInfo\FunctionInfo;
-use LLPhant\Classification\FunctionInfo\Parameter;
-use LLPhant\Classification\FunctionInfo\ToolFormatter;
+use LLPhant\Chat\FunctionInfo\FunctionInfo;
+use LLPhant\Chat\FunctionInfo\Parameter;
+use LLPhant\Chat\FunctionInfo\ToolFormatter;
 
 it('can format function info with basic types to OpenAI format', function () {
     $parameters = [

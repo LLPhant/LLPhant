@@ -4,7 +4,7 @@ namespace LLPhant\Chat;
 
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\HandlerStack;
-use LLPhant\Classification\Enums\MistralAIChatModel;
+use LLPhant\Chat\Enums\MistralAIChatModel;
 use LLPhant\Exception\MissingParameterException;
 use LLPhant\MistralAIConfig;
 use OpenAI\Client;

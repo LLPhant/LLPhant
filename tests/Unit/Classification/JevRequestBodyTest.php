@@ -25,7 +25,7 @@ it('can create a valid Jev request JSON body', function () {
         model: 'jev-latest',
         state: 'Help! My payouts have been failing for 3 days.',
         questions: [
-            'is_urgent' => new NoulType('Does this convey urgency?')
+            'is_urgent' => new NoulType('Does this convey urgency?'),
         ]
     );
 

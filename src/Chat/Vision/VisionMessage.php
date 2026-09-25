@@ -1,10 +1,10 @@
 <?php
 
-namespace LLPhant\Classification\Vision;
+namespace LLPhant\Chat\Vision;
 
 use JsonSerializable;
-use LLPhant\Classification\Enums\ChatRole;
-use LLPhant\Classification\Message;
+use LLPhant\Chat\Enums\ChatRole;
+use LLPhant\Chat\Message;
 
 class VisionMessage extends Message implements JsonSerializable
 {

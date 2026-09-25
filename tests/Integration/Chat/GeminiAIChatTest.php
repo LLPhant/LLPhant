@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Chat;
 
-use LLPhant\Classification\OpenAIChat;
+use LLPhant\Chat\OpenAIChat;
 use LLPhant\GeminiOpenAIConfig;
 
 it('can generate some stuff', function () {

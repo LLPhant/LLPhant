@@ -1,8 +1,8 @@
 <?php
 
-namespace LLPhant\Classification\CalledFunction;
+namespace LLPhant\Chat\CalledFunction;
 
-use LLPhant\Classification\FunctionInfo\FunctionInfo;
+use LLPhant\Chat\FunctionInfo\FunctionInfo;
 
 class CalledFunction
 {

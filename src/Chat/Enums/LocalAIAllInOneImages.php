@@ -1,6 +1,6 @@
 <?php
 
-namespace LLPhant\Classification\Enums;
+namespace LLPhant\Chat\Enums;
 
 /**
  * These are enums that can be used with LocalAI AllInOne docker images

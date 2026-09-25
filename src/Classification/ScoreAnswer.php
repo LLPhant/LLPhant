@@ -9,8 +9,8 @@ class ScoreAnswer extends Answer
     const MAX_DIFFERENCE = 0.05;
 
     /**
-     * @param array<string, string> $legend
-     * @param array<string, float> $probabilities
+     * @param  array<string, string>  $legend
+     * @param  array<string, float>  $probabilities
      */
     public function __construct(
         public readonly float $score,

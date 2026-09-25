@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Chat;
 
-use LLPhant\Classification\OllamaChat;
+use LLPhant\Chat\OllamaChat;
 use LLPhant\LlmmanConfig;
 
 afterEach(function () {

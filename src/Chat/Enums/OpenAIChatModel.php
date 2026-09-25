@@ -1,6 +1,6 @@
 <?php
 
-namespace LLPhant\Classification\Enums;
+namespace LLPhant\Chat\Enums;
 
 enum OpenAIChatModel: string
 {

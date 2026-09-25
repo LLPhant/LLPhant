@@ -7,7 +7,7 @@ namespace LLPhant\Classification;
 class ScoreType extends QuestionType
 {
     /**
-     * @param ScoreCriteria|array<int, string> $criteria
+     * @param  ScoreCriteria|array<int, string>  $criteria
      */
     public function __construct(
         string $instructions,

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Chat;
 
-use LLPhant\Classification\FunctionInfo\FunctionBuilder;
-use LLPhant\Classification\Message;
-use LLPhant\Classification\MistralAIChat;
+use LLPhant\Chat\FunctionInfo\FunctionBuilder;
+use LLPhant\Chat\Message;
+use LLPhant\Chat\MistralAIChat;
 use LLPhant\Exception\HttpException;
 use LLPhant\MistralAIConfig;
 

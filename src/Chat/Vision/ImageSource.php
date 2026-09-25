@@ -1,6 +1,6 @@
 <?php
 
-namespace LLPhant\Classification\Vision;
+namespace LLPhant\Chat\Vision;
 
 use GuzzleHttp\Client;
 use JsonSerializable;

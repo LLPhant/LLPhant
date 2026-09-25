@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Evaluation\StringComparison;
 
-use LLPhant\Classification\Message;
+use LLPhant\Chat\Message;
 use LLPhant\Evaluation\PairwiseString\PairwiseStringEvaluator;
 use LLPhant\Evaluation\StringComparison\StringComparisonEvaluator;
 

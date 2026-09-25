@@ -2,7 +2,7 @@
 
 namespace LLPhant\Query\SemanticSearch;
 
-use LLPhant\Classification\Message;
+use LLPhant\Chat\Message;
 use Psr\Http\Message\StreamInterface;
 
 interface ChatSessionInterface

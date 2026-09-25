@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Chat\Function;
 
-use LLPhant\Classification\FunctionInfo\TypeMapper;
+use LLPhant\Chat\FunctionInfo\TypeMapper;
 use ReflectionMethod;
 use ReflectionNamedType;
 

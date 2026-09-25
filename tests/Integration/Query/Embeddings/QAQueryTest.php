@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Query\Embeddings;
 
-use LLPhant\Classification\OpenAIChat;
+use LLPhant\Chat\OpenAIChat;
 use LLPhant\Embeddings\DataReader\FileDataReader;
 use LLPhant\Embeddings\Distances\CosineDistance;
 use LLPhant\Embeddings\DocumentSplitter\DocumentSplitter;

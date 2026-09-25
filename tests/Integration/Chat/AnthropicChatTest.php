@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Chat;
 
-use LLPhant\Classification\Anthropic\AnthropicImage;
-use LLPhant\Classification\Anthropic\AnthropicImageType;
-use LLPhant\Classification\Anthropic\AnthropicVisionMessage;
-use LLPhant\Classification\AnthropicChat;
-use LLPhant\Classification\FunctionInfo\FunctionInfo;
-use LLPhant\Classification\FunctionInfo\Parameter;
+use LLPhant\Chat\Anthropic\AnthropicImage;
+use LLPhant\Chat\Anthropic\AnthropicImageType;
+use LLPhant\Chat\Anthropic\AnthropicVisionMessage;
+use LLPhant\Chat\AnthropicChat;
+use LLPhant\Chat\FunctionInfo\FunctionInfo;
+use LLPhant\Chat\FunctionInfo\Parameter;
 
 it('can generate some stuff', function () {
     $chat = new AnthropicChat();

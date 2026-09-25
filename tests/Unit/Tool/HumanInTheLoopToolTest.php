@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Tool;
 
-use LLPhant\Classification\FunctionInfo\FunctionBuilder;
+use LLPhant\Chat\FunctionInfo\FunctionBuilder;
 use LLPhant\Tool\HumanInTheLoopTool;
 
 it('returns the answer provided by the injected input callable', function (): void {

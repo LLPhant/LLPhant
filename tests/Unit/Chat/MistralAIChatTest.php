@@ -3,8 +3,8 @@
 namespace Tests\Unit\Chat;
 
 use GuzzleHttp\Psr7\Response;
-use LLPhant\Classification\Message;
-use LLPhant\Classification\MistralAIChat;
+use LLPhant\Chat\Message;
+use LLPhant\Chat\MistralAIChat;
 use LLPhant\MistralAIConfig;
 use Mockery;
 use OpenAI\Client;

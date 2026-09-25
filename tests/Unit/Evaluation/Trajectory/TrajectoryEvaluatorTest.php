@@ -3,7 +3,7 @@
 namespace tests\Unit\Evaluation\Trajectory;
 
 use InvalidArgumentException;
-use LLPhant\Classification\Message;
+use LLPhant\Chat\Message;
 use LLPhant\Evaluation\Trajectory\TrajectoryEvaluator;
 
 it('can generate trajectory evaluation', function (): void {

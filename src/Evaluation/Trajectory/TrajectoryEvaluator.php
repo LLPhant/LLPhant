@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace LLPhant\Evaluation\Trajectory;
 
-use LLPhant\Classification\Message;
+use LLPhant\Chat\Message;
 use LLPhant\Evaluation\AbstractEvaluator;
 use LLPhant\Evaluation\EvaluationResults;
 use LLPhant\Evaluation\Trajectory\Vocabulary\HarmfulKeywordsEn;

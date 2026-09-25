@@ -7,7 +7,7 @@ namespace LLPhant\Classification;
 class ScoreCriteria
 {
     /**
-     * @param array<int, string> $levels
+     * @param  array<int, string>  $levels
      */
     public function __construct(public readonly array $levels)
     {

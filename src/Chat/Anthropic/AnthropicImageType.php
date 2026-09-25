@@ -1,6 +1,6 @@
 <?php
 
-namespace LLPhant\Classification\Anthropic;
+namespace LLPhant\Chat\Anthropic;
 
 enum AnthropicImageType: string
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace LLPhant\Classification\FunctionInfo;
+namespace LLPhant\Chat\FunctionInfo;
 
 class Parameter
 {

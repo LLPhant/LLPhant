@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Chat\Function;
 
-use LLPhant\Classification\FunctionInfo\FunctionBuilder;
+use LLPhant\Chat\FunctionInfo\FunctionBuilder;
 
 it('creates a functionInfo instance from a random class method', function () {
     $functionInfo = FunctionBuilder::buildFunctionInfo(new RichExample(), 'example');

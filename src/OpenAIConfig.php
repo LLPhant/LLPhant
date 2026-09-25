@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace LLPhant;
 
-use LLPhant\Classification\Enums\OpenAIChatModel;
+use LLPhant\Chat\Enums\OpenAIChatModel;
 use OpenAI\Contracts\ClientContract;
 
 /**

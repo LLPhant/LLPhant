@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace LLPhant\Evaluation\Criteria;
 
-use LLPhant\Classification\ChatInterface;
-use LLPhant\Classification\Message;
+use LLPhant\Chat\ChatInterface;
+use LLPhant\Chat\Message;
 use LLPhant\Evaluation\AbstractEvaluator;
 use LLPhant\Evaluation\EvaluationResults;
 

@@ -17,12 +17,12 @@ use LLPhant\Classification\ScoreType;
 it('can generate a noul answer with no criteria', function () {
     $chat = new JevClassifier();
     $questions = [
-        'is_urgent' => new NoulType('Does this convey urgency?')
+        'is_urgent' => new NoulType('Does this convey urgency?'),
     ];
     $response = $chat->askQuestions('Help! My payouts have been failing for 3 days.', $questions);
 
     $expected = [
-        'is_urgent' => new NoulAnswer(0.95)
+        'is_urgent' => new NoulAnswer(0.95),
     ];
 
     expect($response)->toEqual($expected);
@@ -33,12 +33,12 @@ it('can generate a noul answer with some criteria', function () {
     $questions = [
         'is_urgent' => new NoulType(
             'Does this convey urgency?',
-            new NoulCriteria('Explicitly time-sensitive', 'No urgency expressed'))
+            new NoulCriteria('Explicitly time-sensitive', 'No urgency expressed')),
     ];
     $response = $chat->askQuestions('Help! My payouts have been failing for 3 days.', $questions);
 
     $expected = [
-        'is_urgent' => new NoulAnswer(0.95)
+        'is_urgent' => new NoulAnswer(0.95),
     ];
 
     expect($response)->toEqual($expected);
@@ -50,11 +50,11 @@ it('can generate a choice answer with some criteria', function () {
         'department' => new ChoiceType(
             '"Which team should handle this?',
             [
-                "billing" => 'Payments, invoicing, refunds',
-                "technical" => "Bugs, outages, integrations",
-                "sales" => "Pricing, upgrades, new accounts"
+                'billing' => 'Payments, invoicing, refunds',
+                'technical' => 'Bugs, outages, integrations',
+                'sales' => 'Pricing, upgrades, new accounts',
             ]
-        )
+        ),
     ];
     $response = $chat->askQuestions('Help! My payouts have been failing for 3 days.', $questions);
 
@@ -62,12 +62,12 @@ it('can generate a choice answer with some criteria', function () {
         'department' => new ChoiceAnswer(
             choice: 'billing',
             probabilities: [
-                "billing" => 0.88,
-                "technical" => 0.12,
-                "sales" => 0.0
+                'billing' => 0.88,
+                'technical' => 0.12,
+                'sales' => 0.0,
             ],
             confidence: 0.81
-        )
+        ),
     ];
 
     expect($expected['department']->isSimilarTo($response['department']))->toBeTrue('Got a different response: '.json_encode($response));

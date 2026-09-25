@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Chat;
 
-use LLPhant\Classification\OpenAIChat;
+use LLPhant\Chat\OpenAIChat;
 use LLPhant\Evaluation\Guardrails\Guardrails;
 use LLPhant\Evaluation\Guardrails\GuardrailStrategy;
 use LLPhant\Evaluation\Output\JSONFormatEvaluator;

@@ -2,8 +2,8 @@
 
 namespace Tests\Unit\Evaluation\Criteria;
 
-use LLPhant\Classification\Message;
-use LLPhant\Classification\OpenAIChat;
+use LLPhant\Chat\Message;
+use LLPhant\Chat\OpenAIChat;
 use LLPhant\Evaluation\Criteria\CriteriaEvaluator;
 use LLPhant\Evaluation\Criteria\CriteriaEvaluatorPromptBuilder;
 use LLPhant\OpenAIConfig;

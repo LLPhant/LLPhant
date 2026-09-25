@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Query\SemanticSearch;
 
-use LLPhant\Classification\ChatInterface;
-use LLPhant\Classification\OpenAIChat;
+use LLPhant\Chat\ChatInterface;
+use LLPhant\Chat\OpenAIChat;
 use LLPhant\OpenAIConfig;
 use LLPhant\Query\SemanticSearch\MultiQuery;
 

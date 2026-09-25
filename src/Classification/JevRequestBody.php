@@ -2,21 +2,15 @@
 
 namespace LLPhant\Classification;
 
-
-use JsonSerializable;
-
 class JevRequestBody
 {
-
     /**
-     * @param string $model
-     * @param string $state
-     * @param QuestionType[] $questions
+     * @param  QuestionType[]  $questions
      */
     public function __construct(
         private readonly string $model,
         private readonly string $state,
-        private readonly array  $questions)
+        private readonly array $questions)
     {
     }
 
@@ -47,7 +41,7 @@ class JevRequestBody
                     [self::class, 'removeNulls'],
                     $value
                 ),
-                static fn ($value) => $value !== null
+                static fn (mixed $x): bool => $x !== null
             );
         }
 

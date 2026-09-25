@@ -2,8 +2,8 @@
 
 namespace LLPhant\Tool;
 
-use LLPhant\Classification\FunctionInfo\FunctionBuilder;
-use LLPhant\Classification\FunctionInfo\FunctionInfo;
+use LLPhant\Chat\FunctionInfo\FunctionBuilder;
+use LLPhant\Chat\FunctionInfo\FunctionInfo;
 
 class ToolManager
 {

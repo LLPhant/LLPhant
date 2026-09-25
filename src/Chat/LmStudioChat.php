@@ -6,12 +6,12 @@ namespace LLPhant\Chat;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Utils;
-use LLPhant\Classification\CalledFunction\CalledFunction;
-use LLPhant\Classification\Enums\ChatRole;
-use LLPhant\Classification\FunctionInfo\FunctionInfo;
-use LLPhant\Classification\FunctionInfo\ToolCall;
-use LLPhant\Classification\FunctionInfo\ToolFormatter;
-use LLPhant\Classification\Vision\VisionMessage;
+use LLPhant\Chat\CalledFunction\CalledFunction;
+use LLPhant\Chat\Enums\ChatRole;
+use LLPhant\Chat\FunctionInfo\FunctionInfo;
+use LLPhant\Chat\FunctionInfo\ToolCall;
+use LLPhant\Chat\FunctionInfo\ToolFormatter;
+use LLPhant\Chat\Vision\VisionMessage;
 use LLPhant\Exception\HttpException;
 use LLPhant\Exception\MissingParameterException;
 use LLPhant\LmStudioConfig;

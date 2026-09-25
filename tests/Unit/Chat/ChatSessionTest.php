@@ -2,7 +2,7 @@
 
 namespace Tests\Chat;
 
-use LLPhant\Classification\Message;
+use LLPhant\Chat\Message;
 use LLPhant\Query\SemanticSearch\ChatSession;
 
 test('it remembers chat history as an array', function () {

@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Chat;
 
-use LLPhant\Classification\Enums\OpenAIChatModel;
-use LLPhant\Classification\FunctionInfo\FunctionBuilder;
-use LLPhant\Classification\FunctionInfo\FunctionInfo;
-use LLPhant\Classification\FunctionInfo\Parameter;
-use LLPhant\Classification\Message;
-use LLPhant\Classification\OpenAIChat;
+use LLPhant\Chat\Enums\OpenAIChatModel;
+use LLPhant\Chat\FunctionInfo\FunctionBuilder;
+use LLPhant\Chat\FunctionInfo\FunctionInfo;
+use LLPhant\Chat\FunctionInfo\Parameter;
+use LLPhant\Chat\Message;
+use LLPhant\Chat\OpenAIChat;
 use LLPhant\Exception\HttpException;
 use LLPhant\OpenAIConfig;
 use Mockery;

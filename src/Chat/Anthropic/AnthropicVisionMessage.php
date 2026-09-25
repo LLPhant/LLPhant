@@ -1,8 +1,8 @@
 <?php
 
-namespace LLPhant\Classification\Anthropic;
+namespace LLPhant\Chat\Anthropic;
 
-use LLPhant\Classification\Enums\ChatRole;
+use LLPhant\Chat\Enums\ChatRole;
 
 class AnthropicVisionMessage extends AnthropicMessage
 {

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Chat\Function;
 
-use LLPhant\Classification\FunctionInfo\FunctionFormatter;
-use LLPhant\Classification\FunctionInfo\FunctionInfo;
-use LLPhant\Classification\FunctionInfo\Parameter;
+use LLPhant\Chat\FunctionInfo\FunctionFormatter;
+use LLPhant\Chat\FunctionInfo\FunctionInfo;
+use LLPhant\Chat\FunctionInfo\Parameter;
 use stdClass;
 use Tests\Integration\Chat\MailerExample;
 

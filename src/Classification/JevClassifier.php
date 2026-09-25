@@ -18,18 +18,23 @@ use Psr\Log\NullLogger;
 class JevClassifier implements ClassifierInterface
 {
     private string $model;
+
     private string $apiKey;
+
     private ClientInterface $client;
+
     private Psr17Factory $factory;
 
+    private string $url;
+
     public function __construct(
-        JevConfig                        $config = new JevConfig(),
+        JevConfig $config = new JevConfig(),
         private readonly LoggerInterface $logger = new NullLogger())
     {
         $this->url = $config->url;
         $this->model = $config->model;
         $this->apiKey = $config->apiKey
-            ?? (string)Utility::readEnvironment('JEV_API_KEY');
+            ?? (string) Utility::readEnvironment('JEV_API_KEY');
         $this->client = $config->client ?: Psr18ClientDiscovery::find();
         $this->factory = new Psr17Factory(
             requestFactory: $config->requestFactory,
@@ -38,13 +43,13 @@ class JevClassifier implements ClassifierInterface
     }
 
     /**
-     * @param string $state
-     * @param array<string, QuestionType> $questions
+     * @param  array<string, QuestionType>  $questions
      * @return array <string, Answer>
+     *
      * @throws \Exception
      * @throws ClientExceptionInterface
      */
-    function askQuestions(string $state, array $questions): array
+    public function askQuestions(string $state, array $questions): array
     {
         $response = $this->sendRequest($state, $questions);
 
@@ -64,11 +69,11 @@ class JevClassifier implements ClassifierInterface
     }
 
     /**
-     * @@param array<string, QuestionType> $questions
-     * @return ResponseInterface
+     * @param  array<string, QuestionType>  $questions
+     *
+     * @throws ClientExceptionInterface
      * @throws HttpException
      * @throws JsonException
-     * @throws ClientExceptionInterface
      */
     protected function sendRequest(string $state, array $questions): ResponseInterface
     {
@@ -77,10 +82,9 @@ class JevClassifier implements ClassifierInterface
             'params' => $questions,
         ]);
 
-
         $request = $this->factory->createRequest('POST', $this->url);
         $request = $request->withAddedHeader('Content-Type', 'application/json');
-        $request = $request->withAddedHeader('Authorization', 'Bearer ' . $this->apiKey);
+        $request = $request->withAddedHeader('Authorization', 'Bearer '.$this->apiKey);
 
         $data = new JevRequestBody($this->model, $state, $questions);
 
@@ -101,13 +105,14 @@ class JevClassifier implements ClassifierInterface
     }
 
     /**
-     * @param array<string, mixed> $value
-     * @return Answer
+     * @param  array<string, mixed>  $value
+     *
      * @throws \Exception
      */
     private function decodeAnswer(array $value): Answer
     {
         $type = $value['type'];
+
         return match ($type) {
             'noul' => new NoulAnswer($value['noul']),
             'choice' => new ChoiceAnswer(
@@ -121,7 +126,7 @@ class JevClassifier implements ClassifierInterface
                 probabilities: $value['probabilities'],
                 confidence: $value['confidence'],
             ),
-            default => throw new \Exception('unexpected answer type: ' . $type),
+            default => throw new \Exception('unexpected answer type: '.$type),
         };
     }
 }

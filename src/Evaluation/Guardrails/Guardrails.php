@@ -2,8 +2,8 @@
 
 namespace LLPhant\Evaluation\Guardrails;
 
-use LLPhant\Classification\ChatInterface;
-use LLPhant\Classification\Message;
+use LLPhant\Chat\ChatInterface;
+use LLPhant\Chat\Message;
 use LLPhant\Evaluation\EvaluatorInterface;
 
 class Guardrails

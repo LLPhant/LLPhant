@@ -2,7 +2,7 @@
 
 namespace LLPhant\Query\SemanticSearch;
 
-use LLPhant\Classification\ChatInterface;
+use LLPhant\Chat\ChatInterface;
 
 class MultiQuery implements QueryTransformer
 {
