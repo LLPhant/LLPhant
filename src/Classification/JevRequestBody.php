@@ -31,7 +31,7 @@ class JevRequestBody
             'questions' => $this->questions,
         ];
 
-        $flags = JSON_THROW_ON_ERROR | JSON_FORCE_OBJECT;
+        $flags = JSON_THROW_ON_ERROR;
         if ($prettyPrint) {
             $flags |= JSON_PRETTY_PRINT;
         }

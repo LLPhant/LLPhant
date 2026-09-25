@@ -115,6 +115,12 @@ class JevClassifier implements ClassifierInterface
                 probabilities: $value['probabilities'],
                 confidence: $value['confidence'],
             ),
+            'score' => new ScoreAnswer(
+                score: $value['score'],
+                legend: $value['legend'],
+                probabilities: $value['probabilities'],
+                confidence: $value['confidence'],
+            ),
             default => throw new \Exception('unexpected answer type: ' . $type),
         };
     }
