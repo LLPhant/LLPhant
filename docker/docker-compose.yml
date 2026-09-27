@@ -4,6 +4,7 @@ services:
         user: llphant
         stdin_open: true
         tty: true
+        restart: on-failure
         build:
             context: php
             args:
@@ -50,6 +51,7 @@ services:
     opensearch:
       image: opensearchproject/opensearch:2.17.1
       container_name: ${COMPOSE_PROJECT_NAME}-opensearch
+      restart: on-failure
       environment:
         discovery.type: single-node
         node.name: opensearch
@@ -63,6 +65,7 @@ services:
     elasticsearch:
         image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
         container_name: ${COMPOSE_PROJECT_NAME}-elasticsearch
+        restart: on-failure
         environment:
             - discovery.type=single-node
             - xpack.security.enabled=false
@@ -79,6 +82,7 @@ services:
       # In production, you may want to use a managed database service
       image: ankane/pgvector
       container_name: ${COMPOSE_PROJECT_NAME}-pgvector
+      restart: on-failure
       environment:
         - POSTGRES_DB=postgres
         - POSTGRES_USER=myuser
@@ -94,12 +98,14 @@ services:
 
     redis:
       image: redis:latest
+      restart: on-failure
       ports:
         - 6379:6379
         - 8001:8001
 
     chromadb:
       image: 'chromadb/chroma'
+      restart: on-failure
       ports:
         - '8000:8000'
       volumes:
@@ -107,6 +113,7 @@ services:
 
     qdrant:
       container_name: qdrant_demo_qdrant
+      restart: on-failure
       image: qdrant/qdrant
       ports:
         - "6333:6333"
@@ -116,6 +123,7 @@ services:
 
     typesense:
       container_name: typesense_llphant
+      restart: on-failure
       image: typesense/typesense:27.1
       ports:
         - "8108:8108"
@@ -127,6 +135,7 @@ services:
 
     mariadb:
       image: mariadb:11.7-rc
+      restart: on-failure
       container_name: ${COMPOSE_PROJECT_NAME}-mariadb
       ports:
         - "3306:3306"
@@ -139,6 +148,7 @@ services:
     mongodb_atlas:
       # In production, you may want to use your cloud hosted Atlas cluster instead
       container_name: ${COMPOSE_PROJECT_NAME}-mongodb-atlas
+      restart: on-failure
       image: mongodb/mongodb-atlas-local:8
       ports:
         - "27017:27017"
@@ -151,6 +161,7 @@ services:
 
     pinecone:
       image: ghcr.io/pinecone-io/pinecone-local:latest
+      restart: on-failure
       environment:
         PORT: 5080
         PINECONE_HOST: localhost

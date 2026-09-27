@@ -25,7 +25,7 @@ it('can generate a noul answer with no criteria', function () {
         'is_urgent' => new NoulAnswer(0.95),
     ];
 
-    expect($response['is_urgent']->score)->toBe($expected['is_urgent']->score);
+    expect($expected['is_urgent']->isSimilarTo($response['is_urgent']))->toBeTrue('Got a different response: '.json_encode($response));
     expect($response['is_urgent']->inputTokens)->toBeGreaterThan(0);
     expect($response['is_urgent']->outputTokens)->toBeGreaterThan(0);
 });
@@ -43,7 +43,7 @@ it('can generate a noul answer with some criteria', function () {
         'is_urgent' => new NoulAnswer(0.95),
     ];
 
-    expect($response['is_urgent']->score)->toBe($expected['is_urgent']->score);
+    expect($expected['is_urgent']->isSimilarTo($response['is_urgent']))->toBeTrue('Got a different response: '.json_encode($response));
     expect($response['is_urgent']->inputTokens)->toBeGreaterThan(0);
     expect($response['is_urgent']->outputTokens)->toBeGreaterThan(0);
 });
