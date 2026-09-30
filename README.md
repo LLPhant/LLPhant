@@ -16,6 +16,8 @@ LLPhant now supports typed Jev classification with **Noul**, **Choice**, and
 the new **Score** rubric-based questions via ``JevClassifier``.
 Returned answers now also expose Jev usage metadata via ``inputTokens`` and
 ``outputTokens`` fields.
+The same Jev integration can now be used to detect malicious prompt injections
+in ``QuestionAnswering`` through ``ClassifierPromptInjectionQueryTransformer``.
 
 To use JevClassifier, set your API key:
 
