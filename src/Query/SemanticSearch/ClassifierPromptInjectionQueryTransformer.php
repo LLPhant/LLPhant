@@ -33,12 +33,13 @@ class ClassifierPromptInjectionQueryTransformer implements QueryTransformer
     {
         /** @var array<string, NoulAnswer> $response */
         $response = $this->classifier->askQuestions($query, $this->questions);
+        $answer = $response['is_malicious'] ?? null;
 
-        if (! array_key_exists('is_malicious', $response)) {
+        if (! $answer instanceof NoulAnswer) {
             throw new \Exception('Unexpected answer: '.\json_encode($response));
         }
 
-        if ($response['is_malicious']->isTrue($this->minTrueScore)) {
+        if ($answer->isTrue($this->minTrueScore)) {
             throw new SecurityException('Prompt flagged as insecure: '.$query);
         }
 
