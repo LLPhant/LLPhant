@@ -16,6 +16,11 @@ class NoulAnswer extends Answer
         parent::__construct('noul', $inputTokens, $outputTokens);
     }
 
+    public function isTrue(float $minTrueScore = 0.95): bool
+    {
+        return $this->score >= $minTrueScore;
+    }
+
     public function isSimilarTo(NoulAnswer $answer): bool
     {
         if (abs($answer->score - $this->score) > self::MAX_DIFFERENCE) {

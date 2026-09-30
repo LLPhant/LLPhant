@@ -94,6 +94,7 @@ it('can generate a noul answer with some criteria', function () {
     ];
 
     expect($response)->toEqual($expected);
+    expect($response['is_urgent']->isTrue())->toBeTrue();
 });
 
 it('can generate a choice answer with some criteria', function () {
