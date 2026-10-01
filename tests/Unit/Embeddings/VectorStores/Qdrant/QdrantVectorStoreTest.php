@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Embeddings\VectorStores\Qdrant;
 
+use LLPhant\Embeddings\Document;
 use LLPhant\Embeddings\VectorStores\Qdrant\QdrantVectorStore;
 use Mockery;
 use Psr\Http\Message\ResponseInterface;
@@ -132,4 +133,27 @@ it('handles deleting a non-existent collection gracefully', function () {
 
     // If we reach here, it means the exception was caught gracefully
     expect(true)->toBeTrue();
+});
+
+it('stores the document metadata in the point payload', function () {
+    $fake = FakeQdrant::create('{"result":{"operation_id":0,"status":"acknowledged"}}');
+    $document = new Document();
+    $document->content = 'France is a country';
+    $document->embedding = [0.1, 0.2];
+    $document->metadata = ['itemId' => 42, 'tags' => ['geo']];
+    $fake->qdrantStore->addDocument($document);
+    $content = $fake->history[0]['request']->getBody()->getContents();
+    expect(json_decode((string) $content, true)['points'][0]['payload']['metadata'])->toBe(['itemId' => 42, 'tags' => ['geo']]);
+});
+
+it('restores the document metadata from the point payload', function () {
+    $fake = FakeQdrant::create(<<<'JSON'
+    {"result": {"points": [
+        {"id": "1", "score": 0.9, "payload": {"content": "France", "hash": "a", "sourceType": "manual", "sourceName": "manual", "metadata": {"itemId": 42}}},
+        {"id": "2", "score": 0.8, "payload": {"content": "Paris", "hash": "b", "sourceType": "manual", "sourceName": "manual"}}
+    ]}}
+    JSON);
+    $result = $fake->qdrantStore->similaritySearch([0.1, 0.2], 2);
+    expect($result[0]->metadata)->toBe(['itemId' => 42])
+        ->and($result[1]->metadata)->toBe([]);
 });

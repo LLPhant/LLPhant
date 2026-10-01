@@ -122,3 +122,14 @@ it('keeps separator when keepSeparator is true', function () {
     expect($result[0]->content)->toBe('This is a');
     expect($result[1]->content)->toBe('test');
 });
+
+it('keeps the metadata on every chunk', function () {
+    $document = new Document();
+    $document->content = 'This is a test';
+    $document->metadata = ['itemId' => 42];
+    $result = DocumentSplitter::splitDocument($document, 3);
+    expect($result)->toHaveCount(4);
+    foreach ($result as $chunk) {
+        expect($chunk->metadata)->toBe(['itemId' => 42]);
+    }
+});

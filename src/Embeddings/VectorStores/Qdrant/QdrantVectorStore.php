@@ -185,6 +185,7 @@ class QdrantVectorStore extends VectorStoreBase
             $document->hash = $onePoint['payload']['hash'];
             $document->sourceType = $onePoint['payload']['sourceType'];
             $document->sourceName = $onePoint['payload']['sourceName'];
+            $document->metadata = $onePoint['payload']['metadata'] ?? [];
             $documents[] = $document;
         }
 
@@ -211,6 +212,7 @@ class QdrantVectorStore extends VectorStoreBase
                     'hash' => $document->hash,
                     'sourceName' => $document->sourceName,
                     'sourceType' => $document->sourceType,
+                    'metadata' => $document->metadata,
                 ]
             )
         );

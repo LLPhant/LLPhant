@@ -47,6 +47,7 @@ class DocumentSplitter
             $newDocument->hash = hash('sha256', $chunk);
             $newDocument->sourceType = $document->sourceType;
             $newDocument->sourceName = $document->sourceName;
+            $newDocument->metadata = $document->metadata;
             $newDocument->chunkNumber = $chunkNumber;
             $chunkNumber++;
             $splittedDocuments[] = $newDocument;
