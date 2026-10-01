@@ -9,30 +9,23 @@ final class FileDataReader implements DataReader
 {
     public string $sourceType = 'files';
 
-    /**
-     * @template T of Document
-     *
-     * @param  class-string<T>  $documentClassName
-     * @param  string[]  $extensions
-     */
-    public function __construct(public string $filePath, public readonly string $documentClassName = Document::class, private readonly array $extensions = [])
-    {
+    public function __construct(
+        public string $filePath,
+        public readonly string $documentClassName = Document::class,
+        private readonly array $extensions = []
+    ) {
     }
 
-    /**
-     * @return Document[]
-     */
     public function getDocuments(): array
     {
         if (! file_exists($this->filePath)) {
             return [];
         }
 
-        // If it's a directory
         if (is_dir($this->filePath)) {
             return $this->getDocumentsFromDirectory($this->filePath);
         }
-        // If it's a file
+
         $content = $this->getContentFromFile($this->filePath);
         if ($content === false) {
             return [];
@@ -41,15 +34,10 @@ final class FileDataReader implements DataReader
         return [$this->getDocument($content, $this->filePath)];
     }
 
-    /**
-     * @return Document[]
-     */
     private function getDocumentsFromDirectory(string $directory): array
     {
         $documents = [];
-        // Open the directory
         if ($handle = opendir($directory)) {
-            // Read the directory contents
             while (($entry = readdir($handle)) !== false) {
                 $fullPath = $directory.'/'.$entry;
                 if ($entry != '.' && $entry != '..') {
@@ -63,8 +51,6 @@ final class FileDataReader implements DataReader
                     }
                 }
             }
-
-            // Close the directory
             closedir($handle);
         }
 
@@ -95,7 +81,7 @@ final class FileDataReader implements DataReader
         return file_get_contents($path);
     }
 
-    private function getDocument(string $content, string $entry): mixed
+    protected function getDocument(string $content, string $entry): Document
     {
         $document = new $this->documentClassName();
         $document->content = $content;
@@ -103,7 +89,29 @@ final class FileDataReader implements DataReader
         $document->sourceName = $entry;
         $document->hash = \hash('sha256', $content);
 
+        // Extract and add metadata
+        $metadata = $this->extractMetadata($content);
+        foreach ($metadata as $key => $value) {
+            $document->addMetadata($key, $value);
+        }
+
         return $document;
+    }
+
+    public function extractMetadata(string $content): array
+    {
+        $metadata = [];
+
+        // Example logic: extract **Title** and **Category** from content
+        if (preg_match('/\*\*Title:\*\* (.+)/', $content, $matches)) {
+            $metadata['title'] = trim($matches[1]);
+        }
+
+        if (preg_match('/\*\*Category:\*\* (.+)/', $content, $matches)) {
+            $metadata['category'] = trim($matches[1]);
+        }
+
+        return $metadata;
     }
 
     private function validExtension(string $fileExtension): bool
