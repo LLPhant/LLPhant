@@ -7,6 +7,7 @@ use Mockery;
 use Psr\Http\Message\ResponseInterface;
 use Qdrant\Config;
 use Qdrant\Endpoints\Collections;
+use Qdrant\Models\Filter\Condition\MatchString;
 use Qdrant\Models\Request\VectorParams;
 use Qdrant\Qdrant;
 
@@ -47,6 +48,37 @@ it('can perform similarity search', function () {
         ->and($response[0]->content)->toStartWith('France')
         ->and($response[0]->id)->toBe('c4ff4e3f62b63f67f34d3e64e7c53ca5f12dba0035bd471eae8f2ef0f5689432')
         ->and($response[1]->content)->toBe('The house is on fire');
+});
+
+it('sends a query request without score threshold by default', function () {
+    $fake = FakeQdrant::create('{"result":{"points":[]}}');
+    $fake->qdrantStore->similaritySearch([0.1, 0.2], 2);
+    $request = $fake->history[0]['request'];
+    expect($request->getMethod())->toBe('POST')
+        ->and($request->getUri()->getPath())->toEndWith('collections/collection/points/query')
+        ->and(json_decode((string) $request->getBody()->getContents(), true))->toEqual([
+            'query' => [0.1, 0.2],
+            'using' => 'openai',
+            'params' => ['hnsw_ef' => 128],
+            'limit' => 2,
+            'with_payload' => true,
+        ]);
+});
+
+it('sends score threshold, filter and search params when provided', function () {
+    $fake = FakeQdrant::create('{"result":{"points":[]}}');
+    $fake->qdrantStore->setVectorName(null);
+    $fake->qdrantStore->setSearchParams(['exact' => true]);
+    $fake->qdrantStore->similaritySearch([0.1, 0.2], 2, ['must' => [new MatchString('sourceName', 'paris.txt')]], 0.5);
+    $content = $fake->history[0]['request']->getBody()->getContents();
+    expect(json_decode((string) $content, true))->toEqual([
+        'query' => [0.1, 0.2],
+        'filter' => ['must' => [['key' => 'sourceName', 'match' => ['value' => 'paris.txt']]]],
+        'params' => ['exact' => true],
+        'score_threshold' => 0.5,
+        'limit' => 2,
+        'with_payload' => true,
+    ]);
 });
 
 it('can delete a collection successfully', function () {
