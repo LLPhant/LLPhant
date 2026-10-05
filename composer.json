@@ -37,7 +37,7 @@
         "ext-mongodb": "*",
         "codewithkyrian/chromadb-php": "1.0.0",
         "doctrine/dbal": "^4",
-        "doctrine/mongodb-odm": "^2.16.1",
+        "doctrine/mongodb-odm": "^2.17.1",
         "doctrine/orm": "^3",
         "elasticsearch/elasticsearch": "^8.15",
         "hkulekci/qdrant": "^1.19",
