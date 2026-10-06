@@ -71,6 +71,13 @@ Comparison Table of all supported Language Models
      - ✅
      - ✅
      - ✅
+   * - Heabsy (via OpenAI API)
+     - ✅
+     - ✅
+     - ℹ️
+     - ℹ️
+     - ❌
+     - ❌
    * - VoyageAI (via OpenAI API)
      - ✅
      - ✅

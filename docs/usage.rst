@@ -54,6 +54,27 @@ We support Gemini through its OpenAI API compatibility. Here is an example:
 
 If you do not specify an api key, the ``GeminiOpenAIConfig`` tries to read it from the ``GEMINI_API_KEY`` environment variable.
 
+Heabsy
+------
+
+`Heabsy <https://heabsy.com/platform>`_ serves open models through an OpenAI-compatible LLM API,
+so you can use it through ``OpenAIChat`` with the dedicated ``HeabsyConfig`` helper.
+
+.. code-block:: php
+
+    $config = new HeabsyConfig();
+    $config->apiKey = 'your_heabsy_api_key';
+    $config->model = 'qwen38';
+    $chat = new OpenAIChat($config);
+    $response = $chat->generateText('what is one + one ?');
+
+If you do not specify an api key, the ``HeabsyConfig`` tries to read it from the
+``HEABSY_API_KEY`` environment variable; it never falls back to ``OPENAI_API_KEY``.
+The default base URL is ``https://api.heabsy.com/v1`` and the default model is
+``qwen38``, which you can change with the ``HEABSY_MODEL`` environment variable or
+replace with any model id from the `Heabsy model catalog <https://heabsy.com/models>`_.
+Heabsy does not provide an embeddings endpoint.
+
 Mistral
 -------
 
