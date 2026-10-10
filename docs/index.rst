@@ -41,6 +41,7 @@ including OpenAI, Anthropic, Mistral, Ollama, and services compatible with the O
 
    question-answering
    guardrails
+   jev-classifier
 
 .. toctree::
    :maxdepth: 1
