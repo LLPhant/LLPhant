@@ -1,4 +1,4 @@
-JevClassifier
+Jev Classifier
 =============
 
 The ``JevClassifier`` provides typed classification over a state (usually text)
