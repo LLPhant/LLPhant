@@ -31,6 +31,7 @@ key explicitly through ``new JevConfig(apiKey: '...')``.
 See the full Jev API reference: [https://docs.typesafe.ai/api](https://docs.typesafe.ai/api)
 and the LLPhant Jev guide in [docs/jev-classifier.rst](docs/jev-classifier.rst).
 
+_(Note that the subset of LLPhant code that handles Jev has been extracted to the independent library [Jev-PHP](https://github.com/f-lombardo/jev-php))_
 
 ## Similar projects
 
