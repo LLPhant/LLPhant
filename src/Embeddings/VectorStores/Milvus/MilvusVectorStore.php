@@ -12,7 +12,7 @@ class MilvusVectorStore extends VectorStoreBase implements DocumentStore
 {
     final public const MILVUS_COLLECTION_NAME = 'llphant';
 
-    public const OUTPUTFIELDS = ['id', 'content', 'formattedContent', 'sourceType', 'sourceName', 'hash', 'chunkNumber', 'embedding'];
+    public const OUTPUTFIELDS = ['id', 'content', 'formattedContent', 'sourceType', 'sourceName', 'hash', 'chunkNumber', 'embedding', 'metadata'];
 
     public bool $collectionExists = false;
 
@@ -45,6 +45,7 @@ class MilvusVectorStore extends VectorStoreBase implements DocumentStore
                     'sourceName' => $document->sourceName,
                     'hash' => $document->hash,
                     'chunkNumber' => $document->chunkNumber,
+                    'metadata' => $document->metadata,
                 ],
                 $documents
             )
@@ -59,7 +60,7 @@ class MilvusVectorStore extends VectorStoreBase implements DocumentStore
      */
     public function similaritySearch(array $embedding, int $k = 4, array $additionalArguments = []): array
     {
-        /** @var array{code: int, data: array{content: string, formattedContent: string, sourceType: string, sourceName: string, hash: string, embedding: float[], chunkNumber: int}[]} $response */
+        /** @var array{code: int, data: array{content: string, formattedContent: string, sourceType: string, sourceName: string, hash: string, embedding: float[], chunkNumber: int, metadata?: array<string, mixed>}[]} $response */
         $response = $this->client->searchVector(
             $this->collectionName,
             $embedding,
