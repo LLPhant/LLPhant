@@ -54,7 +54,7 @@ class OpenAIConfig extends AIConfig
         parent::__construct(
             apiKey: $resolvedApiKey,
             url: $resolvedUrl,
-            model: $model ?? OpenAIChatModel::Gpt4Turbo->value,
+            model: $model ?? OpenAIChatModel::Gpt56Sol->value,
             client: $client,
             modelOptions: $modelOptions,
         );

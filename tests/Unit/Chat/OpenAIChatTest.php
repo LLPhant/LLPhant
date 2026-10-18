@@ -331,3 +331,10 @@ it('OpenAIChat generateChat loops for MULTIPLE rounds of tool calls', function (
     expect($response)->toBe('Final Answer');
     expect($obj->calls)->toBe(2);
 });
+
+it('defaults to a model OpenAI still serves', function () {
+    $config = new OpenAIConfig(apiKey: 'fakeapikey');
+
+    // gpt-4-turbo shuts down on 2026-10-23, see https://developers.openai.com/api/docs/deprecations
+    expect($config->model)->toBe('gpt-5.6-sol');
+});

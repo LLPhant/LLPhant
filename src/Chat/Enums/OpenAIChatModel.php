@@ -9,4 +9,5 @@ enum OpenAIChatModel: string
     case Gpt4Turbo = 'gpt-4-turbo';
     case Gpt4Omni = 'gpt-4o';
     case Gpt4Omini = 'gpt-4o-mini';
+    case Gpt56Sol = 'gpt-5.6-sol';
 }
