@@ -326,7 +326,7 @@ use Psr\Log\NullLogger;
                 }
 
                 // $functionName should be always set if finishReason is function_call
-                if ($this->shouldCallTool($partialResponse->choices[0]->finishReason) && $toolsToCall !== []) {
+                if ($this->shouldCallStreamedTools($partialResponse->choices[0]->finishReason) && $toolsToCall !== []) {
                     foreach ($toolsToCall as $tool) {
                         if (is_string($tool['function']) && is_string($tool['id'])) {
                             $this->callFunction($tool['function'], $tool['arguments'], $tool['id']);
@@ -483,6 +483,15 @@ use Psr\Log\NullLogger;
     private function shouldCallTool(?string $finishReason): bool
     {
         return $finishReason === 'function_call' || $finishReason === 'tool_calls';
+    }
+
+    /**
+     * Some OpenAI-compatible APIs, such as Gemini's, end a streamed turn that collected tool calls
+     * with "stop". Any finish reason then calls them, except the ones that can cut the arguments short.
+     */
+    private function shouldCallStreamedTools(?string $finishReason): bool
+    {
+        return $finishReason !== null && $finishReason !== 'length' && $finishReason !== 'content_filter';
     }
 
     /**

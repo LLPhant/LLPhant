@@ -399,3 +399,57 @@ it('passes the arguments streamed across several tool call deltas to the functio
     expect($response->getContents())->toBe('Cloudy in both cities.');
     expect($obj->cities)->toBe(['Paris', 'London']);
 });
+
+it('calls every streamed tool call when the stream has no indexes and finishes with stop', function () {
+    // Gemini's OpenAI-compatible endpoint sends each parallel call whole in its own delta,
+    // without an index, and ends the turn with finish_reason "stop"
+    $stream = file_get_contents(__DIR__.'/../../Fixtures/OpenAI/gemini-openai-compat-parallel-tool-calls.sse');
+
+    $finalAnswer = <<<'JSON'
+    {
+      "id": "chatcmpl-final",
+      "object": "chat.completion",
+      "created": 1792316691,
+      "model": "gemini-3.5-flash",
+      "choices": [{
+        "index": 0,
+        "message": { "role": "assistant", "content": "Cloudy in both cities." },
+        "finish_reason": "stop"
+      }]
+    }
+    JSON;
+
+    $mock = new MockHandler([
+        new Response(200, ['Content-Type' => 'text/event-stream'], $stream),
+        new Response(200, ['Content-Type' => 'application/json'], $finalAnswer),
+    ]);
+    $openAIClient = OpenAI::factory()
+        ->withApiKey('fake-key')
+        ->withHttpClient(new GuzzleClient(['handler' => HandlerStack::create($mock)]))
+        ->make();
+
+    $config = new OpenAIConfig();
+    $config->model = 'gemini-3.5-flash';
+    $config->client = $openAIClient;
+    $chat = new OpenAIChat($config);
+
+    $obj = new class
+    {
+        /** @var string[] */
+        public array $cities = [];
+
+        public function get_weather(string $city): string
+        {
+            $this->cities[] = $city;
+
+            return "{$city}: 18 C, cloudy";
+        }
+    };
+
+    $chat->addTool(new FunctionInfo('get_weather', $obj, 'Gets the weather', [new Parameter('city', 'string', 'The city')], [new Parameter('city', 'string', 'The city')]));
+
+    $response = $chat->generateChatStream([Message::user('Weather in Paris and Tokyo?')]);
+
+    expect($response->getContents())->toBe('Cloudy in both cities.');
+    expect($obj->cities)->toBe(['Paris', 'Tokyo']);
+});
