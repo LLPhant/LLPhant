@@ -7,6 +7,7 @@ use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 use LLPhant\Chat\FunctionInfo\FunctionInfo;
+use LLPhant\Chat\FunctionInfo\Parameter;
 use LLPhant\Chat\Message;
 use LLPhant\Chat\OpenAIChat;
 use LLPhant\OpenAIConfig;
@@ -330,4 +331,71 @@ it('OpenAIChat generateChat loops for MULTIPLE rounds of tool calls', function (
 
     expect($response)->toBe('Final Answer');
     expect($obj->calls)->toBe(2);
+});
+
+it('passes the arguments streamed across several tool call deltas to the function', function () {
+    $chunk = fn (array $delta, ?string $finishReason = null): string => 'data: '.json_encode([
+        'id' => 'chatcmpl-stream',
+        'object' => 'chat.completion.chunk',
+        'created' => 1677652288,
+        'model' => 'gpt-4o-mini',
+        'choices' => [['index' => 0, 'delta' => $delta, 'finish_reason' => $finishReason]],
+    ])."\n\n";
+
+    $stream = $chunk(['role' => 'assistant', 'content' => null])
+        .$chunk(['tool_calls' => [['index' => 0, 'id' => 'call_paris', 'type' => 'function', 'function' => ['name' => 'getWeather', 'arguments' => '']]]])
+        .$chunk(['tool_calls' => [['index' => 0, 'function' => ['arguments' => '{"city":']]]])
+        .$chunk(['tool_calls' => [['index' => 0, 'function' => ['arguments' => ' "Paris"}']]]])
+        .$chunk(['tool_calls' => [['index' => 1, 'id' => 'call_london', 'type' => 'function', 'function' => ['name' => 'getWeather', 'arguments' => '']]]])
+        .$chunk(['tool_calls' => [['index' => 1, 'function' => ['arguments' => '{"city": "London"}']]]])
+        .$chunk([], 'tool_calls')
+        ."data: [DONE]\n\n";
+
+    $finalAnswer = <<<'JSON'
+    {
+      "id": "chatcmpl-final",
+      "object": "chat.completion",
+      "created": 1677652289,
+      "model": "gpt-4o-mini",
+      "choices": [{
+        "index": 0,
+        "message": { "role": "assistant", "content": "Cloudy in both cities." },
+        "finish_reason": "stop"
+      }]
+    }
+    JSON;
+
+    $mock = new MockHandler([
+        new Response(200, ['Content-Type' => 'text/event-stream'], $stream),
+        new Response(200, ['Content-Type' => 'application/json'], $finalAnswer),
+    ]);
+    $openAIClient = OpenAI::factory()
+        ->withApiKey('fake-key')
+        ->withHttpClient(new GuzzleClient(['handler' => HandlerStack::create($mock)]))
+        ->make();
+
+    $config = new OpenAIConfig();
+    $config->model = 'gpt-4o-mini';
+    $config->client = $openAIClient;
+    $chat = new OpenAIChat($config);
+
+    $obj = new class
+    {
+        /** @var string[] */
+        public array $cities = [];
+
+        public function getWeather(string $city): string
+        {
+            $this->cities[] = $city;
+
+            return "{$city}: 18 C, cloudy";
+        }
+    };
+
+    $chat->addTool(new FunctionInfo('getWeather', $obj, 'Gets the weather', [new Parameter('city', 'string', 'The city')], [new Parameter('city', 'string', 'The city')]));
+
+    $response = $chat->generateChatStream([Message::user('Weather in Paris and London?')]);
+
+    expect($response->getContents())->toBe('Cloudy in both cities.');
+    expect($obj->cities)->toBe(['Paris', 'London']);
 });

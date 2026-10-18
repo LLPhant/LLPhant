@@ -308,12 +308,20 @@ use Psr\Log\NullLogger;
                 $toolCalls = $partialResponse->choices[0]->delta->toolCalls ?? [];
                 /** @var CreateStreamedResponseToolCall $toolCall */
                 foreach ($toolCalls as $toolCall) {
+                    // The first delta of a call carries its name and id, the following ones only argument fragments
                     if ($toolCall->function->name) {
-                        $toolsToCall[] = [
+                        $toolsToCall[$toolCall->index ?? count($toolsToCall)] = [
                             'function' => $toolCall->function->name,
                             'arguments' => $toolCall->function->arguments,
                             'id' => $toolCall->id,
                         ];
+
+                        continue;
+                    }
+
+                    $index = $toolCall->index ?? array_key_last($toolsToCall);
+                    if ($index !== null && isset($toolsToCall[$index])) {
+                        $toolsToCall[$index]['arguments'] .= $toolCall->function->arguments;
                     }
                 }
 
