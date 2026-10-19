@@ -59,6 +59,8 @@ it('can call a function', function (string $model) {
     $chat->setSystemMessage('You are an AI that deliver information using the email system. When you have enough information to answer the question of the user you send a mail');
     $chat->generateText('Who is Marie Curie in one line? My email is student@foo.com');
 })->with([
+    'gpt-5-mini',
+    'gpt-5-nano',
     'gpt-5.6-sol',
     'gpt-5.5',
     'gpt-4o-mini',
