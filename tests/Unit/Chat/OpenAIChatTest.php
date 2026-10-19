@@ -462,7 +462,26 @@ it('defaults to a model OpenAI still serves', function () {
     expect($config->model)->toBe('gpt-5.6-sol');
 });
 
-it('does not send assistant tool_calls message back to Gemini after streamed tools', function () {
+it('sets reasoning_effort to none when GPT-5 tools are sent through chat completions', function () {
+    $config = new OpenAIConfig();
+    $config->client = new MockOpenAIClient();
+    $chat = new OpenAIChat($config);
+
+    $tool = new class
+    {
+        public function ping(): string
+        {
+            return 'pong';
+        }
+    };
+
+    $chat->addTool(new FunctionInfo('ping', $tool, 'Simple ping', []));
+    $chat->generateChatOrReturnFunctionToCall([Message::user('call ping')]);
+
+    expect($chat->argsLog[0]['reasoning_effort'])->toBe('none');
+});
+
+it('keeps call association in Gemini follow-up transcript for parallel tool calls', function () {
     $stream = file_get_contents(__DIR__.'/../../Fixtures/OpenAI/gemini-openai-compat-parallel-tool-calls.sse');
 
     $finalAnswer = <<<'JSON'
@@ -497,7 +516,7 @@ it('does not send assistant tool_calls message back to Gemini after streamed too
     {
         public function get_weather(string $city): string
         {
-            return "{$city}: 18 C, cloudy";
+            return '18 C';
         }
     };
 
@@ -513,4 +532,24 @@ it('does not send assistant tool_calls message back to Gemini after streamed too
         static fn (Message $message): bool => $message->role->value === 'assistant'
     );
     expect($assistantMessages)->toBe([]);
+
+    $functionMessages = array_values(array_filter(
+        $followUpMessages,
+        static fn (Message $message): bool => $message->role->value === 'function'
+    ));
+    expect($functionMessages)->toHaveCount(2);
+
+    $payloadByCallId = [];
+    foreach ($functionMessages as $functionMessage) {
+        /** @var array{tool_call_id: string, arguments: array{city: string}, result: string} $payload */
+        $payload = json_decode($functionMessage->content, true, 512, JSON_THROW_ON_ERROR);
+        $payloadByCallId[$payload['tool_call_id']] = $payload;
+        expect($functionMessage->name)->toBe('get_weather');
+        expect($payload['result'])->toBe('18 C');
+    }
+
+    expect($payloadByCallId)->toHaveKey('call_4234484');
+    expect($payloadByCallId)->toHaveKey('call_4234487');
+    expect($payloadByCallId['call_4234484']['arguments'])->toBe(['city' => 'Paris']);
+    expect($payloadByCallId['call_4234487']['arguments'])->toBe(['city' => 'Tokyo']);
 });

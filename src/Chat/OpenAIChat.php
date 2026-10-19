@@ -381,6 +381,7 @@ use Psr\Log\NullLogger;
 
         if ($this->tools !== []) {
             $openAiArgs['tools'] = ToolFormatter::formatFunctionsToOpenAITools($this->tools);
+            $this->normalizeReasoningEffortForToolCalls($openAiArgs);
         }
 
         if ($this->requiredFunction instanceof FunctionInfo) {
@@ -390,6 +391,20 @@ use Psr\Log\NullLogger;
         $this->argsLog[] = $openAiArgs;
 
         return $openAiArgs;
+    }
+
+    /**
+     * OpenAI chat/completions models in the GPT-5 family reject function tools unless reasoning_effort is "none".
+     *
+     * @param  array<string, mixed>  $openAiArgs
+     */
+    private function normalizeReasoningEffortForToolCalls(array &$openAiArgs): void
+    {
+        if (! str_starts_with(strtolower($this->model), 'gpt-5')) {
+            return;
+        }
+
+        $openAiArgs['reasoning_effort'] = 'none';
     }
 
     /**
@@ -538,6 +553,22 @@ use Psr\Log\NullLogger;
             return Message::toolResult($functionCalled->return, $functionCalled->tool_call_id, $functionCalled->definition->name);
         }
 
-        return Message::functionResult($functionCalled->return, $functionCalled->definition->name);
+        return Message::functionResult($this->createStructuredFunctionResultPayload($functionCalled), $functionCalled->definition->name);
+    }
+
+    /**
+     * @return array{
+     *     tool_call_id: ?string,
+     *     arguments: array<string, mixed>,
+     *     result: string
+     * }
+     */
+    private function createStructuredFunctionResultPayload(CalledFunction $functionCalled): array
+    {
+        return [
+            'tool_call_id' => $functionCalled->tool_call_id,
+            'arguments' => $functionCalled->arguments,
+            'result' => $functionCalled->return ?? '',
+        ];
     }
 }
