@@ -36,8 +36,10 @@ it('can load any existing model', function () {
     expect($response)->toBeString();
 });
 
-it('can call a function', function () {
-    $chat = new OpenAIChat();
+it('can call a function', function (string $model) {
+    $config = new OpenAIConfig();
+    $config->model = $model;
+    $chat = new OpenAIChat($config);
 
     $subject = new Parameter('subject', 'string', 'the subject of the mail');
     $body = new Parameter('body', 'string', 'the body of the mail');
@@ -56,7 +58,12 @@ it('can call a function', function () {
     $chat->addFunction($function);
     $chat->setSystemMessage('You are an AI that deliver information using the email system. When you have enough information to answer the question of the user you send a mail');
     $chat->generateText('Who is Marie Curie in one line? My email is student@foo.com');
-});
+})->with([
+    'gpt-5.6-sol',
+    'gpt-5.5',
+    'gpt-4o-mini',
+    'gpt-5.4',
+]);
 
 it('calls tool functions during a chat', function () {
     $chat = new OpenAIChat();

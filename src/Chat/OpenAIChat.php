@@ -400,11 +400,30 @@ use Psr\Log\NullLogger;
      */
     private function normalizeReasoningEffortForToolCalls(array &$openAiArgs): void
     {
-        if (! str_starts_with(strtolower($this->model), 'gpt-5')) {
-            return;
+        $prefixes = [
+            'gpt-5.4',
+            'gpt-5.5',
+            'gpt-5.6',
+            'gpt-6-sol',
+        ];
+        if ($this->hasPrefix(strtolower($this->model), $prefixes)) {
+            $openAiArgs['reasoning_effort'] = 'none';
         }
 
-        $openAiArgs['reasoning_effort'] = 'none';
+    }
+
+    /**
+     * @param  string[]  $prefixes
+     */
+    private function hasPrefix(string $string, array $prefixes): bool
+    {
+        foreach ($prefixes as $prefix) {
+            if (str_starts_with($string, $prefix)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
