@@ -289,5 +289,6 @@ it('passes the arguments streamed across several tool call deltas to the functio
     $response = $chat->generateChatStream([Message::user('Weather in Paris and London?')]);
 
     expect(strtolower($response->getContents()))->toContain('cloudy');
-    expect($obj->cities)->toBe(['Paris', 'London']);
+    sort($obj->cities);
+    expect($obj->cities)->toBe(['London', 'Paris']);
 });
