@@ -11,6 +11,7 @@ use LLPhant\Chat\FunctionInfo\Parameter;
 use LLPhant\Chat\Message;
 use LLPhant\Chat\OpenAIChat;
 use LLPhant\Exception\HttpException;
+use LLPhant\GeminiOpenAIConfig;
 use LLPhant\OpenAIConfig;
 use Mockery;
 
@@ -263,4 +264,31 @@ it('normalizes boolean tool parameters when calling a function', function () {
     expect($featureFlagTool->enabledType)->toBe('bool')
         ->and($featureFlagTool->enabled)->toBeTrue()
         ->and($result)->toContain('enabled');
+});
+
+it('passes the arguments streamed across several tool call deltas to the function', function () {
+    $config = new OpenAIConfig();
+    //Tools are needed with newer models
+    $config->model = OpenAIChatModel::Gpt35Turbo->value;
+    $chat = new OpenAIChat($config);
+
+    $obj = new class
+    {
+        /** @var string[] */
+        public array $cities = [];
+
+        public function getWeather(string $city): string
+        {
+            $this->cities[] = $city;
+
+            return "{$city}: 18 C, cloudy";
+        }
+    };
+
+    $chat->addTool(new FunctionInfo('getWeather', $obj, 'Gets the weather', [new Parameter('city', 'string', 'The city')], [new Parameter('city', 'string', 'The city')]));
+
+    $response = $chat->generateChatStream([Message::user('Weather in Paris and London?')]);
+
+    expect(strtolower($response->getContents()))->toContain('cloudy');
+    expect($obj->cities)->toBe(['Paris', 'London']);
 });

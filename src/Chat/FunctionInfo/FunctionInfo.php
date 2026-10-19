@@ -81,7 +81,8 @@ class FunctionInfo
             Message::assistantAskingTools([$this->asToolCallObject()]),
             Message::toolResult(
                 $functionResult,
-                $this->toolCallId
+                $this->toolCallId,
+                $this->name
             )];
     }
 }

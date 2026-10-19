@@ -172,7 +172,7 @@ use Psr\Log\NullLogger;
         $toolsOutput = [];
         foreach ($newFunctionsCalled as $functionCalled) {
             if ($functionCalled->return !== null) {
-                $toolsOutput[] = Message::toolResult($functionCalled->return, $functionCalled->tool_call_id);
+                $toolsOutput[] = $this->createMessageWithToolOutput($functionCalled);
             }
             if ($functionCalled->tool_call_id) {
                 $toolsCalls[] = new ToolCall($functionCalled->tool_call_id, $functionCalled->definition->name, json_encode($functionCalled->arguments, JSON_THROW_ON_ERROR));
@@ -183,7 +183,9 @@ use Psr\Log\NullLogger;
             return [];
         }
 
-        $messages[] = Message::assistantAskingTools($toolsCalls);
+        if ($toolsCalls !== [] && $this->shouldAddAssistantToolCallsMessage()) {
+            $messages[] = Message::assistantAskingTools($toolsCalls);
+        }
 
         return array_merge($messages, $toolsOutput);
     }
@@ -507,7 +509,7 @@ use Psr\Log\NullLogger;
         /** @var CalledFunction $functionCalled */
         foreach ($this->functionsCalled as $functionCalled) {
             if ($functionCalled->return !== null) {
-                $toolsOutput[] = Message::toolResult($functionCalled->return, $functionCalled->tool_call_id);
+                $toolsOutput[] = $this->createMessageWithToolOutput($functionCalled);
             }
             if ($functionCalled->tool_call_id) {
                 $toolsCalls[] = new ToolCall($functionCalled->tool_call_id, $functionCalled->definition->name, json_encode($functionCalled->arguments, JSON_THROW_ON_ERROR));
@@ -518,8 +520,24 @@ use Psr\Log\NullLogger;
             return [];
         }
 
-        $messages[] = Message::assistantAskingTools($toolsCalls);
+        if ($toolsCalls !== [] && $this->shouldAddAssistantToolCallsMessage()) {
+            $messages[] = Message::assistantAskingTools($toolsCalls);
+        }
 
         return array_merge($messages, $toolsOutput);
+    }
+
+    private function shouldAddAssistantToolCallsMessage(): bool
+    {
+        return ! str_starts_with(strtolower($this->model), 'gemini');
+    }
+
+    private function createMessageWithToolOutput(CalledFunction $functionCalled): Message
+    {
+        if ($this->shouldAddAssistantToolCallsMessage()) {
+            return Message::toolResult($functionCalled->return, $functionCalled->tool_call_id, $functionCalled->definition->name);
+        }
+
+        return Message::functionResult($functionCalled->return, $functionCalled->definition->name);
     }
 }

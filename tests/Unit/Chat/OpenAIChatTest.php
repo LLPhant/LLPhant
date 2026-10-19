@@ -10,6 +10,7 @@ use LLPhant\Chat\FunctionInfo\FunctionInfo;
 use LLPhant\Chat\FunctionInfo\Parameter;
 use LLPhant\Chat\Message;
 use LLPhant\Chat\OpenAIChat;
+use LLPhant\GeminiOpenAIConfig;
 use LLPhant\OpenAIConfig;
 use Mockery;
 use OpenAI;
@@ -459,4 +460,57 @@ it('defaults to a model OpenAI still serves', function () {
 
     // gpt-4-turbo shuts down on 2026-10-23, see https://developers.openai.com/api/docs/deprecations
     expect($config->model)->toBe('gpt-5.6-sol');
+});
+
+it('does not send assistant tool_calls message back to Gemini after streamed tools', function () {
+    $stream = file_get_contents(__DIR__.'/../../Fixtures/OpenAI/gemini-openai-compat-parallel-tool-calls.sse');
+
+    $finalAnswer = <<<'JSON'
+    {
+      "id": "chatcmpl-final",
+      "object": "chat.completion",
+      "created": 1792316691,
+      "model": "gemini-3.5-flash",
+      "choices": [{
+        "index": 0,
+        "message": { "role": "assistant", "content": "Cloudy in both cities." },
+        "finish_reason": "stop"
+      }]
+    }
+    JSON;
+
+    $mock = new MockHandler([
+        new Response(200, ['Content-Type' => 'text/event-stream'], $stream),
+        new Response(200, ['Content-Type' => 'application/json'], $finalAnswer),
+    ]);
+    $openAIClient = OpenAI::factory()
+        ->withApiKey('fake-key')
+        ->withHttpClient(new GuzzleClient(['handler' => HandlerStack::create($mock)]))
+        ->make();
+
+    $config = new GeminiOpenAIConfig('fake-key');
+    $config->model = 'gemini-3.5-flash';
+    $config->client = $openAIClient;
+    $chat = new OpenAIChat($config);
+
+    $obj = new class
+    {
+        public function get_weather(string $city): string
+        {
+            return "{$city}: 18 C, cloudy";
+        }
+    };
+
+    $chat->addTool(new FunctionInfo('get_weather', $obj, 'Gets the weather', [new Parameter('city', 'string', 'The city')], [new Parameter('city', 'string', 'The city')]));
+
+    $response = $chat->generateChatStream([Message::user('Weather in Paris and Tokyo?')]);
+
+    expect($response->getContents())->toBe('Cloudy in both cities.');
+
+    $followUpMessages = $chat->argsLog[1]['messages'];
+    $assistantMessages = array_filter(
+        $followUpMessages,
+        static fn (Message $message): bool => $message->role->value === 'assistant'
+    );
+    expect($assistantMessages)->toBe([]);
 });
