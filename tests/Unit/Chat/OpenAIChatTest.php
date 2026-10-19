@@ -453,3 +453,10 @@ it('calls every streamed tool call when the stream has no indexes and finishes w
     expect($response->getContents())->toBe('Cloudy in both cities.');
     expect($obj->cities)->toBe(['Paris', 'Tokyo']);
 });
+
+it('defaults to a model OpenAI still serves', function () {
+    $config = new OpenAIConfig(apiKey: 'fakeapikey');
+
+    // gpt-4-turbo shuts down on 2026-10-23, see https://developers.openai.com/api/docs/deprecations
+    expect($config->model)->toBe('gpt-5.6-sol');
+});
