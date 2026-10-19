@@ -11,7 +11,6 @@ use LLPhant\Chat\FunctionInfo\Parameter;
 use LLPhant\Chat\Message;
 use LLPhant\Chat\OpenAIChat;
 use LLPhant\Exception\HttpException;
-use LLPhant\GeminiOpenAIConfig;
 use LLPhant\OpenAIConfig;
 use Mockery;
 

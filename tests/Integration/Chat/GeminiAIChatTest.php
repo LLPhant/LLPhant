@@ -9,7 +9,6 @@ use LLPhant\Chat\FunctionInfo\Parameter;
 use LLPhant\Chat\Message;
 use LLPhant\Chat\OpenAIChat;
 use LLPhant\GeminiOpenAIConfig;
-use function Tests\Unit\Chat;
 
 it('can generate some stuff', function () {
     $config = new GeminiOpenAIConfig();
@@ -53,4 +52,3 @@ it('passes the arguments streamed across several tool call deltas to the functio
     expect(strtolower($response->getContents()))->toContain('cloudy');
     expect($obj->cities)->toBe(['Paris', 'London']);
 });
-
