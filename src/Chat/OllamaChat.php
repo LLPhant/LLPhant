@@ -303,6 +303,10 @@ class OllamaChat implements ChatInterface
                 }
 
                 $json = Utility::decodeJson($line);
+                if (isset($json['error'])) {
+                    // Ollama reports a failure in the middle of a stream as {"error": "..."}
+                    throw new HttpException(sprintf('HTTP error from Ollama: %s', \is_string($json['error']) ? $json['error'] : json_encode($json['error'])));
+                }
                 if ((bool) $json['done']) {
                     break;
                 }
@@ -350,6 +354,10 @@ class OllamaChat implements ChatInterface
                 }
 
                 $json = Utility::decodeJson($line);
+                if (isset($json['error'])) {
+                    // Ollama reports a failure in the middle of a stream as {"error": "..."}
+                    throw new HttpException(sprintf('HTTP error from Ollama: %s', \is_string($json['error']) ? $json['error'] : json_encode($json['error'])));
+                }
                 if ((bool) $json['done']) {
                     break;
                 }
