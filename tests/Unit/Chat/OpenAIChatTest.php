@@ -460,3 +460,47 @@ it('defaults to a model OpenAI still serves', function () {
     // gpt-4-turbo shuts down on 2026-10-23, see https://developers.openai.com/api/docs/deprecations
     expect($config->model)->toBe('gpt-5.6-sol');
 });
+
+it('counts the usage that the server sends after the finish reason of a stream', function () {
+    $chunk = fn (array $delta, ?string $finishReason = null): string => 'data: '.json_encode([
+        'id' => 'chatcmpl-stream',
+        'object' => 'chat.completion.chunk',
+        'created' => 1677652288,
+        'model' => 'gpt-4o-mini',
+        'choices' => [['index' => 0, 'delta' => $delta, 'finish_reason' => $finishReason]],
+    ])."\n\n";
+
+    $usageChunk = 'data: '.json_encode([
+        'id' => 'chatcmpl-stream',
+        'object' => 'chat.completion.chunk',
+        'created' => 1677652288,
+        'model' => 'gpt-4o-mini',
+        'choices' => [],
+        'usage' => ['prompt_tokens' => 11, 'completion_tokens' => 4, 'total_tokens' => 15],
+    ])."\n\n";
+
+    $stream = $chunk(['role' => 'assistant', 'content' => ''])
+        .$chunk(['content' => 'Hello'])
+        .$chunk(['content' => ' world'])
+        .$chunk([], 'stop')
+        .$usageChunk
+        ."data: [DONE]\n\n";
+
+    $mock = new MockHandler([
+        new Response(200, ['Content-Type' => 'text/event-stream'], $stream),
+    ]);
+    $openAIClient = OpenAI::factory()
+        ->withApiKey('fake-key')
+        ->withHttpClient(new GuzzleClient(['handler' => HandlerStack::create($mock)]))
+        ->make();
+
+    $config = new OpenAIConfig();
+    $config->model = 'gpt-4o-mini';
+    $config->client = $openAIClient;
+    $chat = new OpenAIChat($config);
+
+    $response = $chat->generateChatStream([Message::user('Say hello')]);
+
+    expect($response->getContents())->toBe('Hello world');
+    expect($chat->getTotalTokens())->toBe(15);
+});
