@@ -569,7 +569,7 @@ use Psr\Log\NullLogger;
     private function createMessageWithToolOutput(CalledFunction $functionCalled): Message
     {
         if ($this->shouldAddAssistantToolCallsMessage()) {
-            return Message::toolResult($functionCalled->return, $functionCalled->tool_call_id, $functionCalled->definition->name);
+            return Message::toolResult($functionCalled->return, $functionCalled->tool_call_id);
         }
 
         return Message::functionResult($this->createStructuredFunctionResultPayload($functionCalled), $functionCalled->definition->name);
