@@ -172,7 +172,7 @@ use Psr\Log\NullLogger;
         $toolsOutput = [];
         foreach ($newFunctionsCalled as $functionCalled) {
             if ($functionCalled->return !== null) {
-                $toolsOutput[] = Message::toolResult($functionCalled->return, $functionCalled->tool_call_id);
+                $toolsOutput[] = $this->createMessageWithToolOutput($functionCalled);
             }
             if ($functionCalled->tool_call_id) {
                 $toolsCalls[] = new ToolCall($functionCalled->tool_call_id, $functionCalled->definition->name, json_encode($functionCalled->arguments, JSON_THROW_ON_ERROR));
@@ -183,7 +183,9 @@ use Psr\Log\NullLogger;
             return [];
         }
 
-        $messages[] = Message::assistantAskingTools($toolsCalls);
+        if ($toolsCalls !== [] && $this->shouldAddAssistantToolCallsMessage()) {
+            $messages[] = Message::assistantAskingTools($toolsCalls);
+        }
 
         return array_merge($messages, $toolsOutput);
     }
@@ -379,6 +381,7 @@ use Psr\Log\NullLogger;
 
         if ($this->tools !== []) {
             $openAiArgs['tools'] = ToolFormatter::formatFunctionsToOpenAITools($this->tools);
+            $this->normalizeReasoningEffortForToolCalls($openAiArgs);
         }
 
         if ($this->requiredFunction instanceof FunctionInfo) {
@@ -388,6 +391,39 @@ use Psr\Log\NullLogger;
         $this->argsLog[] = $openAiArgs;
 
         return $openAiArgs;
+    }
+
+    /**
+     * OpenAI chat/completions models in the GPT-5 family reject function tools unless reasoning_effort is "none".
+     *
+     * @param  array<string, mixed>  $openAiArgs
+     */
+    private function normalizeReasoningEffortForToolCalls(array &$openAiArgs): void
+    {
+        $prefixes = [
+            'gpt-5.4',
+            'gpt-5.5',
+            'gpt-5.6',
+            'gpt-6-sol',
+        ];
+        if ($this->hasPrefix(strtolower($this->model), $prefixes)) {
+            $openAiArgs['reasoning_effort'] = 'none';
+        }
+
+    }
+
+    /**
+     * @param  string[]  $prefixes
+     */
+    private function hasPrefix(string $string, array $prefixes): bool
+    {
+        foreach ($prefixes as $prefix) {
+            if (str_starts_with($string, $prefix)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -507,7 +543,7 @@ use Psr\Log\NullLogger;
         /** @var CalledFunction $functionCalled */
         foreach ($this->functionsCalled as $functionCalled) {
             if ($functionCalled->return !== null) {
-                $toolsOutput[] = Message::toolResult($functionCalled->return, $functionCalled->tool_call_id);
+                $toolsOutput[] = $this->createMessageWithToolOutput($functionCalled);
             }
             if ($functionCalled->tool_call_id) {
                 $toolsCalls[] = new ToolCall($functionCalled->tool_call_id, $functionCalled->definition->name, json_encode($functionCalled->arguments, JSON_THROW_ON_ERROR));
@@ -518,8 +554,40 @@ use Psr\Log\NullLogger;
             return [];
         }
 
-        $messages[] = Message::assistantAskingTools($toolsCalls);
+        if ($toolsCalls !== [] && $this->shouldAddAssistantToolCallsMessage()) {
+            $messages[] = Message::assistantAskingTools($toolsCalls);
+        }
 
         return array_merge($messages, $toolsOutput);
+    }
+
+    private function shouldAddAssistantToolCallsMessage(): bool
+    {
+        return ! str_starts_with(strtolower($this->model), 'gemini');
+    }
+
+    private function createMessageWithToolOutput(CalledFunction $functionCalled): Message
+    {
+        if ($this->shouldAddAssistantToolCallsMessage()) {
+            return Message::toolResult($functionCalled->return, $functionCalled->tool_call_id);
+        }
+
+        return Message::functionResult($this->createStructuredFunctionResultPayload($functionCalled), $functionCalled->definition->name);
+    }
+
+    /**
+     * @return array{
+     *     tool_call_id: ?string,
+     *     arguments: array<string, mixed>,
+     *     result: string
+     * }
+     */
+    private function createStructuredFunctionResultPayload(CalledFunction $functionCalled): array
+    {
+        return [
+            'tool_call_id' => $functionCalled->tool_call_id,
+            'arguments' => $functionCalled->arguments,
+            'result' => $functionCalled->return ?? '',
+        ];
     }
 }
