@@ -79,7 +79,7 @@ class Message implements \JsonSerializable, \Stringable
         return $message;
     }
 
-    public static function toolResult(mixed $content, ?string $toolCallId = null, ?string $name = null): self
+    public static function toolResult(mixed $content, ?string $toolCallId = null): self
     {
         $message = new self();
         $message->role = ChatRole::Tool;
@@ -87,10 +87,6 @@ class Message implements \JsonSerializable, \Stringable
 
         if ($toolCallId !== null) {
             $message->tool_call_id = $toolCallId;
-        }
-
-        if ($name !== null) {
-            $message->name = $name;
         }
 
         return $message;

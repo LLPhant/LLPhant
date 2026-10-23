@@ -334,6 +334,88 @@ it('OpenAIChat generateChat loops for MULTIPLE rounds of tool calls', function (
     expect($obj->calls)->toBe(2);
 });
 
+it('does not serialize name on tool messages in OpenAI follow-up requests', function () {
+    $openAIAnswer1 = <<<'JSON'
+    {
+      "id": "chatcmpl-1",
+      "object": "chat.completion",
+      "created": 1677652288,
+      "model": "gpt-4o-mini",
+      "choices": [{
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [{
+            "id": "call_weather_1",
+            "type": "function",
+            "function": { "name": "getWeather", "arguments": "{\"city\":\"Venice\"}" }
+          }]
+        },
+        "finish_reason": "tool_calls"
+      }]
+    }
+    JSON;
+
+    $openAIAnswer2 = <<<'JSON'
+    {
+      "id": "chatcmpl-2",
+      "object": "chat.completion",
+      "created": 1677652289,
+      "model": "gpt-4o-mini",
+      "choices": [{
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "It is cloudy."
+        },
+        "finish_reason": "stop"
+      }]
+    }
+    JSON;
+
+    $mock = new MockHandler([
+        new Response(200, ['Content-Type' => 'application/json'], $openAIAnswer1),
+        new Response(200, ['Content-Type' => 'application/json'], $openAIAnswer2),
+    ]);
+    $openAIClient = OpenAI::factory()
+        ->withApiKey('fake-key')
+        ->withHttpClient(new GuzzleClient(['handler' => HandlerStack::create($mock)]))
+        ->make();
+
+    $config = new OpenAIConfig();
+    $config->model = 'gpt-4o-mini';
+    $config->client = $openAIClient;
+    $chat = new OpenAIChat($config);
+
+    $tool = new class
+    {
+        public function getWeather(string $city): string
+        {
+            return "{$city}: cloudy";
+        }
+    };
+
+    $chat->addTool(new FunctionInfo('getWeather', $tool, 'Gets the weather', [new Parameter('city', 'string', 'The city')], [new Parameter('city', 'string', 'The city')]));
+
+    $response = $chat->generateChat([Message::user('Weather in Venice?')]);
+
+    expect($response)->toBe('It is cloudy.');
+    expect($chat->argsLog)->toHaveCount(2);
+
+    /** @var Message[] $followUpMessages */
+    $followUpMessages = $chat->argsLog[1]['messages'];
+    $toolMessages = array_values(array_filter(
+        $followUpMessages,
+        static fn (Message $message): bool => $message->role->value === 'tool'
+    ));
+
+    expect($toolMessages)->toHaveCount(1);
+    expect($toolMessages[0]->jsonSerialize())
+        ->toHaveKey('tool_call_id')
+        ->not->toHaveKey('name');
+});
+
 it('passes the arguments streamed across several tool call deltas to the function', function () {
     $chunk = fn (array $delta, ?string $finishReason = null): string => 'data: '.json_encode([
         'id' => 'chatcmpl-stream',
