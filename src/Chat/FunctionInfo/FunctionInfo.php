@@ -82,7 +82,6 @@ class FunctionInfo
             Message::toolResult(
                 $functionResult,
                 $this->toolCallId,
-                $this->name
             )];
     }
 }
