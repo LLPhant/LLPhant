@@ -10,6 +10,7 @@ use LLPhant\Chat\FunctionInfo\FunctionInfo;
 use LLPhant\Chat\FunctionInfo\Parameter;
 use LLPhant\Chat\Message;
 use LLPhant\Chat\OllamaChat;
+use LLPhant\Exception\HttpException;
 use LLPhant\Exception\MissingParameterException;
 use LLPhant\OllamaConfig;
 use LLPhant\Utility;
@@ -516,3 +517,29 @@ it('recovers a malformed tool call from message content', function () {
         ->and($mailer->lastMessage)->toStartWith('The email has been sent to student@foo.com with the subject Marie Curie Information')
         ->and($chat->lastFunctionCalled()?->definition->name)->toBe('sendMail');
 });
+
+it('throws on an error line in the middle of a generateStreamOfText() stream', function () {
+    $ndjson = '{"model":"test","response":"Hel","done":false}'."\n".'{"error":"model runner has unexpectedly stopped"}'."\n";
+    $mock = new MockHandler([new Response(200, [], $ndjson)]);
+    $client = new Client(['handler' => HandlerStack::create($mock)]);
+
+    $config = new OllamaConfig();
+    $config->model = 'test';
+    $chat = new OllamaChat($config);
+    $chat->client = $client;
+
+    $chat->generateStreamOfText('this is the prompt question')->getContents();
+})->throws(HttpException::class, 'model runner has unexpectedly stopped');
+
+it('throws on an error line in the middle of a generateChatStream() stream', function () {
+    $ndjson = '{"model":"test","message":{"role":"assistant","content":"Hel"},"done":false}'."\n".'{"error":"model runner has unexpectedly stopped"}'."\n";
+    $mock = new MockHandler([new Response(200, [], $ndjson)]);
+    $client = new Client(['handler' => HandlerStack::create($mock)]);
+
+    $config = new OllamaConfig();
+    $config->model = 'test';
+    $chat = new OllamaChat($config);
+    $chat->client = $client;
+
+    $chat->generateChatStream([Message::user('here the question')])->getContents();
+})->throws(HttpException::class, 'model runner has unexpectedly stopped');
