@@ -76,6 +76,7 @@ class ElasticsearchVectorStore extends VectorStoreBase
                 'sourceName' => $document->sourceName,
                 'hash' => $document->hash,
                 'chunkNumber' => $document->chunkNumber,
+                'metadata' => $document->metadata,
             ],
         ]);
         $this->client->indices()->refresh(['index' => $this->indexName]);
@@ -111,6 +112,7 @@ class ElasticsearchVectorStore extends VectorStoreBase
                 'sourceName' => $document->sourceName,
                 'hash' => $document->hash,
                 'chunkNumber' => $document->chunkNumber,
+                'metadata' => $document->metadata,
             ];
 
         }
@@ -150,7 +152,7 @@ class ElasticsearchVectorStore extends VectorStoreBase
         if (array_key_exists('filter', $additionalArguments)) {
             $searchParams['body']['knn']['filter'] = $additionalArguments['filter'];
         }
-        /** @var array{hits: array{hits: array{array{_source: array{embedding: float[], content: string, formattedContent: string, sourceType: string, sourceName: string, hash: string, chunkNumber: int}}}}} $rawResponse */
+        /** @var array{hits: array{hits: array{array{_source: array{embedding: float[], content: string, formattedContent: string, sourceType: string, sourceName: string, hash: string, chunkNumber: int, metadata?: array<string, mixed>}}}}} $rawResponse */
         $rawResponse = $this->client->search($searchParams);
 
         $documents = [];
@@ -163,6 +165,7 @@ class ElasticsearchVectorStore extends VectorStoreBase
             $document->sourceName = $hit['_source']['sourceName'];
             $document->hash = $hit['_source']['hash'];
             $document->chunkNumber = $hit['_source']['chunkNumber'];
+            $document->metadata = $hit['_source']['metadata'] ?? [];
             $documents[] = $document;
         }
 

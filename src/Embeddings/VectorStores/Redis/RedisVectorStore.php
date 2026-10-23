@@ -112,7 +112,7 @@ class RedisVectorStore extends VectorStoreBase
         $rawRedisResultsCount = count($rawRedisResults);
         for ($i = 1; $i < $rawRedisResultsCount; $i += 2) {
             [$distanceLabel, $distanceValue, $redisPath, $jsonEncodedDocument] = $rawRedisResults[$i + 1];
-            /** @var array{content: string, formattedContent: string, sourceType: string, sourceName: string, hash: string, embedding: float[], chunkNumber: int} $data */
+            /** @var array{content: string, formattedContent: string, sourceType: string, sourceName: string, hash: string, embedding: float[], chunkNumber: int, metadata?: array<string, mixed>} $data */
             $data = json_decode($jsonEncodedDocument, true, 512, JSON_THROW_ON_ERROR);
             $documents[] = DocumentUtils::createDocumentFromArray($data);
         }
