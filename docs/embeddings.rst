@@ -149,6 +149,7 @@ Once you have embeddings you need to store them in a vector store.
 The vector store is a database that can store vectors and perform a similarity search.
 There are currently these vectorStore classes:
 
+-   MeilisearchVectorStore stores embeddings in `Meilisearch <https://www.meilisearch.com/>`_. (require meilisearch/meilisearch-php ^1.16)
 -   MemoryVectorStore stores the embeddings in the memory
 -   FileSystemVectorStore stores the embeddings in a file
 -   DoctrineVectorStore stores the embeddings in a postgresql or in a MariaDB database. (require doctrine/orm)
@@ -399,3 +400,45 @@ convertFromOldFileFormat:
    :format: html
 
 .. include:: footer.rst
+
+Meilisearch VectorStore
+~~~~~~~~~~~~~~~~~~~~~~
+
+Install the official client with ``composer require meilisearch/meilisearch-php:^1.16``
+and run a Meilisearch server supporting user-provided embeddings (v1.13 or later).
+LLPhant generates the embeddings; configure the same dimensions as your embedding generator.
+
+.. code-block:: php
+
+   use LLPhant\Embeddings\VectorStores\Meilisearch\MeilisearchVectorStore;
+   use Meilisearch\Client;
+
+   $client = new Client('http://localhost:7700', 'your-api-key');
+   $vectorStore = new MeilisearchVectorStore($client, 'documents', embedder: 'default');
+   $vectorStore->createIndex(1536); // Run once for a new index.
+   $vectorStore->addDocuments($embeddedDocuments);
+   $documents = $vectorStore->similaritySearch($embedding, 4);
+   $vectorStore->deleteDocument($embeddedDocuments[0]);
+
+For an existing index, configure its named embedder with ``source: userProvided`` and
+matching dimensions before adding documents. The constructor makes no network requests.
+Documents have deterministic IDs based on content, source type, source name and chunk number,
+so inserting the same document again replaces it. Metadata and document fields are preserved.
+Changing content produces a new ID; delete the original document when replacing its content.
+
+``similaritySearch`` performs pure semantic search. Pass Meilisearch search parameters
+such as ``filter`` or ``rankingScoreThreshold`` as its third argument. Configure any filterable
+attributes on the index using the official client first. Results contain the document fields
+and metadata; embeddings are not retrieved by default.
+
+``deleteDocuments`` accepts an array of documents; ``deleteIndex`` removes the entire index.
+Index setup, writes and deletions wait for task completion and report server failures.
+The task timeout defaults to 30 seconds and can be changed with the constructor's
+``timeoutInMs`` argument. A timeout does not cancel the server-side task.
+
+To run the integration test, start Meilisearch and set ``MEILISEARCH_URL`` and optionally
+``MEILISEARCH_API_KEY``, then run:
+
+.. code-block:: bash
+
+   vendor/bin/pest tests/Integration/Embeddings/VectorStores/Meilisearch
