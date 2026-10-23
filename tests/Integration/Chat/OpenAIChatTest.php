@@ -8,6 +8,7 @@ use LLPhant\Chat\Enums\OpenAIChatModel;
 use LLPhant\Chat\FunctionInfo\FunctionBuilder;
 use LLPhant\Chat\FunctionInfo\FunctionInfo;
 use LLPhant\Chat\FunctionInfo\Parameter;
+use LLPhant\Chat\Enums\ChatRole;
 use LLPhant\Chat\Message;
 use LLPhant\Chat\OpenAIChat;
 use LLPhant\Exception\HttpException;
@@ -300,4 +301,42 @@ it('passes the arguments streamed across several tool call deltas to the functio
     expect(strtolower($response->getContents()))->toContain('cloudy');
     sort($obj->cities);
     expect($obj->cities)->toBe(['London', 'Paris']);
+});
+
+it('does not serialize a legacy name field on tool result messages for OpenAI chat completions', function () {
+    $config = new OpenAIConfig();
+    $config->model = OpenAIChatModel::Gpt4Turbo->value;
+    $chat = new OpenAIChat($config);
+
+    $location = new Parameter('location', 'string', 'the city');
+    $weatherExample = new WeatherExample();
+    $tool = new FunctionInfo(
+        'currentWeatherForLocation',
+        $weatherExample,
+        'returns the current weather in the given location',
+        [$location]
+    );
+
+    $chat->addTool($tool);
+    $chat->setSystemMessage('You MUST call currentWeatherForLocation before answering any user question.');
+
+    try {
+        $chat->generateText('What is the weather in Venice?');
+    } catch (HttpException) {
+        // The current behavior can fail remotely before we inspect the second request payload.
+    }
+
+    expect($chat->argsLog)->toHaveCount(2);
+
+    /** @var array<int, Message> $messages */
+    $messages = $chat->argsLog[1]['messages'];
+    $toolMessages = array_values(array_filter(
+        $messages,
+        static fn (Message $message): bool => $message->role === ChatRole::Tool
+    ));
+
+    expect($toolMessages)->not->toBeEmpty();
+    expect($toolMessages[0]->jsonSerialize())
+        ->toHaveKey('tool_call_id')
+        ->not->toHaveKey('name');
 });
