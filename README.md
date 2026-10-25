@@ -1,5 +1,7 @@
 # LLPhant - The PHP library for Gen AI and Vector Databases
 
+[![Plumb score](https://plumbphp.dev/badges/theodo-group/llphant/composite.svg)](https://plumbphp.dev/theodo-group/llphant)
+
 <div align="center">
     <img src="docs/assets/llphant-logo.png" alt="LLPhant" style="border-radius: 50%; padding-bottom: 20px"/>
 </div>
