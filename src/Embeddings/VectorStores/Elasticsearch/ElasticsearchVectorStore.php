@@ -25,6 +25,7 @@ class ElasticsearchVectorStore extends VectorStoreBase
 
         if ($existStatusCode === 200) {
             $this->ensureMetadataMapping();
+
             return;
         }
 
@@ -281,8 +282,8 @@ class ElasticsearchVectorStore extends VectorStoreBase
                 continue;
             }
             $error = $operationResult['error'] ?? [];
-            $errorType = is_array($error) ? ($error['type'] ?? 'unknown') : 'unknown';
-            $errorReason = is_array($error) ? ($error['reason'] ?? 'unknown') : 'unknown';
+            $errorType = $error['type'] ?? 'unknown';
+            $errorReason = $error['reason'] ?? 'unknown';
             $documentId = $operationResult['_id'] ?? 'unknown';
             $failures[] = sprintf(
                 '%s/%s returned status %d (%s: %s)',

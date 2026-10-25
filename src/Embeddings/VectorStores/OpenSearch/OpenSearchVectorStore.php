@@ -19,6 +19,7 @@ class OpenSearchVectorStore extends VectorStoreBase
     {
         if ($client->indices()->exists(['index' => $indexName])) {
             $this->ensureMetadataMapping();
+
             return;
         }
 
@@ -284,8 +285,8 @@ class OpenSearchVectorStore extends VectorStoreBase
                 continue;
             }
             $error = $operationResult['error'] ?? [];
-            $errorType = is_array($error) ? ($error['type'] ?? 'unknown') : 'unknown';
-            $errorReason = is_array($error) ? ($error['reason'] ?? 'unknown') : 'unknown';
+            $errorType = $error['type'] ?? 'unknown';
+            $errorReason = $error['reason'] ?? 'unknown';
             $documentId = $operationResult['_id'] ?? 'unknown';
             $failures[] = sprintf(
                 '%s/%s returned status %d (%s: %s)',
