@@ -79,7 +79,8 @@ Gisoo
 -----
 
 `Gisoo <https://gisoo.pro/docs>`_ is a multi-model gateway with an OpenAI-compatible API,
-so you can use it through ``OpenAIChat`` and ``OpenAIEmbeddings`` with the dedicated ``GisooConfig`` helper.
+so you can use it through ``OpenAIChat`` and an OpenAI embedding generator such as
+``OpenAI3SmallEmbeddingGenerator`` with the dedicated ``GisooConfig`` helper.
 
 .. code-block:: php
 
