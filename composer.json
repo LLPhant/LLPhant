@@ -23,7 +23,6 @@
         "yethee/tiktoken": "^0.10.0"
     },
     "suggest": {
-        "meilisearch/meilisearch-php": "This is required for the MeilisearchVectorStore (^1.16).",
         "doctrine/orm": "This is required for the DoctrineVectoreStore. This should be working with any version ^2.13.0",
         "doctrine/mongodb-odm": "This is required for the DoctrineODMVectoreStore. This should be working with any version ^2.16.1",
         "symfony/cache": "This is one of the possible types of psr/cache needed by doctrine/orm",
@@ -43,7 +42,6 @@
         "elasticsearch/elasticsearch": "^8.15",
         "hkulekci/qdrant": "^1.19",
         "laravel/pint": "v1.15.3",
-        "meilisearch/meilisearch-php": "^1.16",
         "mockery/mockery": "^1.6.12",
         "mongodb/mongodb": "^2.4",
         "opensearch-project/opensearch-php": "^2.3",
