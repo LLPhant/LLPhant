@@ -12,6 +12,7 @@ use LLPhant\Chat\FunctionInfo\Parameter;
 use LLPhant\Chat\Message;
 use LLPhant\Chat\OpenAIChat;
 use LLPhant\Exception\HttpException;
+use LLPhant\GeminiOpenAIConfig;
 use LLPhant\OpenAIConfig;
 use Mockery;
 
@@ -339,4 +340,44 @@ it('does not serialize a legacy name field on tool result messages for OpenAI ch
     expect($toolMessages[0]->jsonSerialize())
         ->toHaveKey('tool_call_id')
         ->not->toHaveKey('name');
+});
+
+it('keeps Gemini thought signatures in function follow-up payloads after streamed tool calls', function () {
+    $config = new GeminiOpenAIConfig();
+    $config->model = 'gemini-3.5-flash';
+    $chat = new OpenAIChat($config);
+    $chat->setSystemMessage('You MUST call get_weather exactly once before answering.');
+
+    $obj = new class
+    {
+        public function get_weather(string $city): string
+        {
+            return '18 C';
+        }
+    };
+
+    $chat->addTool(new FunctionInfo(
+        'get_weather',
+        $obj,
+        'Gets the weather',
+        [new Parameter('city', 'string', 'The city')],
+        [new Parameter('city', 'string', 'The city')]
+    ));
+
+    $response = $chat->generateChatStream([Message::user('What is the weather in Paris?')]);
+    expect($response->getContents())->toBeString();
+    expect($chat->argsLog)->toHaveCount(2);
+
+    /** @var array<int, Message> $followUpMessages */
+    $followUpMessages = $chat->argsLog[1]['messages'];
+    $functionMessages = array_values(array_filter(
+        $followUpMessages,
+        static fn (Message $message): bool => $message->role->value === 'function'
+    ));
+
+    expect($functionMessages)->toHaveCount(1);
+
+    /** @var array{extra_content: array{google: array{thought_signature: string}}} $payload */
+    $payload = json_decode($functionMessages[0]->content, true, 512, JSON_THROW_ON_ERROR);
+    expect($payload['extra_content']['google']['thought_signature'])->toBeString();
 });
