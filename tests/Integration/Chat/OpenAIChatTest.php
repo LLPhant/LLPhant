@@ -9,6 +9,7 @@ use LLPhant\Chat\Enums\OpenAIChatModel;
 use LLPhant\Chat\FunctionInfo\FunctionBuilder;
 use LLPhant\Chat\FunctionInfo\FunctionInfo;
 use LLPhant\Chat\FunctionInfo\Parameter;
+use LLPhant\Chat\GeminiAIChat;
 use LLPhant\Chat\Message;
 use LLPhant\Chat\OpenAIChat;
 use LLPhant\Exception\HttpException;
@@ -345,7 +346,7 @@ it('does not serialize a legacy name field on tool result messages for OpenAI ch
 it('keeps Gemini thought signatures in function follow-up payloads after streamed tool calls', function () {
     $config = new GeminiOpenAIConfig();
     $config->model = 'gemini-3.5-flash';
-    $chat = new OpenAIChat($config);
+    $chat = new GeminiAIChat($config);
     $chat->setSystemMessage('You MUST call get_weather exactly once before answering.');
 
     $obj = new class

@@ -6,15 +6,15 @@ namespace Tests\Integration\Chat;
 
 use LLPhant\Chat\FunctionInfo\FunctionInfo;
 use LLPhant\Chat\FunctionInfo\Parameter;
+use LLPhant\Chat\GeminiAIChat;
 use LLPhant\Chat\Message;
-use LLPhant\Chat\OpenAIChat;
 use LLPhant\GeminiOpenAIConfig;
 
 it('can generate some stuff', function () {
     $config = new GeminiOpenAIConfig();
     $config->apiKey = getenv('GEMINI_API_KEY');
     $config->model = 'gemini-3.5-flash-lite';
-    $chat = new OpenAIChat($config);
+    $chat = new GeminiAIChat($config);
     $response = $chat->generateText('what is one + one ?');
     expect($response)->toBeString();
 });
@@ -22,7 +22,7 @@ it('can generate some stuff', function () {
 it('can generate some stuff getting API key from env', function () {
     $config = new GeminiOpenAIConfig();
     $config->model = 'gemini-3.5-flash-lite';
-    $chat = new OpenAIChat($config);
+    $chat = new GeminiAIChat($config);
     $response = $chat->generateText('what is one + one ?');
     expect($response)->toBeString();
 });
@@ -30,7 +30,7 @@ it('can generate some stuff getting API key from env', function () {
 it('passes the arguments streamed across several tool call deltas to the function', function () {
     $config = new GeminiOpenAIConfig();
     $config->model = 'gemini-3.5-flash-lite';
-    $chat = new OpenAIChat($config);
+    $chat = new GeminiAIChat($config);
 
     $obj = new class
     {

@@ -8,6 +8,7 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 use LLPhant\Chat\FunctionInfo\FunctionInfo;
 use LLPhant\Chat\FunctionInfo\Parameter;
+use LLPhant\Chat\GeminiAIChat;
 use LLPhant\Chat\Message;
 use LLPhant\Chat\OpenAIChat;
 use LLPhant\GeminiOpenAIConfig;
@@ -511,10 +512,10 @@ it('calls every streamed tool call when the stream has no indexes and finishes w
         ->withHttpClient(new GuzzleClient(['handler' => HandlerStack::create($mock)]))
         ->make();
 
-    $config = new OpenAIConfig();
+    $config = new GeminiOpenAIConfig('fake-key');
     $config->model = 'gemini-3.5-flash';
     $config->client = $openAIClient;
-    $chat = new OpenAIChat($config);
+    $chat = new GeminiAIChat($config);
 
     $obj = new class
     {
@@ -592,7 +593,7 @@ it('keeps call association in Gemini follow-up transcript for parallel tool call
     $config = new GeminiOpenAIConfig('fake-key');
     $config->model = 'gemini-3.5-flash';
     $config->client = $openAIClient;
-    $chat = new OpenAIChat($config);
+    $chat = new GeminiAIChat($config);
 
     $obj = new class
     {
@@ -623,7 +624,13 @@ it('keeps call association in Gemini follow-up transcript for parallel tool call
 
     $payloadByCallId = [];
     foreach ($functionMessages as $functionMessage) {
-        /** @var array{tool_call_id: string, arguments: array{city: string}, result: string} $payload */
+        /** @var array{
+         *     tool_call_id: string,
+         *     arguments: array{city: string},
+         *     result: string,
+         *     extra_content?: array{google?: array{thought_signature?: string}}
+         * } $payload
+         */
         $payload = json_decode($functionMessage->content, true, 512, JSON_THROW_ON_ERROR);
         $payloadByCallId[$payload['tool_call_id']] = $payload;
         expect($functionMessage->name)->toBe('get_weather');
@@ -632,6 +639,7 @@ it('keeps call association in Gemini follow-up transcript for parallel tool call
 
     expect($payloadByCallId)->toHaveKey('call_4234484');
     expect($payloadByCallId)->toHaveKey('call_4234487');
+    expect($payloadByCallId['call_4234484']['extra_content']['google']['thought_signature'] ?? null)->toBeString();
     expect($payloadByCallId['call_4234484']['arguments'])->toBe(['city' => 'Paris']);
     expect($payloadByCallId['call_4234487']['arguments'])->toBe(['city' => 'Tokyo']);
 });
