@@ -76,13 +76,6 @@ class MeilisearchVectorStore extends VectorStoreBase
      */
     public function similaritySearch(array $embedding, int $k = 4, array $additionalArguments = []): array
     {
-        if (isset($additionalArguments['attributesToRetrieve'])) {
-            $additionalArguments['attributesToRetrieve'] = array_values(array_unique(array_merge(
-                $additionalArguments['attributesToRetrieve'],
-                ['id', 'content', 'formattedContent', 'hash', 'sourceName', 'sourceType', 'chunkNumber', 'metadata']
-            )));
-        }
-
         $response = $this->index->search('', array_merge($additionalArguments, [
             'vector' => $embedding,
             'limit' => $k,
