@@ -75,6 +75,26 @@ The default base URL is ``https://api.heabsy.com/v1`` and the default model is
 replace with any model id from the `Heabsy model catalog <https://heabsy.com/models>`_.
 Heabsy does not provide an embeddings endpoint.
 
+Gisoo
+-----
+
+`Gisoo <https://gisoo.pro/docs>`_ is a multi-model gateway with an OpenAI-compatible API,
+so you can use it through ``OpenAIChat`` and ``OpenAIEmbeddings`` with the dedicated ``GisooConfig`` helper.
+
+.. code-block:: php
+
+    $config = new GisooConfig();
+    $config->apiKey = 'your_gisoo_api_key';
+    $config->model = 'gpt-5-mini';
+    $chat = new OpenAIChat($config);
+    $response = $chat->generateText('what is one + one ?');
+
+If you do not specify an api key, the ``GisooConfig`` tries to read it from the
+``GISOO_API_KEY`` environment variable; it never falls back to ``OPENAI_API_KEY``.
+The default base URL is ``https://gisoo.pro/api/v1`` and the default model is
+``gpt-5-mini``, which you can change with the ``GISOO_MODEL`` environment variable or replace with
+any model id from the `Gisoo model catalog <https://gisoo.pro/docs/models>`_.
+
 Mistral
 -------
 

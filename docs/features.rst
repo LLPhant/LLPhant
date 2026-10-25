@@ -78,6 +78,13 @@ Comparison Table of all supported Language Models
      - ℹ️
      - ❌
      - ❌
+   * - Gisoo (via OpenAI API)
+     - ✅
+     - ✅
+     - ℹ️
+     - ℹ️
+     - ✅
+     - ❌
    * - VoyageAI (via OpenAI API)
      - ✅
      - ✅
