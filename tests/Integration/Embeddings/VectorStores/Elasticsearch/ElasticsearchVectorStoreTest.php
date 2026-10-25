@@ -69,11 +69,15 @@ it('stores documents with conflicting metadata value types in bulk with Elastics
 
     $indexName = 'llphant_test_metadata_'.bin2hex(random_bytes(6));
     $vectorStore = new ElasticsearchVectorStore($client, $indexName);
-    /** @var float[] $queryEmbedding */
-    $queryEmbedding = $documents[0]->embedding ?? [];
+    try {
+        /** @var float[] $queryEmbedding */
+        $queryEmbedding = $documents[0]->embedding ?? [];
 
-    $vectorStore->addDocuments($documents);
+        $vectorStore->addDocuments($documents);
 
-    $searchResult = $vectorStore->similaritySearch($queryEmbedding, 2);
-    expect($searchResult)->toHaveCount(2);
+        $searchResult = $vectorStore->similaritySearch($queryEmbedding, 2);
+        expect($searchResult)->toHaveCount(2);
+    } finally {
+        $client->indices()->delete(['index' => $indexName]);
+    }
 });
