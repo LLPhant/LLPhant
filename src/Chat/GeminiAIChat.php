@@ -5,6 +5,7 @@ namespace LLPhant\Chat;
 use GuzzleHttp\Psr7\Utils;
 use LLPhant\Chat\CalledFunction\CalledFunction;
 use LLPhant\GeminiOpenAIConfig;
+use OpenAI\Responses\Chat\CreateStreamedResponse;
 use OpenAI\Responses\StreamResponse;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
@@ -125,7 +126,7 @@ class GeminiAIChat extends OpenAIChat
                 $finishReason = $choice['finish_reason'] ?? null;
                 if ($this->shouldCallStreamedTools(is_string($finishReason) ? $finishReason : null) && $toolsToCall !== []) {
                     foreach ($toolsToCall as $tool) {
-                        if (is_string($tool['function']) && is_string($tool['id'])) {
+                        if (is_string($tool['id'])) {
                             $this->callFunction($tool['function'], $tool['arguments'], $tool['id'], $tool['extra_content'] ?? null);
                         }
                     }
@@ -175,6 +176,11 @@ class GeminiAIChat extends OpenAIChat
         return $payload;
     }
 
+    /**
+     * @param  StreamResponse<CreateStreamedResponse>  $stream
+     *
+     * @throws \ReflectionException
+     */
     private function extractRawStreamResponse(StreamResponse $stream): ResponseInterface
     {
         $property = new \ReflectionProperty($stream, 'response');

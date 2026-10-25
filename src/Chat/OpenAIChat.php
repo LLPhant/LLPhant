@@ -454,6 +454,11 @@ use Psr\Log\NullLogger;
         throw new Exception("OpenAI tried to call $functionName which doesn't exist");
     }
 
+    /**
+     * @param  array<string,mixed>|null  $extraContent
+     *
+     * @throws \JsonException
+     */
     protected function callFunction(string $functionName, string $argumentsString, string $toolCallId, ?array $extraContent = null): void
     {
         $arguments = $argumentsString !== '' && $argumentsString !== '0' ? json_decode($argumentsString, true, 512, JSON_THROW_ON_ERROR) : [];
