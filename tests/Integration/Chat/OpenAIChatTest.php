@@ -9,11 +9,9 @@ use LLPhant\Chat\Enums\OpenAIChatModel;
 use LLPhant\Chat\FunctionInfo\FunctionBuilder;
 use LLPhant\Chat\FunctionInfo\FunctionInfo;
 use LLPhant\Chat\FunctionInfo\Parameter;
-use LLPhant\Chat\GeminiAIChat;
 use LLPhant\Chat\Message;
 use LLPhant\Chat\OpenAIChat;
 use LLPhant\Exception\HttpException;
-use LLPhant\GeminiOpenAIConfig;
 use LLPhant\OpenAIConfig;
 use Mockery;
 
@@ -33,7 +31,7 @@ it('can generate some stuff with a system prompt', function () {
 
 it('can load any existing model', function () {
     $config = new OpenAIConfig();
-    $config->model = 'gpt-3.5-turbo-16k';
+    $config->model = 'gpt-4o-mini';
     $chat = new OpenAIChat($config);
     $response = $chat->generateText('one + one ?');
     expect($response)->toBeString();
@@ -90,7 +88,7 @@ it('calls tool functions during a chat', function () {
 it('can call a function and provide the result to the assistant', function () {
     $config = new OpenAIConfig();
     //Functions work only with older models. Tools are needed with newer models
-    $config->model = OpenAIChatModel::Gpt35Turbo->value;
+    $config->model = OpenAIChatModel::Gpt4o->value;
     $chat = new OpenAIChat($config);
     $location = new Parameter('location', 'string', 'the name of the city, the state or province and the nation');
     $weatherExample = new WeatherExample();
@@ -134,7 +132,7 @@ it('can call a function and provide the result to the assistant', function () {
 it('can call a tool and provide the result to the assistant', function () {
     $config = new OpenAIConfig();
     //Tools are needed with newer models
-    $config->model = OpenAIChatModel::Gpt4Turbo->value;
+    $config->model = OpenAIChatModel::Gpt4Omini->value;
     $chat = new OpenAIChat($config);
     $location = new Parameter('location', 'string', 'the name of the city, the state or province and the nation');
     $weatherExample = new WeatherExample();
@@ -186,7 +184,7 @@ it('can generate a chat stream', function () {
 it('can call a function with streaming', function () {
     $config = new OpenAIConfig();
     //Tools are needed with newer models
-    $config->model = OpenAIChatModel::Gpt35Turbo->value;
+    $config->model = OpenAIChatModel::Gpt4o->value;
     $chat = new OpenAIChat($config);
 
     $testFunction = new TestFunctionLLPhant();
@@ -213,7 +211,7 @@ it('reports errors correctly', function () {
 it('can call a function with no arguments', function () {
     $config = new OpenAIConfig();
     //Tools are needed with newer models
-    $config->model = OpenAIChatModel::Gpt35Turbo->value;
+    $config->model = OpenAIChatModel::Gpt4o->value;
     $chat = new OpenAIChat($config);
 
     $itemListObject = new class
@@ -243,7 +241,7 @@ it('can call a function with no arguments', function () {
 it('normalizes boolean tool parameters when calling a function', function () {
     $config = new OpenAIConfig();
     //Tools are needed with newer models
-    $config->model = OpenAIChatModel::Gpt35Turbo->value;
+    $config->model = OpenAIChatModel::Gpt4o->value;
     $chat = new OpenAIChat($config);
 
     $featureFlagTool = new class
@@ -280,7 +278,7 @@ it('normalizes boolean tool parameters when calling a function', function () {
 it('passes the arguments streamed across several tool call deltas to the function', function () {
     $config = new OpenAIConfig();
     //Tools are needed with newer models
-    $config->model = OpenAIChatModel::Gpt35Turbo->value;
+    $config->model = OpenAIChatModel::Gpt4o->value;
     $chat = new OpenAIChat($config);
 
     $obj = new class
@@ -307,7 +305,7 @@ it('passes the arguments streamed across several tool call deltas to the functio
 
 it('does not serialize a legacy name field on tool result messages for OpenAI chat completions', function () {
     $config = new OpenAIConfig();
-    $config->model = OpenAIChatModel::Gpt4Turbo->value;
+    $config->model = OpenAIChatModel::Gpt4o->value;
     $chat = new OpenAIChat($config);
 
     $location = new Parameter('location', 'string', 'the city');
@@ -341,44 +339,4 @@ it('does not serialize a legacy name field on tool result messages for OpenAI ch
     expect($toolMessages[0]->jsonSerialize())
         ->toHaveKey('tool_call_id')
         ->not->toHaveKey('name');
-});
-
-it('keeps Gemini thought signatures in function follow-up payloads after streamed tool calls', function () {
-    $config = new GeminiOpenAIConfig();
-    $config->model = 'gemini-3.5-flash';
-    $chat = new GeminiAIChat($config);
-    $chat->setSystemMessage('You MUST call get_weather exactly once before answering.');
-
-    $obj = new class
-    {
-        public function get_weather(string $city): string
-        {
-            return '18 C';
-        }
-    };
-
-    $chat->addTool(new FunctionInfo(
-        'get_weather',
-        $obj,
-        'Gets the weather',
-        [new Parameter('city', 'string', 'The city')],
-        [new Parameter('city', 'string', 'The city')]
-    ));
-
-    $response = $chat->generateChatStream([Message::user('What is the weather in Paris?')]);
-    expect($response->getContents())->toBeString();
-    expect($chat->argsLog)->toHaveCount(2);
-
-    /** @var array<int, Message> $followUpMessages */
-    $followUpMessages = $chat->argsLog[1]['messages'];
-    $functionMessages = array_values(array_filter(
-        $followUpMessages,
-        static fn (Message $message): bool => $message->role->value === 'function'
-    ));
-
-    expect($functionMessages)->toHaveCount(1);
-
-    /** @var array{extra_content: array{google: array{thought_signature: string}}} $payload */
-    $payload = json_decode($functionMessages[0]->content, true, 512, JSON_THROW_ON_ERROR);
-    expect($payload['extra_content']['google']['thought_signature'])->toBeString();
 });

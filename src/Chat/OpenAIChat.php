@@ -218,6 +218,9 @@ use Psr\Log\NullLogger;
      */
     public function generateChatStream(array $messages): StreamInterface
     {
+        $this->functionsCalled = [];
+        $this->lastFunctionCalled = null;
+
         return $this->createStreamedResponse($messages);
     }
 
