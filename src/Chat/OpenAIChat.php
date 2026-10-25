@@ -28,7 +28,7 @@ use Psr\Log\NullLogger;
  * @phpstan-import-type ModelOptions from OpenAIConfig
  */ class OpenAIChat implements ChatInterface
 {
-    private readonly ClientContract $client;
+    protected readonly ClientContract $client;
 
     public string $model;
 
@@ -54,7 +54,7 @@ use Psr\Log\NullLogger;
 
     public ?FunctionInfo $requiredFunction = null;
 
-    public function __construct(OpenAIConfig $config = new OpenAIConfig(), private readonly LoggerInterface $logger = new NullLogger())
+    public function __construct(OpenAIConfig $config = new OpenAIConfig(), protected readonly LoggerInterface $logger = new NullLogger())
     {
         if ($config->client instanceof ClientContract) {
             $this->client = $config->client;
@@ -173,7 +173,7 @@ use Psr\Log\NullLogger;
         $toolsOutput = [];
         foreach ($newFunctionsCalled as $functionCalled) {
             if ($functionCalled->return !== null) {
-                $toolsOutput[] = Message::toolResult($functionCalled->return, $functionCalled->tool_call_id);
+                $toolsOutput[] = $this->createMessageWithToolOutput($functionCalled);
             }
             if ($functionCalled->tool_call_id) {
                 $toolsCalls[] = new ToolCall($functionCalled->tool_call_id, $functionCalled->definition->name, json_encode($functionCalled->arguments, JSON_THROW_ON_ERROR));
@@ -184,7 +184,9 @@ use Psr\Log\NullLogger;
             return [];
         }
 
-        $messages[] = Message::assistantAskingTools($toolsCalls);
+        if ($toolsCalls !== [] && $this->shouldAddAssistantToolCallsMessage()) {
+            $messages[] = Message::assistantAskingTools($toolsCalls);
+        }
 
         return array_merge($messages, $toolsOutput);
     }
@@ -217,6 +219,9 @@ use Psr\Log\NullLogger;
      */
     public function generateChatStream(array $messages): StreamInterface
     {
+        $this->functionsCalled = [];
+        $this->lastFunctionCalled = null;
+
         return $this->createStreamedResponse($messages);
     }
 
@@ -289,7 +294,7 @@ use Psr\Log\NullLogger;
     /**
      * @param  Message[]  $messages
      */
-    private function createStreamedResponse(array $messages): StreamInterface
+    protected function createStreamedResponse(array $messages): StreamInterface
     {
         $openAiArgs = $this->getOpenAiArgs($messages);
 
@@ -378,7 +383,7 @@ use Psr\Log\NullLogger;
      * @param  Message[]  $messages
      * @return array<string, mixed>
      */
-    private function getOpenAiArgs(array $messages): array
+    protected function getOpenAiArgs(array $messages): array
     {
         // The system message should be the first
         $finalMessages = [];
@@ -394,6 +399,7 @@ use Psr\Log\NullLogger;
 
         if ($this->tools !== []) {
             $openAiArgs['tools'] = ToolFormatter::formatFunctionsToOpenAITools($this->tools);
+            $this->normalizeReasoningEffortForToolCalls($openAiArgs);
         }
 
         if ($this->requiredFunction instanceof FunctionInfo) {
@@ -403,6 +409,39 @@ use Psr\Log\NullLogger;
         $this->argsLog[] = $openAiArgs;
 
         return $openAiArgs;
+    }
+
+    /**
+     * OpenAI chat/completions models in the GPT-5 family reject function tools unless reasoning_effort is "none".
+     *
+     * @param  array<string, mixed>  $openAiArgs
+     */
+    private function normalizeReasoningEffortForToolCalls(array &$openAiArgs): void
+    {
+        $prefixes = [
+            'gpt-5.4',
+            'gpt-5.5',
+            'gpt-5.6',
+            'gpt-6-sol',
+        ];
+        if ($this->hasPrefix(strtolower($this->model), $prefixes)) {
+            $openAiArgs['reasoning_effort'] = 'none';
+        }
+
+    }
+
+    /**
+     * @param  string[]  $prefixes
+     */
+    private function hasPrefix(string $string, array $prefixes): bool
+    {
+        foreach ($prefixes as $prefix) {
+            if (str_starts_with($string, $prefix)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -433,13 +472,18 @@ use Psr\Log\NullLogger;
         throw new Exception("OpenAI tried to call $functionName which doesn't exist");
     }
 
-    private function callFunction(string $functionName, string $argumentsString, string $toolCallId): void
+    /**
+     * @param  array<string,mixed>|null  $extraContent
+     *
+     * @throws \JsonException
+     */
+    protected function callFunction(string $functionName, string $argumentsString, string $toolCallId, ?array $extraContent = null): void
     {
         $arguments = $argumentsString !== '' && $argumentsString !== '0' ? json_decode($argumentsString, true, 512, JSON_THROW_ON_ERROR) : [];
         $functionToCall = $this->getFunctionInfoFromName($functionName, $toolCallId);
         $return = $functionToCall->instance->{$functionToCall->name}(...$arguments);
         $normalizedReturn = $return === null ? null : Message::normalizeContent($return);
-        $this->functionsCalled[] = new CalledFunction($functionToCall, $arguments, $normalizedReturn, $toolCallId);
+        $this->functionsCalled[] = new CalledFunction($functionToCall, $arguments, $normalizedReturn, $toolCallId, $extraContent);
         $this->lastFunctionCalled = $functionToCall;
     }
 
@@ -501,12 +545,11 @@ use Psr\Log\NullLogger;
     }
 
     /**
-     * Some OpenAI-compatible APIs, such as Gemini's, end a streamed turn that collected tool calls
-     * with "stop". Any finish reason then calls them, except the ones that can cut the arguments short.
+     * OpenAI ends streamed tool-call turns with finish_reason "tool_calls" (or legacy "function_call").
      */
-    private function shouldCallStreamedTools(?string $finishReason): bool
+    protected function shouldCallStreamedTools(?string $finishReason): bool
     {
-        return $finishReason !== null && $finishReason !== 'length' && $finishReason !== 'content_filter';
+        return $this->shouldCallTool($finishReason);
     }
 
     /**
@@ -522,7 +565,7 @@ use Psr\Log\NullLogger;
         /** @var CalledFunction $functionCalled */
         foreach ($this->functionsCalled as $functionCalled) {
             if ($functionCalled->return !== null) {
-                $toolsOutput[] = Message::toolResult($functionCalled->return, $functionCalled->tool_call_id);
+                $toolsOutput[] = $this->createMessageWithToolOutput($functionCalled);
             }
             if ($functionCalled->tool_call_id) {
                 $toolsCalls[] = new ToolCall($functionCalled->tool_call_id, $functionCalled->definition->name, json_encode($functionCalled->arguments, JSON_THROW_ON_ERROR));
@@ -533,8 +576,20 @@ use Psr\Log\NullLogger;
             return [];
         }
 
-        $messages[] = Message::assistantAskingTools($toolsCalls);
+        if ($toolsCalls !== [] && $this->shouldAddAssistantToolCallsMessage()) {
+            $messages[] = Message::assistantAskingTools($toolsCalls);
+        }
 
         return array_merge($messages, $toolsOutput);
+    }
+
+    protected function shouldAddAssistantToolCallsMessage(): bool
+    {
+        return true;
+    }
+
+    protected function createMessageWithToolOutput(CalledFunction $functionCalled): Message
+    {
+        return Message::toolResult($functionCalled->return, $functionCalled->tool_call_id);
     }
 }

@@ -129,7 +129,7 @@ class Message implements \JsonSerializable, \Stringable
             $result['tool_call_id'] = $this->tool_call_id;
         }
 
-        if (! empty($this->name)) {
+        if ($this->role === ChatRole::Function && ! empty($this->name)) {
             $result['name'] = $this->name;
         }
 
