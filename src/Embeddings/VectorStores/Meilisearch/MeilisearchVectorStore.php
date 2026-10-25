@@ -120,7 +120,7 @@ class MeilisearchVectorStore extends VectorStoreBase
             return;
         }
 
-        $ids = array_map(fn (Document $document): string => $this->getId($document), $documents);
+         $ids = array_values(array_map(fn (Document $document): string => $this->getId($document), $documents));
         $this->waitForTask($this->index->deleteDocuments($ids));
     }
 
