@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Tests\Unit\Chat;
 
 use LLPhant\Chat\OpenAIChat;
-use LLPhant\Exception\MissingParameterException;
 use LLPhant\CheaperInferenceConfig;
+use LLPhant\Exception\MissingParameterException;
 
 afterEach(function () {
     putenv('CHEAPER_INFERENCE_API_KEY');
