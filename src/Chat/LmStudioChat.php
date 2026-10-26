@@ -97,24 +97,36 @@ class LmStudioChat implements ChatInterface
         $result = $this->generateResponse($messages);
 
         if (is_array($result)) {
-            $messages[] = $this->assistantAskingFunctions($result);
-            foreach ($result as $functionToCall) {
-                $toolResult = $functionToCall->call();
-                $normalizedToolResult = $toolResult === null ? null : Message::normalizeContent($toolResult);
-                $this->functionsCalled[] = new CalledFunction(
-                    $functionToCall,
-                    json_decode($functionToCall->jsonArgs, true, 512, JSON_THROW_ON_ERROR),
-                    $normalizedToolResult,
-                    $functionToCall->getToolCallId()
-                );
-                $toolResultMessage = Message::toolResult($toolResult, $functionToCall->getToolCallId());
-                $messages[] = $toolResultMessage;
-            }
-
-            return $this->generateChatRecursive($messages);
+            return $this->generateChatRecursive($this->messagesAfterCallingFunctions($messages, $result));
         }
 
         return $result;
+    }
+
+    /**
+     * Calls the functions the model asked for and returns the messages extended with the assistant
+     * request and the tool results.
+     *
+     * @param  Message[]  $messages
+     * @param  FunctionInfo[]  $functionsToCall
+     * @return Message[]
+     */
+    private function messagesAfterCallingFunctions(array $messages, array $functionsToCall): array
+    {
+        $messages[] = $this->assistantAskingFunctions($functionsToCall);
+        foreach ($functionsToCall as $functionToCall) {
+            $toolResult = $functionToCall->call();
+            $normalizedToolResult = $toolResult === null ? null : Message::normalizeContent($toolResult);
+            $this->functionsCalled[] = new CalledFunction(
+                $functionToCall,
+                json_decode($functionToCall->jsonArgs, true, 512, JSON_THROW_ON_ERROR),
+                $normalizedToolResult,
+                $functionToCall->getToolCallId()
+            );
+            $messages[] = Message::toolResult($toolResult, $functionToCall->getToolCallId());
+        }
+
+        return $messages;
     }
 
     /**
@@ -188,8 +200,10 @@ class LmStudioChat implements ChatInterface
 
         $response = $this->sendRequest('POST', 'v1/chat/completions', $params, $stream);
 
-        $generator = function (StreamInterface $stream) {
+        $generator = function (StreamInterface $stream) use ($messages) {
             $buffer = '';
+            /** @var array<int, array{name: string, arguments: string, id: ?string}> $toolsToCall */
+            $toolsToCall = [];
             while (! $stream->eof()) {
                 $buffer .= $stream->read(1024);
 
@@ -210,6 +224,40 @@ class LmStudioChat implements ChatInterface
                     $json = \json_decode($data, true, 512, JSON_THROW_ON_ERROR);
                     if (! $json) {
                         continue;
+                    }
+
+                    foreach ($json['choices'][0]['delta']['tool_calls'] ?? [] as $toolCall) {
+                        $name = $toolCall['function']['name'] ?? null;
+                        $arguments = $toolCall['function']['arguments'] ?? '';
+                        // The first delta of a call carries its name and id, the following ones only argument fragments
+                        if (\is_string($name) && $name !== '') {
+                            $toolsToCall[$toolCall['index'] ?? \count($toolsToCall)] = [
+                                'name' => $name,
+                                'arguments' => $arguments,
+                                'id' => $toolCall['id'] ?? null,
+                            ];
+
+                            continue;
+                        }
+
+                        $index = $toolCall['index'] ?? \array_key_last($toolsToCall);
+                        if ($index !== null && isset($toolsToCall[$index])) {
+                            $toolsToCall[$index]['arguments'] .= $arguments;
+                        }
+                    }
+
+                    if ($toolsToCall !== [] && $this->shouldCallStreamedTools($json['choices'][0]['finish_reason'] ?? null)) {
+                        $functionsToCall = [];
+                        foreach ($toolsToCall as $tool) {
+                            $functionInfo = $this->getFunctionInfoFromName($tool['name']);
+                            $functionInfo->jsonArgs = $tool['arguments'];
+                            $functionInfo->setToolCallId($tool['id']);
+                            $functionsToCall[] = $functionInfo;
+                        }
+                        // We move to a non-streamed answer here, like OpenAIChat does
+                        yield $this->generateChatRecursive($this->messagesAfterCallingFunctions($messages, $functionsToCall));
+
+                        return;
                     }
 
                     $delta = $json['choices'][0]['delta']['content'] ?? null;
@@ -338,6 +386,15 @@ class LmStudioChat implements ChatInterface
         }
 
         return $responseMessages;
+    }
+
+    /**
+     * Some OpenAI-compatible APIs, such as Gemini's, end a streamed turn that collected tool calls
+     * with "stop". Any finish reason then calls them, except the ones that can cut the arguments short.
+     */
+    private function shouldCallStreamedTools(?string $finishReason): bool
+    {
+        return $finishReason !== null && $finishReason !== 'length' && $finishReason !== 'content_filter';
     }
 
     private function getFunctionInfoFromName(string $functionName): FunctionInfo
