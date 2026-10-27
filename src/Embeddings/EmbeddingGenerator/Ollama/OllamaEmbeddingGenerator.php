@@ -11,6 +11,7 @@ use Http\Discovery\Psr18ClientDiscovery;
 use LLPhant\Embeddings\Document;
 use LLPhant\Embeddings\DocumentUtils;
 use LLPhant\Embeddings\EmbeddingGenerator\EmbeddingGeneratorInterface;
+use LLPhant\Embeddings\EmbeddingGenerator\EmbeddingTotalTokensTrait;
 use LLPhant\OllamaConfig;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
@@ -18,6 +19,8 @@ use Psr\Http\Message\StreamFactoryInterface;
 
 final class OllamaEmbeddingGenerator implements EmbeddingGeneratorInterface
 {
+    use EmbeddingTotalTokensTrait;
+
     public ClientInterface $client;
 
     private readonly RequestFactoryInterface
@@ -106,6 +109,8 @@ final class OllamaEmbeddingGenerator implements EmbeddingGeneratorInterface
         if (! isset($searchResults['embeddings'])) {
             throw new Exception("Request to Ollama didn't returned expected format: ".$response->getBody()->getContents());
         }
+
+        $this->addUsedTokens($searchResults);
 
         return $searchResults['embeddings'][0];
     }

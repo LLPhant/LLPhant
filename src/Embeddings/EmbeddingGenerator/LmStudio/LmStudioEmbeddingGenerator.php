@@ -11,6 +11,7 @@ use Http\Discovery\Psr18ClientDiscovery;
 use LLPhant\Embeddings\Document;
 use LLPhant\Embeddings\DocumentUtils;
 use LLPhant\Embeddings\EmbeddingGenerator\EmbeddingGeneratorInterface;
+use LLPhant\Embeddings\EmbeddingGenerator\EmbeddingTotalTokensTrait;
 use LLPhant\LmStudioConfig;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
@@ -18,6 +19,8 @@ use Psr\Http\Message\StreamFactoryInterface;
 
 final class LmStudioEmbeddingGenerator implements EmbeddingGeneratorInterface
 {
+    use EmbeddingTotalTokensTrait;
+
     public ClientInterface $client;
 
     private readonly RequestFactoryInterface
@@ -92,6 +95,8 @@ final class LmStudioEmbeddingGenerator implements EmbeddingGeneratorInterface
         if (! isset($json['data'][0]['embedding'])) {
             throw new Exception("Request to LM Studio didn't return expected format: ".json_encode($json));
         }
+
+        $this->addUsedTokens($json);
 
         return $json['data'][0]['embedding'];
     }
