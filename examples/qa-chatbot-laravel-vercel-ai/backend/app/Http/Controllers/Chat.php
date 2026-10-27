@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use LLPhant\Chat\Enums\ChatRole;
-use LLPhant\Chat\Message;
-use LLPhant\Chat\OpenAIChat;
+use LLPhant\Classification\Enums\ChatRole;
+use LLPhant\Classification\Message;
+use LLPhant\Classification\OpenAIChat;
 use LLPhant\Embeddings\DataReader\FileDataReader;
 use LLPhant\Embeddings\DocumentSplitter\DocumentSplitter;
 use LLPhant\Embeddings\EmbeddingFormatter\EmbeddingFormatter;

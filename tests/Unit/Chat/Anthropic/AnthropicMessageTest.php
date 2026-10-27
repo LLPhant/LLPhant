@@ -6,6 +6,7 @@ use LLPhant\Chat\Anthropic\AnthropicImage;
 use LLPhant\Chat\Anthropic\AnthropicImageType;
 use LLPhant\Chat\Anthropic\AnthropicMessage;
 use LLPhant\Chat\Anthropic\AnthropicVisionMessage;
+use stdClass;
 
 it('generates a correct tool result message for Anthropic', function () {
 
@@ -23,6 +24,25 @@ it('generates a correct tool result message for Anthropic', function () {
     JSON;
 
     $toolsOutput = ['toolu_01A09q90qw90lq917835lq9' => '15 degrees'];
+
+    expect(\json_encode(AnthropicMessage::toolResultMessage($toolsOutput), JSON_PRETTY_PRINT))->toBe($expectedJson);
+});
+
+it('serializes array tool result content as json string for Anthropic', function () {
+    $expectedJson = <<<'JSON'
+    {
+        "role": "user",
+        "content": [
+            {
+                "type": "tool_result",
+                "tool_use_id": "toolu_01A09q90qw90lq917835lq9",
+                "content": "[\"Barolo riserva 2015\",\"Brunello di Montalcino 2020\"]"
+            }
+        ]
+    }
+    JSON;
+
+    $toolsOutput = ['toolu_01A09q90qw90lq917835lq9' => ['Barolo riserva 2015', 'Brunello di Montalcino 2020']];
 
     expect(\json_encode(AnthropicMessage::toolResultMessage($toolsOutput), JSON_PRETTY_PRINT))->toBe($expectedJson);
 });
@@ -53,6 +73,41 @@ it('generates a correct assistant answer message for Anthropic', function () {
     $assistantAnswer = [
         ['type' => 'text', 'text' => '<thinking>I need to call the get_weather function, and the user wants SF, which is likely San Francisco, CA.</thinking>'],
         ['type' => 'tool_use', 'id' => 'toolu_01A09q90qw90lq917835lq9', 'name' => 'get_weather', 'input' => ['location' => 'San Francisco, CA', 'unit' => 'celsius']],
+    ];
+
+    expect(\json_encode(AnthropicMessage::fromAssistantAnswer($assistantAnswer), JSON_PRETTY_PRINT))->toBe($expectedJson);
+});
+
+// Without the fix, a parameterless tool call decodes `input: {}` as an empty PHP array,
+// which re-serializes as `[]` instead of `{}`. Anthropic rejects it with 400
+// "tool_use.input: Input should be an object".
+// The coercion must be in fromAssistantAnswer() because getContentFrom() reads
+// contentsArray directly without going through jsonSerialize().
+it('serializes an empty tool_use input as an object for Anthropic', function () {
+    $message = AnthropicMessage::fromAssistantAnswer([
+        ['type' => 'tool_use', 'id' => 'toolu_x', 'name' => 'list_products', 'input' => []],
+    ]);
+
+    expect($message->contentsArray[0]['input'])->toBeInstanceOf(stdClass::class);
+});
+
+it('normalizes empty tool input to object for Anthropic', function () {
+    $expectedJson = <<<'JSON'
+    {
+        "role": "assistant",
+        "content": [
+            {
+                "type": "tool_use",
+                "id": "toolu_01A09q90qw90lq917835lq9",
+                "name": "get_items",
+                "input": {}
+            }
+        ]
+    }
+    JSON;
+
+    $assistantAnswer = [
+        ['type' => 'tool_use', 'id' => 'toolu_01A09q90qw90lq917835lq9', 'name' => 'get_items', 'input' => []],
     ];
 
     expect(\json_encode(AnthropicMessage::fromAssistantAnswer($assistantAnswer), JSON_PRETTY_PRINT))->toBe($expectedJson);

@@ -38,7 +38,11 @@ class AnthropicStreamResponse
             $json = Utility::decodeJson(str_replace('data:', '', $data));
 
             if (isset($json['error'])) {
-                throw new HttpException($json['error']);
+                // The error event carries an object: {"type": "overloaded_error", "message": "..."}
+                $error = $json['error'];
+                throw new HttpException(\is_array($error)
+                    ? sprintf('%s: %s', $error['type'] ?? 'error', $error['message'] ?? json_encode($error))
+                    : (string) $error);
             }
 
             $type = $json['type'];

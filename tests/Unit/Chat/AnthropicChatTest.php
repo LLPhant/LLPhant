@@ -5,13 +5,17 @@ namespace Tests\Unit\Chat;
 use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
 use LLPhant\AnthropicConfig;
 use LLPhant\Chat\AnthropicChat;
+use LLPhant\Chat\FunctionInfo\FunctionInfo;
+use LLPhant\Chat\FunctionInfo\Parameter;
 use LLPhant\Chat\Message;
 use Psr\Http\Message\StreamInterface;
 use Psr\Log\AbstractLogger;
 use Psr\Log\LoggerInterface;
+use Tests\Integration\Chat\WeatherExample;
 
 const ANTHROPIC_FAKE_JSON_ANSWER = <<<'JSON'
 {
@@ -108,4 +112,173 @@ it('returns a stream response using generateStreamOfText()', function () {
 it('returns a stream response using generateChatStream()', function () {
     $response = anthropicChatWithFakeHttpConnection(ANTROPIC_FAKE_STREAM_ANSWER)->generateChatStream([Message::user('here the question')]);
     expect($response)->toBeInstanceof(StreamInterface::class)->and($response->__toString())->toBe('Hello!');
+});
+
+it('stops at tool call in generateChatOrReturnFunctionToCall', function () {
+    $anthropicAnswerWithTool = <<<'JSON'
+    {
+      "content": [
+        {
+          "id": "tool_123",
+          "input": {
+            "location": "Venice"
+          },
+          "name": "currentWeatherForLocation",
+          "type": "tool_use"
+        }
+      ],
+      "id": "msg_123",
+      "model": "claude-3",
+      "role": "assistant",
+      "stop_reason": "tool_use",
+      "type": "message",
+      "usage": {
+        "input_tokens": 10,
+        "output_tokens": 25
+      }
+    }
+    JSON;
+
+    $anthropicChat = anthropicChatWithFakeHttpConnection($anthropicAnswerWithTool);
+
+    $weatherExample = new WeatherExample();
+    $function = new FunctionInfo(
+        'currentWeatherForLocation',
+        $weatherExample,
+        'description',
+        [new Parameter('location', 'string', 'desc')]
+    );
+    $anthropicChat->addFunction($function);
+
+    $result = $anthropicChat->generateChatOrReturnFunctionToCall([Message::user('weather in Venice?')]);
+
+    expect($result)->toBeArray();
+    expect($result[0])->toBeInstanceOf(FunctionInfo::class);
+    expect($result[0]->name)->toBe('currentWeatherForLocation');
+    // It should NOT have executed the function
+    expect($weatherExample->lastMessage)->toBe('');
+});
+
+it('stops at tool call in generateTextOrReturnFunctionToCall', function () {
+    $anthropicAnswerWithTool = <<<'JSON'
+    {
+      "content": [
+        {
+          "id": "tool_123",
+          "input": {
+            "location": "Venice"
+          },
+          "name": "currentWeatherForLocation",
+          "type": "tool_use"
+        }
+      ],
+      "id": "msg_123",
+      "model": "claude-3",
+      "role": "assistant",
+      "stop_reason": "tool_use",
+      "type": "message",
+      "usage": {
+        "input_tokens": 10,
+        "output_tokens": 25
+      }
+    }
+    JSON;
+
+    $anthropicChat = anthropicChatWithFakeHttpConnection($anthropicAnswerWithTool);
+
+    $weatherExample = new WeatherExample();
+    $function = new FunctionInfo(
+        'currentWeatherForLocation',
+        $weatherExample,
+        'description',
+        [new Parameter('location', 'string', 'desc')]
+    );
+    $anthropicChat->addFunction($function);
+
+    $result = $anthropicChat->generateTextOrReturnFunctionToCall('weather in Venice?');
+
+    expect($result)->toBeArray();
+    expect($result[0])->toBeInstanceOf(FunctionInfo::class);
+    expect($result[0]->name)->toBe('currentWeatherForLocation');
+    // It should NOT have executed the function
+    expect($weatherExample->lastMessage)->toBe('');
+});
+
+it('serializes empty tool input as object in recursive anthropic calls', function () {
+    $firstAnswer = <<<'JSON'
+    {
+      "content": [
+        {
+          "type": "text",
+          "text": "Let me check that for you."
+        },
+        {
+          "id": "tool_123",
+          "input": {},
+          "name": "getItemList",
+          "type": "tool_use"
+        }
+      ],
+      "id": "msg_123",
+      "model": "claude-3",
+      "role": "assistant",
+      "stop_reason": "tool_use",
+      "type": "message",
+      "usage": {
+        "input_tokens": 10,
+        "output_tokens": 25
+      }
+    }
+    JSON;
+
+    $secondAnswer = <<<'JSON'
+    {
+      "content": [
+        {
+          "type": "text",
+          "text": "The oldest wine is Barolo riserva 2015."
+        }
+      ],
+      "id": "msg_124",
+      "model": "claude-3",
+      "role": "assistant",
+      "stop_reason": "end_turn",
+      "type": "message",
+      "usage": {
+        "input_tokens": 20,
+        "output_tokens": 12
+      }
+    }
+    JSON;
+
+    $historyContainer = [];
+    $history = Middleware::history($historyContainer);
+    $mock = new MockHandler([
+        new Response(200, [], $firstAnswer),
+        new Response(200, [], $secondAnswer),
+    ]);
+    $handlerStack = HandlerStack::create($mock);
+    $handlerStack->push($history);
+    $client = new Client(['handler' => $handlerStack]);
+
+    $config = new AnthropicConfig(client: $client);
+    $chat = new AnthropicChat($config);
+
+    $itemListObject = new class
+    {
+        public function getItemList(): array
+        {
+            return ['Barolo riserva 2015', 'Brunello di Montalcino 2020'];
+        }
+    };
+    $chat->addFunction(new FunctionInfo('getItemList', $itemListObject, 'Get a list of items from my warehouse', []));
+
+    $chat->generateText('What is the oldest wine I have in my warehouse?');
+
+    expect($historyContainer)->toHaveCount(2);
+
+    $secondRequestBody = (string) $historyContainer[1]['request']->getBody();
+    $secondRequestPayload = json_decode($secondRequestBody, true, 512, JSON_THROW_ON_ERROR);
+    expect($secondRequestPayload['messages'][1]['content'][1]['input'])->toBeArray()->toBeEmpty();
+    expect($secondRequestBody)->toContain('"input":{}');
 });

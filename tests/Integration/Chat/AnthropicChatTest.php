@@ -20,9 +20,9 @@ it('can generate some stuff', function () {
 
 it('can generate some stuff with a system prompt', function () {
     $chat = new AnthropicChat();
-    $chat->setSystemMessage('Whatever we ask you, you MUST answer "ok"');
+    $chat->setSystemMessage('My questions will be in English. Please answer with a word in Italian');
     $response = $chat->generateText('what is one + one?');
-    expect(strtolower($response))->toStartWith('ok');
+    expect(strtolower($response))->toStartWith('due');
 });
 
 it('can generate some stuff using a stream', function () {
@@ -55,6 +55,65 @@ it('can call a function', function () {
     expect($mockMailerExample->lastMessage)->toStartWith('The email has been sent to student@foo.com with the subject ')
         ->and($chat->lastFunctionCalled)->toBe($function)
         ->and($chat->getTotalTokens())->toBeGreaterThan(0);
+});
+
+it('can call a function with no arguments', function () {
+    $chat = new AnthropicChat();
+
+    $itemListObject = new class
+    {
+        public function getItemList(): array
+        {
+            return ['Barolo riserva 2015', 'Brunello di Montalcino 2020'];
+        }
+    };
+
+    $function = new FunctionInfo(
+        'getItemList',
+        $itemListObject,
+        'Get a list of items from my warehouse',
+        []
+    );
+
+    $chat->addFunction($function);
+    $chat->setSystemMessage('You are an AI that can get a list of items from my warehouse using an external system.');
+    $answer = $chat->generateText('What is the oldest wine I have in my warehouse?');
+
+    expect($answer)->toContain('Barolo riserva 2015');
+});
+
+it('normalizes boolean tool parameters when calling a function', function () {
+    $chat = new AnthropicChat();
+
+    $featureFlagTool = new class
+    {
+        public ?bool $enabled = null;
+
+        public ?string $enabledType = null;
+
+        public function setFeatureFlag(bool $enabled): string
+        {
+            $this->enabled = $enabled;
+            $this->enabledType = get_debug_type($enabled);
+
+            return $enabled ? 'Feature enabled' : 'Feature disabled';
+        }
+    };
+
+    $function = new FunctionInfo(
+        'setFeatureFlag',
+        $featureFlagTool,
+        'Enables or disables the feature flag',
+        [new Parameter('enabled', 'boolean', 'true to enable, false to disable')]
+    );
+
+    $chat->addFunction($function);
+    $chat->setSystemMessage('You are an AI assistant. You MUST call setFeatureFlag exactly once and pass enabled=true.');
+    $result = $chat->generateText('Please enable the feature flag.');
+
+    expect($featureFlagTool->enabledType)->toBe('bool')
+        ->and($featureFlagTool->enabled)->toBeTrue()
+        ->and($result)->toContain('enabled');
 });
 
 it('can use the result of a function', function () {

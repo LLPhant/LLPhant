@@ -7,23 +7,42 @@ use Psr\Http\Message\StreamInterface;
 
 interface ChatInterface
 {
+    /**
+     * Generates a text response from a prompt.
+     * If tools are configured, the LLM may call them automatically.
+     * The method will loop until a final text answer is produced.
+     */
     public function generateText(string $prompt): string;
 
     /**
+     * Generates a text response or returns a list of functions to be called.
+     * This method stops at the first tool call suggested by the LLM,
+     * allowing the developer to handle tool execution manually.
+     *
      * @return string|FunctionInfo[]
      */
-    public function generateTextOrReturnFunctionCalled(string $prompt): string|array;
+    public function generateTextOrReturnFunctionToCall(string $prompt): string|array;
 
     public function generateStreamOfText(string $prompt): StreamInterface;
 
-    /** @param  Message[]  $messages */
+    /**
+     * Generates a chat response from an array of messages.
+     * If tools are configured, the LLM may call them automatically.
+     * The method will loop until a final text answer is produced.
+     *
+     * @param  Message[]  $messages
+     */
     public function generateChat(array $messages): string;
 
     /**
+     * Generates a chat response or returns a list of functions to be called.
+     * This method stops at the first tool call suggested by the LLM,
+     * allowing the developer to handle tool execution manually.
+     *
      * @param  Message[]  $messages
      * @return string|FunctionInfo[]
      */
-    public function generateChatOrReturnFunctionCalled(array $messages): string|array;
+    public function generateChatOrReturnFunctionToCall(array $messages): string|array;
 
     /** @param  Message[]  $messages */
     public function generateChatStream(array $messages): StreamInterface;

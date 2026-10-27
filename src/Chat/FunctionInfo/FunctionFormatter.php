@@ -2,6 +2,8 @@
 
 namespace LLPhant\Chat\FunctionInfo;
 
+use stdClass;
+
 class FunctionFormatter
 {
     /**
@@ -29,7 +31,7 @@ class FunctionFormatter
      * @deprecated Switch to using tools instead of functions in your code when using OpenAIChat
      * This is pretty fine instead when using AnthropicChat
      *
-     * @return array{name: string, description: string, parameters: array{type: string, properties: array<string, mixed[]>, required: string[]}}
+     * @return array{name: string, description: string, parameters: array{type: string, properties: array<string, array<string, mixed>>|stdClass, required: list<string>}}
      */
     public static function formatOneFunctionToOpenAI(FunctionInfo $functionInfo): array
     {
@@ -49,7 +51,7 @@ class FunctionFormatter
             'description' => $functionInfo->description,
             'parameters' => [
                 'type' => 'object',
-                'properties' => $parametersOpenAI,
+                'properties' => $parametersOpenAI === [] ? new stdClass() : $parametersOpenAI,
                 'required' => $requiredParametersOpenAI,
             ],
         ];
@@ -154,7 +156,7 @@ class FunctionFormatter
     /**
      * @param  Parameter[]  $parameters
      * @param  Parameter[]  $requiredParameters
-     * @return array{type: string, properties: array<string, array{type: string, description: string}>}
+     * @return array{type: string, properties: array<string, array{type: string, description: string, enum?: mixed[]}>|stdClass, required?: list<string>}
      */
     private static function toInputSchema(array $parameters, array $requiredParameters): array
     {
@@ -175,10 +177,15 @@ class FunctionFormatter
             $requiredParametersNames[] = $requiredParameter->name;
         }
 
-        return [
+        $schema = [
             'type' => 'object',
-            'properties' => $result,
-            'required' => $requiredParametersNames,
+            'properties' => $result === [] ? new stdClass() : $result,
         ];
+
+        if ($requiredParametersNames !== []) {
+            $schema['required'] = $requiredParametersNames;
+        }
+
+        return $schema;
     }
 }

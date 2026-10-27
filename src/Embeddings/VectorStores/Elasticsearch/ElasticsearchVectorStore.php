@@ -24,6 +24,8 @@ class ElasticsearchVectorStore extends VectorStoreBase
         $existStatusCode = $existResponse->getStatusCode();
 
         if ($existStatusCode === 200) {
+            $this->ensureMetadataMapping();
+
             return;
         }
 
@@ -49,6 +51,13 @@ class ElasticsearchVectorStore extends VectorStoreBase
                         ],
                         'chunkNumber' => [
                             'type' => 'integer',
+                        ],
+                        // 'enabled' => false on an object field means: Elasticsearch/OpenSearch will store the field in source
+                        // but will not parse/index any inner keys.
+                        // metadata is kept as raw JSON (you can read it back).
+                        'metadata' => [
+                            'type' => 'object',
+                            'enabled' => false,
                         ],
                     ],
                 ],
@@ -76,6 +85,7 @@ class ElasticsearchVectorStore extends VectorStoreBase
                 'sourceName' => $document->sourceName,
                 'hash' => $document->hash,
                 'chunkNumber' => $document->chunkNumber,
+                'metadata' => $document->metadata,
             ],
         ]);
         $this->client->indices()->refresh(['index' => $this->indexName]);
@@ -111,10 +121,13 @@ class ElasticsearchVectorStore extends VectorStoreBase
                 'sourceName' => $document->sourceName,
                 'hash' => $document->hash,
                 'chunkNumber' => $document->chunkNumber,
+                'metadata' => $document->metadata,
             ];
 
         }
-        $this->client->bulk($params);
+        /** @var ElasticsearchResponse $bulkResponse */
+        $bulkResponse = $this->client->bulk($params);
+        $this->assertBulkSucceeded($bulkResponse->asArray());
         $this->client->indices()->refresh(['index' => $this->indexName]);
     }
 
@@ -150,7 +163,7 @@ class ElasticsearchVectorStore extends VectorStoreBase
         if (array_key_exists('filter', $additionalArguments)) {
             $searchParams['body']['knn']['filter'] = $additionalArguments['filter'];
         }
-        /** @var array{hits: array{hits: array{array{_source: array{embedding: float[], content: string, formattedContent: string, sourceType: string, sourceName: string, hash: string, chunkNumber: int}}}}} $rawResponse */
+        /** @var array{hits: array{hits: array{array{_source: array{embedding: float[], content: string, formattedContent: string, sourceType: string, sourceName: string, hash: string, chunkNumber: int, metadata?: array<string, mixed>}}}}} $rawResponse */
         $rawResponse = $this->client->search($searchParams);
 
         $documents = [];
@@ -163,6 +176,7 @@ class ElasticsearchVectorStore extends VectorStoreBase
             $document->sourceName = $hit['_source']['sourceName'];
             $document->hash = $hit['_source']['hash'];
             $document->chunkNumber = $hit['_source']['chunkNumber'];
+            $document->metadata = $hit['_source']['metadata'] ?? [];
             $documents[] = $document;
         }
 
@@ -202,5 +216,89 @@ class ElasticsearchVectorStore extends VectorStoreBase
             ],
         ]);
         $this->vectorDimSet = true;
+    }
+
+    /**
+     * @throws Exception
+     */
+    private function ensureMetadataMapping(): void
+    {
+        /** @var array<string, mixed> $response */
+        $response = $this->client->indices()->getMapping(['index' => $this->indexName]);
+        $metadataMapping = $response[$this->indexName]['mappings']['properties']['metadata'] ?? null;
+        if (! is_array($metadataMapping)) {
+            $this->client->indices()->putMapping([
+                'index' => $this->indexName,
+                'body' => [
+                    'properties' => [
+                        // enabled=false: keep metadata in _source, do not parse/index inner keys.
+                        'metadata' => [
+                            'type' => 'object',
+                            'enabled' => false,
+                        ],
+                    ],
+                ],
+            ]);
+
+            return;
+        }
+
+        $metadataType = $metadataMapping['type'] ?? null;
+        $metadataEnabled = $metadataMapping['enabled'] ?? null;
+        if ($metadataType === 'object' && $metadataEnabled === false) {
+            return;
+        }
+
+        throw new Exception(sprintf(
+            'Index "%s" has incompatible metadata mapping. Expected type=object with enabled=false, got: %s',
+            $this->indexName,
+            json_encode($metadataMapping, JSON_THROW_ON_ERROR),
+        ));
+    }
+
+    /**
+     * @param  array{errors?: bool, items?: array<int, array<string, array{status?: int, _id?: string, error?: array{type?: string, reason?: string}}>>}  $bulkResponse
+     *
+     * @throws Exception
+     */
+    private function assertBulkSucceeded(array $bulkResponse): void
+    {
+        if (($bulkResponse['errors'] ?? false) !== true) {
+            return;
+        }
+
+        $failures = [];
+        foreach ($bulkResponse['items'] ?? [] as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+            $operation = array_key_first($item);
+            if ($operation === null || ! is_array($item[$operation])) {
+                continue;
+            }
+            $operationResult = $item[$operation];
+            $status = $operationResult['status'] ?? 0;
+            if (! is_int($status) || $status < 300) {
+                continue;
+            }
+            $error = $operationResult['error'] ?? [];
+            $errorType = $error['type'] ?? 'unknown';
+            $errorReason = $error['reason'] ?? 'unknown';
+            $documentId = $operationResult['_id'] ?? 'unknown';
+            $failures[] = sprintf(
+                '%s/%s returned status %d (%s: %s)',
+                $operation,
+                $documentId,
+                $status,
+                $errorType,
+                $errorReason,
+            );
+        }
+
+        if ($failures === []) {
+            throw new Exception('Elasticsearch bulk indexing failed with unknown item errors.');
+        }
+
+        throw new Exception(sprintf('Elasticsearch bulk indexing failed: %s', implode('; ', $failures)));
     }
 }

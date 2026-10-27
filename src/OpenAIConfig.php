@@ -25,6 +25,7 @@ use OpenAI\Contracts\ClientContract;
  *     response_format?: ResponseFormat|null,
  *     seed?: int|null,
  *     service_tier?: string|null,
+ *     reasoning_effort?: 'none'|'minimal'|'low'|'medium'|'high'|string|null,
  *     stop?: string|array<string>|null,
  *     temperature?: float|null,
  *     top_p?: float|null,
@@ -54,7 +55,7 @@ class OpenAIConfig extends AIConfig
         parent::__construct(
             apiKey: $resolvedApiKey,
             url: $resolvedUrl,
-            model: $model ?? OpenAIChatModel::Gpt4Turbo->value,
+            model: $model ?? OpenAIChatModel::Gpt56Sol->value,
             client: $client,
             modelOptions: $modelOptions,
         );

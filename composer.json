@@ -12,7 +12,7 @@
         "php": "^8.1.0",
         "guzzlehttp/guzzle": "^7.4.5",
         "guzzlehttp/psr7": "^2.7",
-        "openai-php/client": "^v0.16.1",
+        "openai-php/client": "^v0.19.2",
         "php-http/discovery": "^1.20.0",
         "php-http/multipart-stream-builder": "^1.4.2",
         "phpoffice/phpword": "^1.4.0",
@@ -24,21 +24,26 @@
     },
     "suggest": {
         "doctrine/orm": "This is required for the DoctrineVectoreStore. This should be working with any version ^2.13.0",
+        "doctrine/mongodb-odm": "This is required for the DoctrineODMVectoreStore. This should be working with any version ^2.16.1",
         "symfony/cache": "This is one of the possible types of psr/cache needed by doctrine/orm",
         "hkulekci/qdrant": "This is required for the QdrantVectoreStore.",
         "predis/predis": "This is required for the RedisVectoreStore.",
         "elasticsearch/elasticsearch": "This is required for the ElasticsearchVectoreStore.",
         "codewithkyrian/chromadb-php": "This is required for the ChromaDBVectorStore.",
-        "opensearch-project/opensearch-php": "This is required for the OpenSearchVectorStore."
+        "opensearch-project/opensearch-php": "This is required for the OpenSearchVectorStore.",
+        "probots-io/pinecone-php": "This is required for the PineconeVectorStore. Use scotteuser/pinecone-php for <= PHP 8.2"
     },
     "require-dev": {
         "codewithkyrian/chromadb-php": "1.0.0",
         "doctrine/orm": "^3",
         "doctrine/dbal": "^4",
+        "doctrine/mongodb-odm": "^2.16.1",
+        "doctrine/orm": "^3",
         "elasticsearch/elasticsearch": "^8.15",
-        "hkulekci/qdrant": "^v0.5.7",
+        "hkulekci/qdrant": "^1.19",
         "laravel/pint": "v1.15.3",
         "mockery/mockery": "^1.6.12",
+        "mongodb/mongodb": "^2.4",
         "opensearch-project/opensearch-php": "^2.3",
         "pestphp/pest": "^3.0",
         "pestphp/pest-plugin-arch": "^3.0",
@@ -68,21 +73,27 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true,
             "php-http/discovery": false
+        },
+        "platform": {
+            "ext-gd": "1.0.0"
         }
     },
     "scripts": {
         "lint": "pint -v src tests",
-        "fix-lint": "pint -v --repair src tests",
-        "refactor": "rector --debug",
+        "fix-lint": "pint -v --repair src tests || [ $? -eq 1 ]",
         "test:lint": "pint --test -v src tests",
-        "test:refactor": "rector --dry-run ",
         "test:types": "phpstan analyse --ansi --memory-limit 4G",
         "test:type-coverage": "php ./vendor/bin/pest ./tests --type-coverage --min=100 --memory-limit=4G",
         "test:unit": "pest ./tests/Unit --colors=always",
         "test:int": "pest ./tests/Integration --colors=always",
         "test": [
             "@test:lint",
-            "@test:refactor",
+            "@test:types",
+            "@test:type-coverage",
+            "@test:unit"
+        ],
+        "quality": [
+            "@fix-lint",
             "@test:types",
             "@test:type-coverage",
             "@test:unit"

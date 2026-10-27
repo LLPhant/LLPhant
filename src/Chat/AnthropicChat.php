@@ -79,6 +79,14 @@ class AnthropicChat implements ChatInterface
     /** @param Message[] $messages */
     public function generateChat(array $messages): string
     {
+        $this->lastFunctionCalled = null;
+
+        return $this->generateChatRecursive($messages);
+    }
+
+    /** @param Message[] $messages */
+    private function generateChatRecursive(array $messages): string
+    {
         $params = $this->createParams($messages, false);
 
         $json = $this->getJsonMessagesResponse($params);
@@ -106,7 +114,7 @@ class AnthropicChat implements ChatInterface
         }
 
         if ($json['stop_reason'] === 'tool_use') {
-            return $this->generateChat(\array_merge($messages, [AnthropicMessage::fromAssistantAnswer($responses), AnthropicMessage::toolResultMessage($toolsOutput)]));
+            return $this->generateChatRecursive(\array_merge($messages, [AnthropicMessage::fromAssistantAnswer($responses), AnthropicMessage::toolResultMessage($toolsOutput)]));
         }
 
         $this->addUsedTokens($json);
@@ -120,17 +128,44 @@ class AnthropicChat implements ChatInterface
     }
 
     /**
+     * @param  Message[]  $messages
      * @return string|FunctionInfo[]
      */
-    public function generateChatOrReturnFunctionCalled(array $messages): string|array
+    public function generateChatOrReturnFunctionToCall(array $messages): string|array
     {
-        $answer = $this->generateChat($messages);
+        $this->lastFunctionCalled = null;
 
-        if ($this->lastFunctionCalled instanceof FunctionInfo) {
-            return [$this->lastFunctionCalled];
+        $params = $this->createParams($messages, false);
+
+        $json = $this->getJsonMessagesResponse($params);
+
+        $responses = $json['content'];
+
+        $toolsToCall = [];
+        $resultText = '';
+
+        foreach ($responses as $response) {
+            if ($response['type'] === 'text') {
+                if ($resultText !== '') {
+                    $resultText .= PHP_EOL;
+                }
+                $resultText .= $response['text'];
+            }
+
+            if ($response['type'] === 'tool_use') {
+                $functionName = $response['name'];
+                $functionInfo = $this->getFunctionInfoFromName($functionName);
+                $functionInfo->jsonArgs = json_encode($response['input'] ?? [], JSON_THROW_ON_ERROR);
+                $functionInfo->setToolCallId($response['id']);
+                $toolsToCall[] = $functionInfo;
+            }
         }
 
-        return $answer;
+        if ($toolsToCall !== []) {
+            return $toolsToCall;
+        }
+
+        return $resultText;
     }
 
     public function generateChatStream(array $messages): StreamInterface
@@ -145,9 +180,9 @@ class AnthropicChat implements ChatInterface
     /**
      * @return string|FunctionInfo[]
      */
-    public function generateTextOrReturnFunctionCalled(string $prompt): string|array
+    public function generateTextOrReturnFunctionToCall(string $prompt): string|array
     {
-        return $this->generateChatOrReturnFunctionCalled([Message::user($prompt)]);
+        return $this->generateChatOrReturnFunctionToCall([Message::user($prompt)]);
     }
 
     public function setSystemMessage(string $message): void

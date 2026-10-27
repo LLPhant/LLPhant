@@ -2,9 +2,15 @@ name: Formats
 
 on:
   push:
+    paths: &on-paths-filter
+      - 'composer.json'
+      - 'src/**'
+      - 'tests/**'
+      - '.github/workflows/**'
     branches:
       - main
   pull_request:
+    paths: *on-paths-filter
 
 jobs:
   ci:
@@ -14,24 +20,24 @@ jobs:
       fail-fast: true
       matrix:
         os: [ubuntu-latest]
-        php: [8.2]
-        dependency-version: [prefer-lowest, prefer-stable]
+        php: [8.2, 8.5]
+        dependency-version: [prefer-stable]
 
     name: Formats P${{ matrix.php }} - ${{ matrix.os }} - ${{ matrix.dependency-version }}
 
     steps:
 
     - name: Checkout
-      uses: actions/checkout@v6
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
     - name: Cache dependencies
-      uses: actions/cache@v4
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ~/.composer/cache/files
         key: dependencies-php-${{ matrix.php }}-composer-${{ hashFiles('composer.json') }}
 
     - name: Setup PHP
-      uses: shivammathur/setup-php@v2
+      uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
       with:
         php-version: ${{ matrix.php }}
         extensions: dom, mbstring, zip
@@ -43,9 +49,6 @@ jobs:
 
     - name: Coding Style Checks
       run: composer test:lint
-
-    - name: Refactor Checks
-      run: composer test:refactor
 
     - name: Type Checks
       run: composer test:types

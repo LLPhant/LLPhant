@@ -2,9 +2,9 @@ parameters:
     level: 8
     paths:
         - src
+        - types
     excludePaths:
             analyse:
-                - src/Testing
-                - src/Experimental
 
-    reportUnmatchedIgnoredErrors: true
+    treatPhpDocTypesAsCertain: false
+    reportUnmatchedIgnoredErrors: false

@@ -54,7 +54,7 @@ class FakeQdrant extends Qdrant
 {
     public const QDRANT_COLLECTION_LIST = <<<'JSON'
     {
-        "result": [
+        "result": { "points": [
             {
                 "id": "c4ff4e3f62b63f67f34d3e64e7c53ca5f12dba0035bd471eae8f2ef0f5689432",
                 "version": 0,
@@ -83,7 +83,7 @@ class FakeQdrant extends Qdrant
                     "chunkNumber": 2
                 }
             }
-        ]
+        ] }
     }
     JSON;
 

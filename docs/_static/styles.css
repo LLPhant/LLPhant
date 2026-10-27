@@ -1,0 +1,5 @@
+/* Reduce the sidebar brand/title font size */
+.sidebar-brand-text {
+    font-size: 1rem;
+    line-height: 1.4;
+}

@@ -22,4 +22,7 @@ class Document
     public string $hash = '';
 
     public int $chunkNumber = 0;
+
+    /** @var array<string, mixed> */
+    public array $metadata = [];
 }

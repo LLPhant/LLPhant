@@ -91,6 +91,56 @@ it('embed documents', function () {
     expect($result[0])->toBeInstanceOf(Document::class);
 });
 
+it('returns embedding length from /show model_info', function () {
+    $config = new OllamaConfig();
+    $config->model = 'fake-model';
+    $config->url = 'http://fakeurl';
+    $generator = new OllamaEmbeddingGenerator($config);
+
+    $showResponse = json_encode([
+        'model_info' => [
+            'general.architecture' => 'nomic-bert',
+            'nomic-bert.embedding_length' => 768,
+        ],
+    ]);
+
+    $mock = new MockHandler([
+        new Response(200, [], $showResponse),
+    ]);
+    $handlerStack = HandlerStack::create($mock);
+    $client = new GuzzleClient(['handler' => $handlerStack]);
+
+    $generator->client = $client;
+
+    expect($generator->getEmbeddingLength())->toBe(768);
+});
+
+it('caches the embedding length after the first call', function () {
+    $config = new OllamaConfig();
+    $config->model = 'fake-model';
+    $config->url = 'http://fakeurl';
+    $generator = new OllamaEmbeddingGenerator($config);
+
+    $showResponse = json_encode([
+        'model_info' => [
+            'general.architecture' => 'nomic-bert',
+            'nomic-bert.embedding_length' => 768,
+        ],
+    ]);
+
+    // Only one response queued — second call must use cache, not make another request
+    $mock = new MockHandler([
+        new Response(200, [], $showResponse),
+    ]);
+    $handlerStack = HandlerStack::create($mock);
+    $client = new GuzzleClient(['handler' => $handlerStack]);
+
+    $generator->client = $client;
+
+    expect($generator->getEmbeddingLength())->toBe(768);
+    expect($generator->getEmbeddingLength())->toBe(768); // cached, no second HTTP call
+});
+
 it('can use timeout option', function () {
     $config = new OllamaConfig();
     $config->model = 'fake-model';

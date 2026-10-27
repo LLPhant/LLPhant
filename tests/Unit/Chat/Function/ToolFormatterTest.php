@@ -44,7 +44,7 @@ it('can format function info with basic types to OpenAI format', function () {
         ],
     ];
 
-    expect(ToolFormatter::formatOneToolToOpenAI($functionInfo))->toBe($expected);
+    expect(ToolFormatter::formatOneToolToOpenAI($functionInfo))->toEqual($expected);
 });
 
 it('can format function with object parameter to OpenAI format', function () {
@@ -86,7 +86,7 @@ it('can format function with object parameter to OpenAI format', function () {
         ],
     ];
 
-    expect(ToolFormatter::formatOneToolToOpenAI($functionInfo))->toBe($expected);
+    expect(ToolFormatter::formatOneToolToOpenAI($functionInfo))->toEqual($expected);
 });
 
 it('can format function info with simple array parameter to OpenAI format', function () {
@@ -171,4 +171,23 @@ it('can format function info with array of objects types to OpenAI format', func
     ];
 
     expect(ToolFormatter::formatOneToolToOpenAI($functionInfo))->toBe($expected);
+});
+
+it('can format function info with no parameters to OpenAI format', function () {
+    $functionInfo = new FunctionInfo('testFunction', 'TestClass', 'testDescription', [], []);
+
+    $expected = [
+        'type' => 'function',
+        'function' => [
+            'name' => 'testFunction',
+            'description' => 'testDescription',
+            'parameters' => [
+                'type' => 'object',
+                'properties' => new \stdClass(),
+                'required' => [],
+            ],
+        ],
+    ];
+
+    expect(ToolFormatter::formatOneToolToOpenAI($functionInfo))->toEqual($expected);
 });

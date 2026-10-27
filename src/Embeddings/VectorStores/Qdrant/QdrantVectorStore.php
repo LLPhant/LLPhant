@@ -15,7 +15,7 @@ use Qdrant\Models\Filter\Filter;
 use Qdrant\Models\PointsStruct;
 use Qdrant\Models\PointStruct;
 use Qdrant\Models\Request\CreateCollection;
-use Qdrant\Models\Request\SearchRequest;
+use Qdrant\Models\Request\Points\QueryRequest;
 use Qdrant\Models\Request\VectorParams;
 use Qdrant\Models\VectorStruct;
 use Qdrant\Qdrant;
@@ -26,6 +26,9 @@ class QdrantVectorStore extends VectorStoreBase
     final public const QDRANT_OPENAI_VECTOR_NAME = 'openai';
 
     public Qdrant $client;
+
+    /** @var array<string, mixed> */
+    private array $searchParams = ['hnsw_ef' => 128];
 
     public function __construct(
         Config $config,
@@ -57,6 +60,17 @@ class QdrantVectorStore extends VectorStoreBase
             throw new InvalidArgumentException('Invalid distance');
         }
         $this->distance = $distance;
+    }
+
+    /**
+     * Search params sent with every similarity search, e.g. ['hnsw_ef' => 256],
+     * or ['exact' => true] to bypass the HNSW index and do a full scan.
+     *
+     * @param  array<string, mixed>  $searchParams
+     */
+    public function setSearchParams(array $searchParams): void
+    {
+        $this->searchParams = $searchParams;
     }
 
     /**
@@ -113,12 +127,13 @@ class QdrantVectorStore extends VectorStoreBase
 
     /**
      * @param  float[]  $embedding
+     * @param  int  $k  Limit the number of results to be returned
      * @param  array<string, ConditionInterface[]>  $additionalArguments
+     * @param  float|null  $scoreThreshold  Only return results with a better score: higher for Cosine and Dot, lower (a max distance) for Euclid
      * @return array<int, Document>
      */
-    public function similaritySearch(array $embedding, int $k = 4, array $additionalArguments = []): array
+    public function similaritySearch(array $embedding, int $k = 4, array $additionalArguments = [], ?float $scoreThreshold = null): array
     {
-        $vectorStruct = new VectorStruct($embedding, $this->vectorName);
         $filter = new Filter();
 
         if (isset($additionalArguments['must'])) {
@@ -139,18 +154,24 @@ class QdrantVectorStore extends VectorStoreBase
             }
         }
 
-        $searchRequest = (new SearchRequest($vectorStruct))
+        $queryRequest = (new QueryRequest())
+            ->setQuery($embedding)
             ->setFilter($filter)
             ->setLimit($k)
-            ->setParams([
-                'hnsw_ef' => 128,
-                'exact' => true,
-            ])
+            ->setParams($this->searchParams)
             ->setWithPayload(true);
 
-        $response = $this->client->collections($this->collectionName)->points()->search($searchRequest);
+        if ($this->vectorName !== null) {
+            $queryRequest->setUsing($this->vectorName);
+        }
+
+        if ($scoreThreshold !== null) {
+            $queryRequest->setScoreThreshold($scoreThreshold);
+        }
+
+        $response = $this->client->collections($this->collectionName)->points()->query()->query($queryRequest);
         $arrayResponse = $response->__toArray();
-        $results = $arrayResponse['result'];
+        $results = $arrayResponse['result']['points'] ?? [];
 
         if ((is_countable($results) ? count($results) : 0) === 0) {
             return [];
@@ -164,6 +185,7 @@ class QdrantVectorStore extends VectorStoreBase
             $document->hash = $onePoint['payload']['hash'];
             $document->sourceType = $onePoint['payload']['sourceType'];
             $document->sourceName = $onePoint['payload']['sourceName'];
+            $document->metadata = $onePoint['payload']['metadata'] ?? [];
             $documents[] = $document;
         }
 
@@ -190,8 +212,19 @@ class QdrantVectorStore extends VectorStoreBase
                     'hash' => $document->hash,
                     'sourceName' => $document->sourceName,
                     'sourceType' => $document->sourceType,
+                    'metadata' => $document->metadata,
                 ]
             )
         );
+    }
+
+    public function deleteCollection(?string $collectionName = null): void
+    {
+        $collectionName = $collectionName ?? $this->collectionName;
+        try {
+            $this->client->collections($collectionName)->delete();
+        } catch (\Exception $e) {
+            // Collection may not exist, which is fine for deletion
+        }
     }
 }

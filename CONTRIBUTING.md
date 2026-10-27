@@ -32,13 +32,6 @@ In the [docker](/docker) folder you can find a complete environment for running 
 * You may need to [rebase](https://git-scm.com/book/en/v2/Git-Branching-Rebasing) to avoid merge conflicts.
 * Please remember that we follow [SemVer](http://semver.org/).
 
-## Refactor
-
-Refactor your code:
-```bash
-composer refactor
-```
-
 ## Lint
 
 Lint your code:
@@ -53,9 +46,9 @@ Run all tests:
 composer test
 ```
 
-Check code quality:
+Check type coverage:
 ```bash
-composer test:refactor
+composer test:type-coverage
 ```
 
 Check types:
@@ -67,6 +60,9 @@ Unit tests:
 ```bash
 composer test:unit
 ```
+
+#### Tip
+A brief composer script you can run before committing your changes in order to be sure that base checks are OK is `composer quality`.
 
 ### Integration tests
 
@@ -136,6 +132,7 @@ composer test:int
 You can set host names and keys for the various services involved in integration tests using these environment variables:
 ```
 OPENAI_API_KEY
+ATLASCLOUD_API_KEY
 MISTRAL_API_KEY
 ANTHROPIC_API_KEY
 ASTRADB_ENDPOINT
@@ -153,4 +150,3 @@ TYPESENSE_API_KEY
 TYPESENSE_NODE
 MARIADB_HOST
 ```
-

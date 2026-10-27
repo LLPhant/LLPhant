@@ -1,0 +1,48 @@
+{% extends 'base.html.twig' %}
+{% block body %}
+    <h1>Search rental listings</h1>
+
+    <div class="search">
+        <div class="description">
+            <p>
+                Use the form to search for Paris rental listings based on your preferences.
+                You can search by title or amenities.
+            </p>
+            <p>
+                <strong>For instance, try these examples:</strong>
+            <ul>
+                <li>"Cozy apartment overlooking the Eiffel Tower" by title</li>
+                <li>"Child-friendly with toys" by amenities</li>
+                <li>"Suitable for remote work" by amenities</li>
+            </ul>
+            </p>
+        </div>
+
+        <div class="search-form">
+            {{ form_start(form) }}
+            {{ form_widget(form) }}
+
+            <input type="submit" value="Search" />
+            {{ form_end(form) }}
+        </div>
+
+    </div>
+
+    {% if results %}
+    <h2>Search Results</h2>
+    <div class="results">
+        {% for result in results %}
+            <div class="result">
+                <h3 class="title">{{ result.content }}</h3>
+                <ul class="amenities">
+                    {% for amenity in result.amenities %}
+                        <li>{{ amenity }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% else %}
+            <li>No results found.</li>
+        {% endfor %}
+    </div>
+    {% endif %}
+{% endblock %}

@@ -19,7 +19,7 @@ use Tests\Integration\Chat\WeatherExample;
 it('can call a function and provide the result to the assistant', function () {
     $config = new OpenAIConfig();
     //Functions work only with older models. Tools are needed with newer models
-    $config->model = OpenAIChatModel::Gpt35Turbo->value;
+    $config->model = OpenAIChatModel::Gpt4o->value;
     $chat = new OpenAIChat($config);
     $location = new Parameter('location', 'string', 'the name of the city, the state or province and the nation');
     $weatherExample = new WeatherExample();

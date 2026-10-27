@@ -27,13 +27,16 @@ RUN groupadd -g $GID llphant \
 # Install Composer
 COPY --from=composer /usr/bin/composer /usr/bin/composer
 
-# Install xdebug-3.2.2 This fixed version solves problems developing on Apple Silicon. Check for future versions
-RUN pecl install xdebug-3.2.2 \
+# Install a pinned Xdebug release that is available for the configured PHP version.
+RUN pecl install xdebug-3.5.1 mongodb \
 && docker-php-ext-enable xdebug
 
 RUN docker-php-ext-install pdo pdo_pgsql pdo_mysql zip intl bcmath ffi
 
-RUN docker-php-ext-enable opcache
+# Enable opcache only for PHP versions < 8.5 (built-in from 8.5+)
+RUN if [ "$(php -r 'echo version_compare(PHP_VERSION, "8.5.0", "<");')" = "1" ]; then \
+        docker-php-ext-enable opcache; \
+    fi
 
 COPY php-custom.ini /usr/local/etc/php/conf.d/docker-php-custom.ini
 COPY xdebug.ini /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini

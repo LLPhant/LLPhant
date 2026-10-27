@@ -29,16 +29,22 @@ class Utility
     public static function readEnvironment(string $name, ?string $defaultValue = null): ?string
     {
         $value = getenv($name);
-        if ($value !== false) {
+        if ($value !== false && trim($value) !== '') {
             return $value;
         }
 
         if (isset($_ENV[$name])) {
-            return $_ENV[$name];
+            $value = $_ENV[$name];
+            if (is_string($value) && trim($value) !== '') {
+                return $value;
+            }
         }
 
         if (isset($_SERVER[$name])) {
-            return $_SERVER[$name];
+            $value = $_SERVER[$name];
+            if (is_string($value) && trim($value) !== '') {
+                return $value;
+            }
         }
 
         return $defaultValue;

@@ -1,0 +1,14 @@
+services:
+  mongodb_atlas:
+    container_name: mongodb-atlas
+    image: mongodb/mongodb-atlas-local:8
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+    environment:
+      MONGODB_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME}
+      MONGODB_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
+
+volumes:
+  mongodb-data:

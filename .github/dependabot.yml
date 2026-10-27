@@ -10,6 +10,8 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
 
   - package-ecosystem: "composer"
     directory: "/"
@@ -22,3 +24,6 @@ updates:
     open-pull-requests-limit: 5
     allow:
       - dependency-type: "development"
+    cooldown:
+      default-days: 7
+
