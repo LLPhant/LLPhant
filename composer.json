@@ -32,7 +32,7 @@
         "opensearch-project/opensearch-php": "This is required for the OpenSearchVectorStore."
     },
     "require-dev": {
-        "codewithkyrian/chromadb-php":"1.0.0",
+        "codewithkyrian/chromadb-php": "1.0.0",
         "doctrine/orm": "^3",
         "doctrine/dbal": "^4",
         "elasticsearch/elasticsearch": "^8.15",
@@ -40,15 +40,15 @@
         "laravel/pint": "v1.15.3",
         "mockery/mockery": "^1.6.12",
         "opensearch-project/opensearch-php": "^2.3",
-        "pestphp/pest": "^v2.36.0",
-        "pestphp/pest-plugin-arch": "^2.7.0",
-        "pestphp/pest-plugin-type-coverage": "2.8.0",
-        "phpstan/phpstan": "1.10.55",
+        "pestphp/pest": "^3.0",
+        "pestphp/pest-plugin-arch": "^3.0",
+        "pestphp/pest-plugin-type-coverage": "^3.0",
+        "phpstan/phpstan": "^1.12 || ^2.0",
         "predis/predis": "^2.2",
-        "rector/rector": "^0.16.0",
+        "rector/rector": "^1.0 || ^2.0",
         "symfony/cache": "^7.2",
         "symfony/var-dumper": "^7.2",
-        "symfony/process": "^v7.1.8"
+        "symfony/process": "^7.1.8"
     },
     "autoload": {
         "psr-4": {
