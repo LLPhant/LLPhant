@@ -20,7 +20,7 @@ class MistralAIChat extends OpenAIChat
         $config->model ??= MistralAIChatModel::large->value;
         if (! $config->client instanceof Client) {
             if (! $config->apiKey) {
-                throw new MissingParameterException('You have to provide a OPENAI_API_KEY env var to request OpenAI.');
+                throw new MissingParameterException('You have to provide a MISTRAL_API_KEY env var to request Mistral AI.');
             }
             if (! $config->url) {
                 throw new MissingParameterException('You have to provide an url o to set OPENAI_BASE_URL env var to request OpenAI.');
