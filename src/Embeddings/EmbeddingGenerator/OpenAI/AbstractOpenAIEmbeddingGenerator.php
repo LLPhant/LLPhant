@@ -10,6 +10,7 @@ use Http\Discovery\Psr18ClientDiscovery;
 use LLPhant\Embeddings\Document;
 use LLPhant\Embeddings\DocumentUtils;
 use LLPhant\Embeddings\EmbeddingGenerator\EmbeddingGeneratorInterface;
+use LLPhant\Embeddings\EmbeddingGenerator\EmbeddingTotalTokensTrait;
 use LLPhant\Exception\MissingParameterException;
 use LLPhant\OpenAIConfig;
 use OpenAI;
@@ -21,6 +22,8 @@ use Psr\Http\Message\StreamFactoryInterface;
 
 abstract class AbstractOpenAIEmbeddingGenerator implements EmbeddingGeneratorInterface
 {
+    use EmbeddingTotalTokensTrait;
+
     public ClientContract $client;
 
     public int $batch_size_limit = 50;
@@ -78,6 +81,7 @@ abstract class AbstractOpenAIEmbeddingGenerator implements EmbeddingGeneratorInt
             'model' => $this->getModelName(),
             'input' => $text,
         ]);
+        $this->addUsedTokens($response->toArray());
 
         return $response->embeddings[0]->embedding;
     }
@@ -124,6 +128,7 @@ abstract class AbstractOpenAIEmbeddingGenerator implements EmbeddingGeneratorInt
                 ->withBody($this->factory->createStream(json_encode($body, JSON_THROW_ON_ERROR)));
             $response = $clientForBatch->sendRequest($request);
             $jsonResponse = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
+            $this->addUsedTokens($jsonResponse);
 
             if (\array_key_exists('data', $jsonResponse)) {
                 foreach ($jsonResponse['data'] as $key => $oneEmbeddingObject) {

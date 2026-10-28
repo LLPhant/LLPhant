@@ -152,3 +152,21 @@ it('can use timeout option', function () {
     // This expectation will be removed when using next version of Guzzle
     expect($generator->client->getConfig()['connect_timeout'])->toBe(99.0);
 });
+
+it('counts the prompt tokens reported by Ollama', function () {
+    $config = new OllamaConfig();
+    $config->model = 'fake-model';
+    $config->url = 'http://fakeurl';
+    $generator = new OllamaEmbeddingGenerator($config);
+
+    $mock = new MockHandler([
+        new Response(200, [], '{"embeddings": [[1, 2, 3]], "prompt_eval_count": 7}'),
+        new Response(200, [], '{"embeddings": [[1, 2, 3]]}'),
+    ]);
+    $generator->client = new GuzzleClient(['handler' => HandlerStack::create($mock)]);
+
+    $generator->embedText('first');
+    $generator->embedText('second, provider silent');
+
+    expect($generator->getTotalTokens())->toBe(7);
+});

@@ -10,7 +10,7 @@ use LLPhant\Embeddings\Document;
 use LLPhant\Embeddings\EmbeddingGenerator\LmStudio\LmStudioEmbeddingGenerator;
 use LLPhant\LmStudioConfig;
 
-it('embed a text', function () {
+it('can embed a text', function () {
     $config = new LmStudioConfig();
     $config->model = 'fake-model';
     $config->url = 'http://fakeurl';
@@ -66,4 +66,20 @@ it('embed documents', function () {
     $result = $generator->embedDocuments([$document]);
     expect($result)->toBeArray();
     expect($result[0])->toBeInstanceOf(Document::class);
+});
+
+it('counts the tokens reported by LM Studio', function () {
+    $config = new LmStudioConfig();
+    $config->model = 'fake-model';
+    $config->url = 'http://fakeurl';
+    $generator = new LmStudioEmbeddingGenerator($config);
+
+    $mock = new MockHandler([
+        new Response(200, [], '{"data": [{"embedding": [1, 2, 3]}], "usage": {"prompt_tokens": 4, "total_tokens": 4}}'),
+    ]);
+    $generator->client = new GuzzleClient(['handler' => HandlerStack::create($mock)]);
+
+    $generator->embedText('this is the text to embed');
+
+    expect($generator->getTotalTokens())->toBe(4);
 });
