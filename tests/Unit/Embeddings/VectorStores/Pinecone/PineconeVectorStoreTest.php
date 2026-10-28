@@ -188,3 +188,55 @@ it('maps document unique id correctly from fetched chunk range', function () {
     expect($documents)->toHaveCount(1)
         ->and(DocumentUtils::getUniqueId($documents[0]))->toBe('aType:aName:1');
 });
+
+it('stores the document metadata as a JSON string because Pinecone rejects nested objects', function () {
+    $document = DocumentFixtures::documentChunk(0, 'aType', 'aName');
+    $document->metadata = ['author' => 'Jane', 'tags' => ['a', 'b'], 'nested' => ['page' => 3]];
+
+    $client = Mockery::mock(PineconeClient::class);
+    $client->shouldReceive('upsert')
+        ->once()
+        ->with(
+            Mockery::on(fn (array $vectors): bool => $vectors[0]['metadata']['metadata'] === json_encode($document->metadata)),
+            ''
+        )
+        ->andReturn(true);
+
+    (new PineconeVectorStore($client))->addDocuments([$document]);
+});
+
+it('does not add a metadata field when the document has no metadata', function () {
+    $client = Mockery::mock(PineconeClient::class);
+    $client->shouldReceive('upsert')
+        ->once()
+        ->with(Mockery::on(fn (array $vectors): bool => ! array_key_exists('metadata', $vectors[0]['metadata'])), '')
+        ->andReturn(true);
+
+    (new PineconeVectorStore($client))->addDocuments([DocumentFixtures::documentChunk(0, 'aType', 'aName')]);
+});
+
+it('restores the document metadata when mapping matches', function () {
+    $metadata = ['author' => 'Jane', 'nested' => ['page' => 3]];
+    $client = Mockery::mock(PineconeClient::class);
+    $client->shouldReceive('query')->once()->andReturn([
+        [
+            'id' => 'abc123',
+            'metadata' => [
+                'content' => 'Document 1',
+                'sourceType' => 'aType',
+                'sourceName' => 'aName',
+                'chunkNumber' => 1,
+                'metadata' => json_encode($metadata),
+            ],
+        ],
+        [
+            'id' => 'def456',
+            'metadata' => ['content' => 'Document 2', 'metadata' => 'not json'],
+        ],
+    ]);
+
+    $results = (new PineconeVectorStore($client))->similaritySearch([0.1, 0.2]);
+
+    expect($results[0]->metadata)->toBe($metadata);
+    expect($results[1]->metadata)->toBe([]);
+});
