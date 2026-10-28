@@ -10,6 +10,8 @@ use LLPhant\Embeddings\DocumentUtils;
 use LLPhant\Embeddings\EmbeddingGenerator\OpenAI\AbstractOpenAIEmbeddingGenerator;
 use LLPhant\OpenAIConfig;
 use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 use Tests\Unit\Chat\MockOpenAIClient;
 
 const FAKE_EMBEDDING_ANSWER = <<<'JSON'
@@ -102,3 +104,36 @@ it('can embed text in non UTF8 encodings', function () {
 
     expect($generator->embedText($japanese))->toBeArray();
 });
+
+it('throws the API error instead of returning documents without embeddings', function () {
+    $config = new OpenAIConfig();
+    $config->apiKey = 'fake-key';
+    $config->client = new MockOpenAIClient();
+
+    $generator = new class($config) extends AbstractOpenAIEmbeddingGenerator
+    {
+        public function getEmbeddingLength(): int
+        {
+            return 1;
+        }
+
+        public function getModelName(): string
+        {
+            return 'test';
+        }
+
+        protected function createClientForBatch(): ClientInterface
+        {
+            // A PSR-18 client does not throw on 4xx/5xx responses
+            return new class implements ClientInterface
+            {
+                public function sendRequest(RequestInterface $request): ResponseInterface
+                {
+                    return new Response(429, [], '{"error": {"message": "Rate limit reached", "type": "requests"}}');
+                }
+            };
+        }
+    };
+
+    $generator->embedDocuments(DocumentUtils::documents('Sample document'));
+})->throws(\Exception::class, 'Rate limit reached');
