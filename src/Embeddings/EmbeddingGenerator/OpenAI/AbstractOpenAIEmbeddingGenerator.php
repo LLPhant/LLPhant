@@ -123,7 +123,15 @@ abstract class AbstractOpenAIEmbeddingGenerator implements EmbeddingGeneratorInt
                 ->withHeader('Authorization', 'Bearer '.$this->apiKey)
                 ->withBody($this->factory->createStream(json_encode($body, JSON_THROW_ON_ERROR)));
             $response = $clientForBatch->sendRequest($request);
-            $jsonResponse = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
+            $contents = $response->getBody()->getContents();
+            if ($response->getStatusCode() >= 400) {
+                throw new Exception(\sprintf('Embedding request failed with status %d: %s', $response->getStatusCode(), $contents));
+            }
+            $jsonResponse = json_decode($contents, true, 512, JSON_THROW_ON_ERROR);
+
+            if (\array_key_exists('error', $jsonResponse)) {
+                throw new Exception('Embedding request failed: '.json_encode($jsonResponse['error'], JSON_THROW_ON_ERROR));
+            }
 
             if (\array_key_exists('data', $jsonResponse)) {
                 foreach ($jsonResponse['data'] as $key => $oneEmbeddingObject) {
