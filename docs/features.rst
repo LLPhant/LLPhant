@@ -85,6 +85,13 @@ Comparison Table of all supported Language Models
      - ℹ️
      - ✅
      - ❌
+   * - cheapaimodel (via OpenAI API)
+     - ✅
+     - ✅
+     - ✅
+     - ℹ️
+     - ❌
+     - ❌
    * - VoyageAI (via OpenAI API)
      - ✅
      - ✅
