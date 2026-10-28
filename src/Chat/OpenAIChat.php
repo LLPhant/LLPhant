@@ -345,19 +345,15 @@ use Psr\Log\NullLogger;
                     yield $this->generateChat($newMessages);
                 }
 
+                // The chunk that carries the finish reason can still carry the last piece of text
+                $content = $partialResponse->choices[0]->delta->content;
+                if ($content !== null && $content !== '') {
+                    yield $content;
+                }
+
                 if (! is_null($partialResponse->choices[0]->finishReason)) {
                     break;
                 }
-
-                if ($partialResponse->choices[0]->delta->content === null) {
-                    continue;
-                }
-
-                if ($partialResponse->choices[0]->delta->content === '') {
-                    continue;
-                }
-
-                yield $partialResponse->choices[0]->delta->content;
             }
         };
 
