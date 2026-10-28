@@ -643,3 +643,59 @@ it('keeps call association in Gemini follow-up transcript for parallel tool call
     expect($payloadByCallId['call_4234484']['arguments'])->toBe(['city' => 'Paris']);
     expect($payloadByCallId['call_4234487']['arguments'])->toBe(['city' => 'Tokyo']);
 });
+
+it('keeps the text of the chunk that carries the finish reason when streaming', function () {
+    $chunk = fn (array $delta, ?string $finishReason = null): string => 'data: '.json_encode([
+        'id' => 'chatcmpl-stream',
+        'object' => 'chat.completion.chunk',
+        'created' => 1677652288,
+        'model' => 'gpt-4o-mini',
+        'choices' => [['index' => 0, 'delta' => $delta, 'finish_reason' => $finishReason]],
+    ])."\n\n";
+
+    $stream = $chunk(['role' => 'assistant', 'content' => 'Hello'])
+        .$chunk(['content' => ' world'], 'stop')
+        ."data: [DONE]\n\n";
+
+    $mock = new MockHandler([new Response(200, ['Content-Type' => 'text/event-stream'], $stream)]);
+    $openAIClient = OpenAI::factory()
+        ->withApiKey('fake-key')
+        ->withHttpClient(new GuzzleClient(['handler' => HandlerStack::create($mock)]))
+        ->make();
+
+    $config = new OpenAIConfig();
+    $config->model = 'gpt-4o-mini';
+    $config->client = $openAIClient;
+
+    $response = (new OpenAIChat($config))->generateChatStream([Message::user('Hi')]);
+
+    expect($response->getContents())->toBe('Hello world');
+});
+
+it('keeps the text of the chunk that carries the finish reason when streaming from Gemini', function () {
+    $chunk = fn (array $delta, ?string $finishReason = null): string => 'data: '.json_encode([
+        'id' => 'chatcmpl-stream',
+        'object' => 'chat.completion.chunk',
+        'created' => 1792316691,
+        'model' => 'gemini-3.5-flash',
+        'choices' => [['index' => 0, 'delta' => $delta, 'finish_reason' => $finishReason]],
+    ])."\n\n";
+
+    $stream = $chunk(['role' => 'assistant', 'content' => 'Hello'])
+        .$chunk(['content' => ' world'], 'stop')
+        ."data: [DONE]\n\n";
+
+    $mock = new MockHandler([new Response(200, ['Content-Type' => 'text/event-stream'], $stream)]);
+    $openAIClient = OpenAI::factory()
+        ->withApiKey('fake-key')
+        ->withHttpClient(new GuzzleClient(['handler' => HandlerStack::create($mock)]))
+        ->make();
+
+    $config = new GeminiOpenAIConfig('fake-key');
+    $config->model = 'gemini-3.5-flash';
+    $config->client = $openAIClient;
+
+    $response = (new GeminiAIChat($config))->generateChatStream([Message::user('Hi')]);
+
+    expect($response->getContents())->toBe('Hello world');
+});

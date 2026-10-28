@@ -137,16 +137,15 @@ class GeminiAIChat extends OpenAIChat
                     yield $this->generateChat($newMessages);
                 }
 
+                // The chunk that carries the finish reason can still carry the last piece of text
+                $content = $delta['content'] ?? null;
+                if (is_string($content) && $content !== '') {
+                    yield $content;
+                }
+
                 if (! is_null($finishReason)) {
                     break;
                 }
-
-                $content = $delta['content'] ?? null;
-                if (! is_string($content) || $content === '') {
-                    continue;
-                }
-
-                yield $content;
             }
         };
 
