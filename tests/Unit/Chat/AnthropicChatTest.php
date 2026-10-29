@@ -106,7 +106,7 @@ it('returns a stream response using generateStreamOfText()', function () {
     $anthropicChat = anthropicChatWithFakeHttpConnection(ANTROPIC_FAKE_STREAM_ANSWER);
     $response = $anthropicChat->generateStreamOfText('this is the prompt question');
     expect($response)->toBeInstanceof(StreamInterface::class)->and($response->__toString())->toBe('Hello!');
-    expect($anthropicChat->getTotalTokens())->toBe(15);
+    expect($anthropicChat->getTotalTokens())->toBe(40);
 });
 
 it('returns a stream response using generateChatStream()', function () {

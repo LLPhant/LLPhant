@@ -12,7 +12,9 @@ class AnthropicStreamResponse
 {
     final public const DATA_PREFIX = 'data: ';
 
-    use AnthropicTotalTokensTrait;
+    private int $inputTokens = 0;
+
+    private int $outputTokens = 0;
 
     public function __construct(
         protected ResponseInterface $response,
@@ -47,7 +49,7 @@ class AnthropicStreamResponse
 
             $type = $json['type'];
 
-            $this->addUsedTokens($json);
+            $this->updateUsedTokens($json);
 
             if ($type === 'content_block_delta' && $json['delta']['type'] === 'text_delta') {
                 $this->finalStream->write($json['delta']['text']);
@@ -82,6 +84,33 @@ class AnthropicStreamResponse
 
     public function getTotalTokens(): int
     {
-        return $this->totalTokens;
+        return $this->inputTokens + $this->outputTokens;
+    }
+
+    /**
+     * The usage of a stream is cumulative: message_start reports it under message.usage (the input
+     * and cache tokens, and a placeholder output count) and message_delta repeats it under usage
+     * with the final output count, so the latest value reported for each counter wins.
+     *
+     * @param  array<string, mixed>  $json
+     */
+    private function updateUsedTokens(array $json): void
+    {
+        $usage = $json['usage'] ?? $json['message']['usage'] ?? null;
+        if (! \is_array($usage)) {
+            return;
+        }
+
+        $inputKeys = ['input_tokens', 'cache_creation_input_tokens', 'cache_read_input_tokens'];
+        if (\count(array_intersect_key($usage, array_flip($inputKeys))) > 0) {
+            $this->inputTokens = 0;
+            foreach ($inputKeys as $key) {
+                $this->inputTokens += (int) ($usage[$key] ?? 0);
+            }
+        }
+
+        if (\array_key_exists('output_tokens', $usage)) {
+            $this->outputTokens = (int) $usage['output_tokens'];
+        }
     }
 }
