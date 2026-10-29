@@ -516,3 +516,73 @@ it('recovers a malformed tool call from message content', function () {
         ->and($mailer->lastMessage)->toStartWith('The email has been sent to student@foo.com with the subject Marie Curie Information')
         ->and($chat->lastFunctionCalled()?->definition->name)->toBe('sendMail');
 });
+
+function ollamaStreamPayload(OllamaChat $chat, MockHandler $mock): array
+{
+    return Utility::decodeJson($mock->getLastRequest()->getBody()->getContents());
+}
+
+it('OllamaChat generateStreamOfText sends the system message', function () {
+    $mock = new MockHandler([new Response(200, [], '')]);
+    $config = new OllamaConfig();
+    $config->model = 'test';
+    $chat = new OllamaChat($config);
+    $chat->client = new Client(['handler' => HandlerStack::create($mock)]);
+    $chat->setSystemMessage('You are a pirate');
+
+    $chat->generateStreamOfText('this is the prompt question');
+
+    expect(ollamaStreamPayload($chat, $mock)['system'])->toBe('You are a pirate');
+});
+
+it('OllamaChat generateStreamOfText leaves out the system message when none is set', function () {
+    $mock = new MockHandler([new Response(200, [], '')]);
+    $config = new OllamaConfig();
+    $config->model = 'test';
+    $chat = new OllamaChat($config);
+    $chat->client = new Client(['handler' => HandlerStack::create($mock)]);
+
+    $chat->generateStreamOfText('this is the prompt question');
+
+    expect(ollamaStreamPayload($chat, $mock))->not->toHaveKey('system');
+});
+
+it('OllamaChat generateStreamOfText sends the json format when it is enabled', function () {
+    $mock = new MockHandler([new Response(200, [], '')]);
+    $config = new OllamaConfig();
+    $config->model = 'test';
+    $config->formatJson = true;
+    $chat = new OllamaChat($config);
+    $chat->client = new Client(['handler' => HandlerStack::create($mock)]);
+
+    $chat->generateStreamOfText('this is the prompt question');
+
+    expect(ollamaStreamPayload($chat, $mock)['format'])->toBe('json');
+});
+
+it('OllamaChat generateChatStream sends the json format when it is enabled', function () {
+    $mock = new MockHandler([new Response(200, [], '')]);
+    $config = new OllamaConfig();
+    $config->model = 'test';
+    $config->formatJson = true;
+    $chat = new OllamaChat($config);
+    $chat->client = new Client(['handler' => HandlerStack::create($mock)]);
+
+    $chat->generateChatStream([Message::user('test')]);
+
+    expect(ollamaStreamPayload($chat, $mock)['format'])->toBe('json');
+});
+
+it('OllamaChat streams leave out the json format by default', function () {
+    $mock = new MockHandler([new Response(200, [], ''), new Response(200, [], '')]);
+    $config = new OllamaConfig();
+    $config->model = 'test';
+    $chat = new OllamaChat($config);
+    $chat->client = new Client(['handler' => HandlerStack::create($mock)]);
+
+    $chat->generateStreamOfText('this is the prompt question');
+    expect(ollamaStreamPayload($chat, $mock))->not->toHaveKey('format');
+
+    $chat->generateChatStream([Message::user('test')]);
+    expect(ollamaStreamPayload($chat, $mock))->not->toHaveKey('format');
+});

@@ -133,6 +133,15 @@ class OllamaChat implements ChatInterface
             'prompt' => $prompt,
             'stream' => true,
         ];
+
+        if (isset($this->systemMessage->content)) {
+            $params['system'] = $this->systemMessage->content;
+        }
+
+        if ($this->formatJson) {
+            $params['format'] = 'json';
+        }
+
         $response = $this->sendRequest(
             'POST',
             'generate',
@@ -217,6 +226,11 @@ class OllamaChat implements ChatInterface
             'messages' => $this->prepareMessages($messages),
             'stream' => true,
         ];
+
+        if ($this->formatJson) {
+            $params['format'] = 'json';
+        }
+
         $response = $this->sendRequest(
             'POST',
             'chat',
