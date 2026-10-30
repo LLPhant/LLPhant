@@ -192,9 +192,7 @@ class OllamaChat implements ChatInterface
             foreach ($message['tool_calls'] as $toolCall) {
                 $functionName = $toolCall['function']['name'];
                 $toolResult = $this->callFunction($functionName, $toolCall['function']['arguments']);
-                if (is_string($toolResult)) {
-                    $toolsOutput[] = Message::toolResult($toolResult);
-                }
+                $toolsOutput[] = Message::toolResult($toolResult);
             }
         }
 
