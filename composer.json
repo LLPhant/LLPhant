@@ -52,7 +52,7 @@
         "predis/predis": "^2.4",
         "rector/rector": "^2",
         "scotteuser/pinecone-php": "^1.0.4",
-        "symfony/cache": "^7.2",
+        "symfony/cache": "^8.1",
         "symfony/process": "^v7.3.11",
         "symfony/var-dumper": "^7.2"
     },
