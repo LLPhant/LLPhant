@@ -207,10 +207,10 @@ class OllamaChat implements ChatInterface
 
         if ($toolsOutput !== []) {
             $assistantMessage = Message::assistant($message['content'] ?? null);
-            // Note: We do NOT set $assistantMessage->tool_calls here because 
-            // we've already executed the tool calls. Including tool_calls in the 
-            // message history can cause Ollama to re-process them, leading to 
-            // duplicate tool calls. The tool results are already in $toolsOutput.
+            // We do NOT set $assistantMessage->tool_calls here because Ollama's API
+            // may re-process tool_calls that are included in the message history, leading to
+            // duplicate tool calls. The tool results are already in $toolsOutput and that's
+            // sufficient for Ollama to continue the conversation.
 
             return $this->generateChatRecursive(\array_merge($messages, [$assistantMessage], $toolsOutput));
         }
