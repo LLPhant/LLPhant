@@ -168,7 +168,7 @@ class FileSystemVectorStore extends VectorStoreBase implements DocumentStore
     }
 
     /**
-     * @return array{content: string, formattedContent: string|null, embedding: float[]|null, sourceType: string, sourceName: string, chunkNumber: int, hash: string}
+     * @return array{content: string, formattedContent: string|null, embedding: float[]|null, sourceType: string, sourceName: string, chunkNumber: int, hash: string, metadata: array<string, mixed>}
      */
     private function documentToArray(Document $document): array
     {
@@ -180,6 +180,7 @@ class FileSystemVectorStore extends VectorStoreBase implements DocumentStore
             'sourceName' => $document->sourceName,
             'chunkNumber' => $document->chunkNumber,
             'hash' => $document->hash,
+            'metadata' => $document->metadata,
         ];
     }
 

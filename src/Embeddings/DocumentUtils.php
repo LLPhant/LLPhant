@@ -36,7 +36,7 @@ class DocumentUtils
     }
 
     /**
-     * @param  array{content: string, formattedContent: string, sourceType: string, sourceName: string, hash: string, embedding: float[], chunkNumber: int}[]  $documentDataArray
+     * @param  array{content: string, formattedContent: string, sourceType: string, sourceName: string, hash: string, embedding: float[], chunkNumber: int, metadata?: array<string, mixed>}[]  $documentDataArray
      * @return Document[]
      */
     public static function createDocumentsFromArray(array $documentDataArray): array
@@ -50,7 +50,7 @@ class DocumentUtils
     }
 
     /**
-     * @param  array{content: string, formattedContent: string, sourceType: string, sourceName: string, hash: string, embedding: float[], chunkNumber: int}  $documentData
+     * @param  array{content: string, formattedContent: string, sourceType: string, sourceName: string, hash: string, embedding: float[], chunkNumber: int, metadata?: array<string, mixed>}  $documentData
      */
     public static function createDocumentFromArray(array $documentData): Document
     {
@@ -62,6 +62,7 @@ class DocumentUtils
         $document->sourceName = $documentData['sourceName'];
         $document->hash = $documentData['hash'];
         $document->chunkNumber = $documentData['chunkNumber'];
+        $document->metadata = $documentData['metadata'] ?? [];
 
         return $document;
     }

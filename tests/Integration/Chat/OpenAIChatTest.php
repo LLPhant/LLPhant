@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Chat;
 
+use LLPhant\Chat\Enums\ChatRole;
 use LLPhant\Chat\Enums\OpenAIChatModel;
 use LLPhant\Chat\FunctionInfo\FunctionBuilder;
 use LLPhant\Chat\FunctionInfo\FunctionInfo;
@@ -30,14 +31,16 @@ it('can generate some stuff with a system prompt', function () {
 
 it('can load any existing model', function () {
     $config = new OpenAIConfig();
-    $config->model = 'gpt-3.5-turbo-16k';
+    $config->model = 'gpt-4o-mini';
     $chat = new OpenAIChat($config);
     $response = $chat->generateText('one + one ?');
     expect($response)->toBeString();
 });
 
-it('can call a function', function () {
-    $chat = new OpenAIChat();
+it('can call a function', function (string $model) {
+    $config = new OpenAIConfig();
+    $config->model = $model;
+    $chat = new OpenAIChat($config);
 
     $subject = new Parameter('subject', 'string', 'the subject of the mail');
     $body = new Parameter('body', 'string', 'the body of the mail');
@@ -56,7 +59,14 @@ it('can call a function', function () {
     $chat->addFunction($function);
     $chat->setSystemMessage('You are an AI that deliver information using the email system. When you have enough information to answer the question of the user you send a mail');
     $chat->generateText('Who is Marie Curie in one line? My email is student@foo.com');
-});
+})->with([
+    'gpt-5-mini',
+    'gpt-5-nano',
+    'gpt-5.6-sol',
+    'gpt-5.5',
+    'gpt-4o-mini',
+    'gpt-5.4',
+]);
 
 it('calls tool functions during a chat', function () {
     $chat = new OpenAIChat();
@@ -78,7 +88,7 @@ it('calls tool functions during a chat', function () {
 it('can call a function and provide the result to the assistant', function () {
     $config = new OpenAIConfig();
     //Functions work only with older models. Tools are needed with newer models
-    $config->model = OpenAIChatModel::Gpt35Turbo->value;
+    $config->model = OpenAIChatModel::Gpt4o->value;
     $chat = new OpenAIChat($config);
     $location = new Parameter('location', 'string', 'the name of the city, the state or province and the nation');
     $weatherExample = new WeatherExample();
@@ -122,7 +132,7 @@ it('can call a function and provide the result to the assistant', function () {
 it('can call a tool and provide the result to the assistant', function () {
     $config = new OpenAIConfig();
     //Tools are needed with newer models
-    $config->model = OpenAIChatModel::Gpt4Turbo->value;
+    $config->model = OpenAIChatModel::Gpt4Omini->value;
     $chat = new OpenAIChat($config);
     $location = new Parameter('location', 'string', 'the name of the city, the state or province and the nation');
     $weatherExample = new WeatherExample();
@@ -174,7 +184,7 @@ it('can generate a chat stream', function () {
 it('can call a function with streaming', function () {
     $config = new OpenAIConfig();
     //Tools are needed with newer models
-    $config->model = OpenAIChatModel::Gpt35Turbo->value;
+    $config->model = OpenAIChatModel::Gpt4o->value;
     $chat = new OpenAIChat($config);
 
     $testFunction = new TestFunctionLLPhant();
@@ -201,7 +211,7 @@ it('reports errors correctly', function () {
 it('can call a function with no arguments', function () {
     $config = new OpenAIConfig();
     //Tools are needed with newer models
-    $config->model = OpenAIChatModel::Gpt35Turbo->value;
+    $config->model = OpenAIChatModel::Gpt4o->value;
     $chat = new OpenAIChat($config);
 
     $itemListObject = new class
@@ -231,7 +241,7 @@ it('can call a function with no arguments', function () {
 it('normalizes boolean tool parameters when calling a function', function () {
     $config = new OpenAIConfig();
     //Tools are needed with newer models
-    $config->model = OpenAIChatModel::Gpt35Turbo->value;
+    $config->model = OpenAIChatModel::Gpt4o->value;
     $chat = new OpenAIChat($config);
 
     $featureFlagTool = new class
@@ -263,4 +273,70 @@ it('normalizes boolean tool parameters when calling a function', function () {
     expect($featureFlagTool->enabledType)->toBe('bool')
         ->and($featureFlagTool->enabled)->toBeTrue()
         ->and($result)->toContain('enabled');
+});
+
+it('passes the arguments streamed across several tool call deltas to the function', function () {
+    $config = new OpenAIConfig();
+    //Tools are needed with newer models
+    $config->model = OpenAIChatModel::Gpt4o->value;
+    $chat = new OpenAIChat($config);
+
+    $obj = new class
+    {
+        /** @var string[] */
+        public array $cities = [];
+
+        public function getWeather(string $city): string
+        {
+            $this->cities[] = $city;
+
+            return "{$city}: 18 C, cloudy";
+        }
+    };
+
+    $chat->addTool(new FunctionInfo('getWeather', $obj, 'Gets the weather', [new Parameter('city', 'string', 'The city')], [new Parameter('city', 'string', 'The city')]));
+
+    $response = $chat->generateChatStream([Message::user('Weather in Paris and London?')]);
+
+    expect(strtolower($response->getContents()))->toContain('cloudy');
+    sort($obj->cities);
+    expect($obj->cities)->toBe(['London', 'Paris']);
+});
+
+it('does not serialize a legacy name field on tool result messages for OpenAI chat completions', function () {
+    $config = new OpenAIConfig();
+    $config->model = OpenAIChatModel::Gpt4o->value;
+    $chat = new OpenAIChat($config);
+
+    $location = new Parameter('location', 'string', 'the city');
+    $weatherExample = new WeatherExample();
+    $tool = new FunctionInfo(
+        'currentWeatherForLocation',
+        $weatherExample,
+        'returns the current weather in the given location',
+        [$location]
+    );
+
+    $chat->addTool($tool);
+    $chat->setSystemMessage('You MUST call currentWeatherForLocation before answering any user question.');
+
+    try {
+        $chat->generateText('What is the weather in Venice?');
+    } catch (HttpException) {
+        // The current behavior can fail remotely before we inspect the second request payload.
+    }
+
+    expect($chat->argsLog)->toHaveCount(2);
+
+    /** @var array<int, Message> $messages */
+    $messages = $chat->argsLog[1]['messages'];
+    $toolMessages = array_values(array_filter(
+        $messages,
+        static fn (Message $message): bool => $message->role === ChatRole::Tool
+    ));
+
+    expect($toolMessages)->not->toBeEmpty();
+    expect($toolMessages[0]->jsonSerialize())
+        ->toHaveKey('tool_call_id')
+        ->not->toHaveKey('name');
 });

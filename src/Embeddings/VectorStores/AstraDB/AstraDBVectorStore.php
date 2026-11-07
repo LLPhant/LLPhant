@@ -64,6 +64,7 @@ class AstraDBVectorStore extends VectorStoreBase
                     'sourceName' => $document->sourceName,
                     'hash' => $document->hash,
                     'chunkNumber' => $document->chunkNumber,
+                    'metadata' => $document->metadata,
                 ],
                 $documents
             )

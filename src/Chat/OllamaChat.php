@@ -133,6 +133,15 @@ class OllamaChat implements ChatInterface
             'prompt' => $prompt,
             'stream' => true,
         ];
+
+        if (isset($this->systemMessage->content)) {
+            $params['system'] = $this->systemMessage->content;
+        }
+
+        if ($this->formatJson) {
+            $params['format'] = 'json';
+        }
+
         $response = $this->sendRequest(
             'POST',
             'generate',
@@ -192,9 +201,7 @@ class OllamaChat implements ChatInterface
             foreach ($message['tool_calls'] as $toolCall) {
                 $functionName = $toolCall['function']['name'];
                 $toolResult = $this->callFunction($functionName, $toolCall['function']['arguments']);
-                if (is_string($toolResult)) {
-                    $toolsOutput[] = Message::toolResult($toolResult);
-                }
+                $toolsOutput[] = Message::toolResult($toolResult);
             }
         }
 
@@ -217,6 +224,11 @@ class OllamaChat implements ChatInterface
             'messages' => $this->prepareMessages($messages),
             'stream' => true,
         ];
+
+        if ($this->formatJson) {
+            $params['format'] = 'json';
+        }
+
         $response = $this->sendRequest(
             'POST',
             'chat',

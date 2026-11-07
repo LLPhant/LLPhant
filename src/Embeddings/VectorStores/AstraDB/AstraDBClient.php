@@ -115,7 +115,7 @@ class AstraDBClient
 
     /**
      * @param  array<float>  $embedding
-     * @return array{content: string, formattedContent: string, sourceType: string, sourceName: string, hash: string, embedding: float[], chunkNumber: int}[]
+     * @return array{content: string, formattedContent: string, sourceType: string, sourceName: string, hash: string, embedding: float[], chunkNumber: int, metadata?: array<string, mixed>}[]
      *
      * @throws \JsonException
      */
@@ -132,6 +132,7 @@ class AstraDBClient
                     'sourceName' => 1,
                     'hash' => 1,
                     'chunkNumber' => 1,
+                    'metadata' => 1,
                     '$vector' => 1,
                 ],
                 'options' => [
@@ -146,7 +147,7 @@ class AstraDBClient
 
         /**
          * @param  array<string, mixed>  $documentValues
-         * @return array{content: string, formattedContent: string, sourceType: string, sourceName: string, hash: string, embedding: float[], chunkNumber: int}[]
+         * @return array{content: string, formattedContent: string, sourceType: string, sourceName: string, hash: string, embedding: float[], chunkNumber: int, metadata?: array<string, mixed>}[]
          */
         $mapFunction = function (array $documentValues): array {
             // Add the new "column" 'embedding', since we can't rename the '$vector' one
@@ -155,7 +156,7 @@ class AstraDBClient
             return $documentValues;
         };
 
-        /** @var array{content: string, formattedContent: string, sourceType: string, sourceName: string, hash: string, embedding: float[], chunkNumber: int}[] $result */
+        /** @var array{content: string, formattedContent: string, sourceType: string, sourceName: string, hash: string, embedding: float[], chunkNumber: int, metadata?: array<string, mixed>}[] $result */
         $result = array_map($mapFunction, $result['data']['documents']);
 
         return $result;

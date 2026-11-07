@@ -46,6 +46,23 @@ If it's OK for you to use the default ``Document`` class, you can go this way:
 
 To create your own data reader you need to create a class that implements the ``DataReader`` interface.
 
+Custom metadata
+---------------
+
+You can attach your own attributes to a document using the ``metadata`` array.
+They are kept on every chunk created by the ``DocumentSplitter`` and returned by the vector store with the search results.
+
+.. code-block:: php
+
+   $document = new Document();
+   $document->content = 'Paris is the capital of France';
+   $document->metadata = ['itemId' => 42, 'tags' => ['geo']];
+
+   // ... after a similarity search
+   $results[0]->metadata; // ['itemId' => 42, 'tags' => ['geo']]
+
+Metadata is stored by the AstraDB, Elasticsearch, FileSystem, Memory, Milvus, MongoDB, OpenSearch, Qdrant, Redis and Typesense vector stores.
+
 Document Splitter
 -----------------
 

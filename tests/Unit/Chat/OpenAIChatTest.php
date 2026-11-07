@@ -8,8 +8,10 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 use LLPhant\Chat\FunctionInfo\FunctionInfo;
 use LLPhant\Chat\FunctionInfo\Parameter;
+use LLPhant\Chat\GeminiAIChat;
 use LLPhant\Chat\Message;
 use LLPhant\Chat\OpenAIChat;
+use LLPhant\GeminiOpenAIConfig;
 use LLPhant\OpenAIConfig;
 use Mockery;
 use OpenAI;
@@ -333,6 +335,88 @@ it('OpenAIChat generateChat loops for MULTIPLE rounds of tool calls', function (
     expect($obj->calls)->toBe(2);
 });
 
+it('does not serialize name on tool messages in OpenAI follow-up requests', function () {
+    $openAIAnswer1 = <<<'JSON'
+    {
+      "id": "chatcmpl-1",
+      "object": "chat.completion",
+      "created": 1677652288,
+      "model": "gpt-4o-mini",
+      "choices": [{
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [{
+            "id": "call_weather_1",
+            "type": "function",
+            "function": { "name": "getWeather", "arguments": "{\"city\":\"Venice\"}" }
+          }]
+        },
+        "finish_reason": "tool_calls"
+      }]
+    }
+    JSON;
+
+    $openAIAnswer2 = <<<'JSON'
+    {
+      "id": "chatcmpl-2",
+      "object": "chat.completion",
+      "created": 1677652289,
+      "model": "gpt-4o-mini",
+      "choices": [{
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "It is cloudy."
+        },
+        "finish_reason": "stop"
+      }]
+    }
+    JSON;
+
+    $mock = new MockHandler([
+        new Response(200, ['Content-Type' => 'application/json'], $openAIAnswer1),
+        new Response(200, ['Content-Type' => 'application/json'], $openAIAnswer2),
+    ]);
+    $openAIClient = OpenAI::factory()
+        ->withApiKey('fake-key')
+        ->withHttpClient(new GuzzleClient(['handler' => HandlerStack::create($mock)]))
+        ->make();
+
+    $config = new OpenAIConfig();
+    $config->model = 'gpt-4o-mini';
+    $config->client = $openAIClient;
+    $chat = new OpenAIChat($config);
+
+    $tool = new class
+    {
+        public function getWeather(string $city): string
+        {
+            return "{$city}: cloudy";
+        }
+    };
+
+    $chat->addTool(new FunctionInfo('getWeather', $tool, 'Gets the weather', [new Parameter('city', 'string', 'The city')], [new Parameter('city', 'string', 'The city')]));
+
+    $response = $chat->generateChat([Message::user('Weather in Venice?')]);
+
+    expect($response)->toBe('It is cloudy.');
+    expect($chat->argsLog)->toHaveCount(2);
+
+    /** @var Message[] $followUpMessages */
+    $followUpMessages = $chat->argsLog[1]['messages'];
+    $toolMessages = array_values(array_filter(
+        $followUpMessages,
+        static fn (Message $message): bool => $message->role->value === 'tool'
+    ));
+
+    expect($toolMessages)->toHaveCount(1);
+    expect($toolMessages[0]->jsonSerialize())
+        ->toHaveKey('tool_call_id')
+        ->not->toHaveKey('name');
+});
+
 it('passes the arguments streamed across several tool call deltas to the function', function () {
     $chunk = fn (array $delta, ?string $finishReason = null): string => 'data: '.json_encode([
         'id' => 'chatcmpl-stream',
@@ -428,10 +512,10 @@ it('calls every streamed tool call when the stream has no indexes and finishes w
         ->withHttpClient(new GuzzleClient(['handler' => HandlerStack::create($mock)]))
         ->make();
 
-    $config = new OpenAIConfig();
+    $config = new GeminiOpenAIConfig('fake-key');
     $config->model = 'gemini-3.5-flash';
     $config->client = $openAIClient;
-    $chat = new OpenAIChat($config);
+    $chat = new GeminiAIChat($config);
 
     $obj = new class
     {
@@ -459,4 +543,103 @@ it('defaults to a model OpenAI still serves', function () {
 
     // gpt-4-turbo shuts down on 2026-10-23, see https://developers.openai.com/api/docs/deprecations
     expect($config->model)->toBe('gpt-5.6-sol');
+});
+
+it('sets reasoning_effort to none when GPT-5 tools are sent through chat completions', function () {
+    $config = new OpenAIConfig();
+    $config->client = new MockOpenAIClient();
+    $chat = new OpenAIChat($config);
+
+    $tool = new class
+    {
+        public function ping(): string
+        {
+            return 'pong';
+        }
+    };
+
+    $chat->addTool(new FunctionInfo('ping', $tool, 'Simple ping', []));
+    $chat->generateChatOrReturnFunctionToCall([Message::user('call ping')]);
+
+    expect($chat->argsLog[0]['reasoning_effort'])->toBe('none');
+});
+
+it('keeps call association in Gemini follow-up transcript for parallel tool calls', function () {
+    $stream = file_get_contents(__DIR__.'/../../Fixtures/OpenAI/gemini-openai-compat-parallel-tool-calls.sse');
+
+    $finalAnswer = <<<'JSON'
+    {
+      "id": "chatcmpl-final",
+      "object": "chat.completion",
+      "created": 1792316691,
+      "model": "gemini-3.5-flash",
+      "choices": [{
+        "index": 0,
+        "message": { "role": "assistant", "content": "Cloudy in both cities." },
+        "finish_reason": "stop"
+      }]
+    }
+    JSON;
+
+    $mock = new MockHandler([
+        new Response(200, ['Content-Type' => 'text/event-stream'], $stream),
+        new Response(200, ['Content-Type' => 'application/json'], $finalAnswer),
+    ]);
+    $openAIClient = OpenAI::factory()
+        ->withApiKey('fake-key')
+        ->withHttpClient(new GuzzleClient(['handler' => HandlerStack::create($mock)]))
+        ->make();
+
+    $config = new GeminiOpenAIConfig('fake-key');
+    $config->model = 'gemini-3.5-flash';
+    $config->client = $openAIClient;
+    $chat = new GeminiAIChat($config);
+
+    $obj = new class
+    {
+        public function get_weather(string $city): string
+        {
+            return '18 C';
+        }
+    };
+
+    $chat->addTool(new FunctionInfo('get_weather', $obj, 'Gets the weather', [new Parameter('city', 'string', 'The city')], [new Parameter('city', 'string', 'The city')]));
+
+    $response = $chat->generateChatStream([Message::user('Weather in Paris and Tokyo?')]);
+
+    expect($response->getContents())->toBe('Cloudy in both cities.');
+
+    $followUpMessages = $chat->argsLog[1]['messages'];
+    $assistantMessages = array_filter(
+        $followUpMessages,
+        static fn (Message $message): bool => $message->role->value === 'assistant'
+    );
+    expect($assistantMessages)->toBe([]);
+
+    $functionMessages = array_values(array_filter(
+        $followUpMessages,
+        static fn (Message $message): bool => $message->role->value === 'function'
+    ));
+    expect($functionMessages)->toHaveCount(2);
+
+    $payloadByCallId = [];
+    foreach ($functionMessages as $functionMessage) {
+        /** @var array{
+         *     tool_call_id: string,
+         *     arguments: array{city: string},
+         *     result: string,
+         *     extra_content?: array{google?: array{thought_signature?: string}}
+         * } $payload
+         */
+        $payload = json_decode($functionMessage->content, true, 512, JSON_THROW_ON_ERROR);
+        $payloadByCallId[$payload['tool_call_id']] = $payload;
+        expect($functionMessage->name)->toBe('get_weather');
+        expect($payload['result'])->toBe('18 C');
+    }
+
+    expect($payloadByCallId)->toHaveKey('call_4234484');
+    expect($payloadByCallId)->toHaveKey('call_4234487');
+    expect($payloadByCallId['call_4234484']['extra_content']['google']['thought_signature'] ?? null)->toBeString();
+    expect($payloadByCallId['call_4234484']['arguments'])->toBe(['city' => 'Paris']);
+    expect($payloadByCallId['call_4234487']['arguments'])->toBe(['city' => 'Tokyo']);
 });

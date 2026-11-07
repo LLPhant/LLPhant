@@ -42,14 +42,15 @@ replace it with any Atlas Cloud model identifier available in your account.
 Gemini
 ------
 
-We support Gemini through its OpenAI API compatibility. Here is an example:
+We support Gemini through its OpenAI-compatible API with a dedicated chat class.
+Use ``GeminiAIChat`` together with ``GeminiOpenAIConfig``.
 
 .. code-block:: php
 
     $config = new GeminiOpenAIConfig();
     $config->apiKey = "your_api_key";
     $config->model = 'gemini-2.0-flash';
-    $chat = new OpenAIChat($config);
+    $chat = new GeminiAIChat($config);
     $response = $chat->generateText('what is one + one ?');
 
 If you do not specify an api key, the ``GeminiOpenAIConfig`` tries to read it from the ``GEMINI_API_KEY`` environment variable.
@@ -74,6 +75,27 @@ The default base URL is ``https://api.heabsy.com/v1`` and the default model is
 ``qwen38``, which you can change with the ``HEABSY_MODEL`` environment variable or
 replace with any model id from the `Heabsy model catalog <https://heabsy.com/models>`_.
 Heabsy does not provide an embeddings endpoint.
+
+Gisoo
+-----
+
+`Gisoo <https://gisoo.pro/docs>`_ is a multi-model gateway with an OpenAI-compatible API,
+so you can use it through ``OpenAIChat`` and an OpenAI embedding generator such as
+``OpenAI3SmallEmbeddingGenerator`` with the dedicated ``GisooConfig`` helper.
+
+.. code-block:: php
+
+    $config = new GisooConfig();
+    $config->apiKey = 'your_gisoo_api_key';
+    $config->model = 'gpt-5-mini';
+    $chat = new OpenAIChat($config);
+    $response = $chat->generateText('what is one + one ?');
+
+If you do not specify an api key, the ``GisooConfig`` tries to read it from the
+``GISOO_API_KEY`` environment variable; it never falls back to ``OPENAI_API_KEY``.
+The default base URL is ``https://gisoo.pro/api/v1`` and the default model is
+``gpt-5-mini``, which you can change with the ``GISOO_MODEL`` environment variable or replace with
+any model id from the `Gisoo model catalog <https://gisoo.pro/docs/models>`_.
 
 Mistral
 -------
@@ -168,7 +190,7 @@ The API to generate text using OpenAI will only be from the chat API.
 So even if you want to generate a completion for a simple question under the hood it will use the chat API.
 This is why this class is called OpenAIChat.
 
-You can use the ``OpenAIChat``, ``MistralAIChat`` or ``OllamaChat`` to generate text or to create a chat.
+You can use ``OpenAIChat``, ``GeminiAIChat``, ``MistralAIChat`` or ``OllamaChat`` to generate text or to create a chat.
 
 We can use it to simply generate text from a prompt.
 This will ask directly an answer from the LLM.

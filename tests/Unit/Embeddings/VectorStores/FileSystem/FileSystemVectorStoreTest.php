@@ -42,6 +42,16 @@ describe('FileSystemVectorStore', function () {
             ->and($result[1]->content)->toBe('Second example');
     });
 
+    it('keeps the document metadata', function () {
+        /** @var TestCase $this */
+        $document = DocumentFixtures::documentWitEmbedding('First example', [0.0, 0.0]);
+        $document->metadata = ['itemId' => 42, 'tags' => ['geo']];
+        $this->fileSystemVectorStore->addDocument($document);
+
+        $result = $this->fileSystemVectorStore->similaritySearch([0.0, 0.0], 1);
+        expect($result[0]->metadata)->toBe(['itemId' => 42, 'tags' => ['geo']]);
+    });
+
     it('can fetch documents by chunk range', function () {
         /** @var TestCase $this */
         $this->fileSystemVectorStore->addDocuments([

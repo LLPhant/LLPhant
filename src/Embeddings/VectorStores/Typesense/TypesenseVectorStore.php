@@ -94,6 +94,7 @@ class TypesenseVectorStore extends VectorStoreBase
                 $document->sourceType = $onePoint['document']['sourceType'];
                 $document->sourceName = $onePoint['document']['sourceName'];
                 $document->chunkNumber = $onePoint['document']['chunkNumber'];
+                $document->metadata = $onePoint['document']['metadata'] ?? [];
                 $documents[] = $document;
             }
         }
@@ -120,6 +121,7 @@ class TypesenseVectorStore extends VectorStoreBase
             'sourceName' => $document->sourceName,
             'sourceType' => $document->sourceType,
             'chunkNumber' => $document->chunkNumber,
+            'metadata' => $document->metadata,
         ];
     }
 
