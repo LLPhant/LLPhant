@@ -184,17 +184,7 @@ it('sends correct payload for tools', function () {
         },
         {
           "role": "assistant",
-          "content": "",
-          "tool_calls": [
-            {
-              "function": {
-                "name": "currentWeatherForLocation",
-                "arguments": {
-                  "location": "Venice"
-                }
-              }
-            }
-          ]
+          "content": ""
         },
         {
           "role": "tool",
@@ -374,13 +364,15 @@ it('OllamaChat generateChat loops for MULTIPLE rounds of tool calls and maintain
     $payload = Utility::decodeJson($lastRequest->getBody()->getContents());
     $messages = $payload['messages'];
 
-    // Expected messages: system (if any), user, assistant (tool call), tool (result)
+    // Expected messages: system (if any), user, assistant, tool (result)
     // OllamaChat adds system message automatically if set.
+    // Note: We do NOT include tool_calls in the assistant message for Ollama as it may
+    // cause duplicate tool calls.
 
     $assistantMessageFound = false;
     $toolMessageFound = false;
     foreach ($messages as $msg) {
-        if ($msg['role'] === 'assistant' && isset($msg['tool_calls'])) {
+        if ($msg['role'] === 'assistant') {
             $assistantMessageFound = true;
         }
         if ($msg['role'] === 'tool') {
@@ -388,7 +380,7 @@ it('OllamaChat generateChat loops for MULTIPLE rounds of tool calls and maintain
         }
     }
 
-    expect($assistantMessageFound)->toBeTrue('Assistant message with tool_calls is missing from history');
+    expect($assistantMessageFound)->toBeTrue('Assistant message is missing from history');
     expect($toolMessageFound)->toBeTrue('Tool result message is missing from history');
 });
 

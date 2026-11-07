@@ -201,13 +201,16 @@ class OllamaChat implements ChatInterface
             foreach ($message['tool_calls'] as $toolCall) {
                 $functionName = $toolCall['function']['name'];
                 $toolResult = $this->callFunction($functionName, $toolCall['function']['arguments']);
-                $toolsOutput[] = Message::toolResult($toolResult);
+                $toolsOutput[] = Message::toolResult($toolResult, $toolCall['id'] ?? null);
             }
         }
 
         if ($toolsOutput !== []) {
             $assistantMessage = Message::assistant($message['content'] ?? null);
-            $assistantMessage->tool_calls = $message['tool_calls'];
+            // We do NOT set $assistantMessage->tool_calls here because Ollama's API
+            // may re-process tool_calls that are included in the message history, leading to
+            // duplicate tool calls. The tool results are already in $toolsOutput and that's
+            // sufficient for Ollama to continue the conversation.
 
             return $this->generateChatRecursive(\array_merge($messages, [$assistantMessage], $toolsOutput));
         }
