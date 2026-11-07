@@ -14,6 +14,10 @@ class AnthropicStreamResponse
 
     private int $inputTokens = 0;
 
+    private int $cacheCreationInputTokens = 0;
+
+    private int $cacheReadInputTokens = 0;
+
     private int $outputTokens = 0;
 
     public function __construct(
@@ -84,13 +88,17 @@ class AnthropicStreamResponse
 
     public function getTotalTokens(): int
     {
-        return $this->inputTokens + $this->outputTokens;
+        return $this->inputTokens
+            + $this->cacheCreationInputTokens
+            + $this->cacheReadInputTokens
+            + $this->outputTokens;
     }
 
     /**
-     * The usage of a stream is cumulative: message_start reports it under message.usage (the input
-     * and cache tokens, and a placeholder output count) and message_delta repeats it under usage
-     * with the final output count, so the latest value reported for each counter wins.
+     * Usage is cumulative and each counter is independent. message_start reports the input and
+     * cache tokens under message.usage; message_delta reports the final output count and may
+     * repeat only some of the other keys. A key that is absent leaves the counter already stored,
+     * so the latest value reported for each counter wins.
      *
      * @param  array<string, mixed>  $json
      */
@@ -101,14 +109,15 @@ class AnthropicStreamResponse
             return;
         }
 
-        $inputKeys = ['input_tokens', 'cache_creation_input_tokens', 'cache_read_input_tokens'];
-        if (\count(array_intersect_key($usage, array_flip($inputKeys))) > 0) {
-            $this->inputTokens = 0;
-            foreach ($inputKeys as $key) {
-                $this->inputTokens += (int) ($usage[$key] ?? 0);
-            }
+        if (\array_key_exists('input_tokens', $usage)) {
+            $this->inputTokens = (int) $usage['input_tokens'];
         }
-
+        if (\array_key_exists('cache_creation_input_tokens', $usage)) {
+            $this->cacheCreationInputTokens = (int) $usage['cache_creation_input_tokens'];
+        }
+        if (\array_key_exists('cache_read_input_tokens', $usage)) {
+            $this->cacheReadInputTokens = (int) $usage['cache_read_input_tokens'];
+        }
         if (\array_key_exists('output_tokens', $usage)) {
             $this->outputTokens = (int) $usage['output_tokens'];
         }

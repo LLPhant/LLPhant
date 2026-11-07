@@ -70,3 +70,14 @@ it('does not count the input tokens twice when the message_delta event repeats t
 
     expect($response->getTotalTokens())->toBe(40);
 });
+
+it('keeps the cache tokens when a later usage event repeats only the input tokens', function () {
+    $response = anthropicStream(
+        'event: message_start'."\n".'data: {"type":"message_start","message":{"id":"msg_1","type":"message","role":"assistant","content":[],"usage":{"input_tokens":5,"cache_creation_input_tokens":100,"cache_read_input_tokens":2000,"output_tokens":1}}}',
+        'event: message_delta'."\n".'data: {"type":"message_delta","delta":{"stop_reason":"end_turn"},"usage":{"input_tokens":5,"output_tokens":15}}',
+        'event: message_stop'."\n".'data: {"type":"message_stop"}',
+    );
+    $response->getStream();
+
+    expect($response->getTotalTokens())->toBe(2120);
+});
