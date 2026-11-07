@@ -12,7 +12,12 @@ function withEnvironment(array $values, callable $callback): void
 {
     $previous = [];
     foreach ($values as $name => $value) {
-        $previous[$name] = getenv($name);
+        $previous[$name] = [
+            'process' => getenv($name),
+            'env' => array_intersect_key($_ENV, [$name => true]),
+            'server' => array_intersect_key($_SERVER, [$name => true]),
+        ];
+        unset($_ENV[$name], $_SERVER[$name]);
         putenv($value === null ? $name : "$name=$value");
     }
 
@@ -20,7 +25,11 @@ function withEnvironment(array $values, callable $callback): void
         $callback();
     } finally {
         foreach ($previous as $name => $value) {
-            putenv($value === false ? $name : "$name=$value");
+            $processValue = $value['process'];
+            putenv($processValue === false ? $name : "$name=$processValue");
+            unset($_ENV[$name], $_SERVER[$name]);
+            $_ENV += $value['env'];
+            $_SERVER += $value['server'];
         }
     }
 }
