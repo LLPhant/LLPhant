@@ -10,6 +10,7 @@ use Http\Discovery\Psr18ClientDiscovery;
 use LLPhant\Embeddings\Document;
 use LLPhant\Embeddings\DocumentUtils;
 use LLPhant\Embeddings\EmbeddingGenerator\EmbeddingGeneratorInterface;
+use LLPhant\Embeddings\EmbeddingGenerator\EmbeddingTotalTokensTrait;
 use LLPhant\Utility;
 use LLPhant\VoyageAIConfig;
 use OpenAI\Contracts\ClientContract;
@@ -23,6 +24,8 @@ use function str_replace;
 
 abstract class AbstractVoyageAIEmbeddingGenerator implements EmbeddingGeneratorInterface
 {
+    use EmbeddingTotalTokensTrait;
+
     public ClientInterface $client;
 
     public int $batch_size_limit = 128;
@@ -93,6 +96,7 @@ abstract class AbstractVoyageAIEmbeddingGenerator implements EmbeddingGeneratorI
 
         $response = $this->client->sendRequest($this->createPostRequest($body));
         $jsonResponse = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
+        $this->addUsedTokens($jsonResponse);
 
         $result = [];
 
@@ -169,6 +173,7 @@ abstract class AbstractVoyageAIEmbeddingGenerator implements EmbeddingGeneratorI
 
             $response = $this->client->sendRequest($this->createPostRequest($body));
             $jsonResponse = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
+            $this->addUsedTokens($jsonResponse);
 
             if (\array_key_exists('data', $jsonResponse)) {
                 foreach ($jsonResponse['data'] as $key => $oneEmbeddingObject) {
