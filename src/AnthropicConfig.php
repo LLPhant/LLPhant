@@ -23,6 +23,8 @@ class AnthropicConfig
         public readonly ?ClientInterface $client = null,
         public readonly ?RequestFactoryInterface $requestFactory = null,
         public readonly ?StreamFactoryInterface $streamFactory = null,
+        public readonly ?string $url = null,
+        public readonly ?string $apiVersion = null,
     ) {
     }
 }
