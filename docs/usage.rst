@@ -146,6 +146,28 @@ To call Anthropic models you have to provide an API key . You can set the ANTHRO
 
     export ANTHROPIC_API_KEY=XXXXXX
 
+By default, requests use ``https://api.anthropic.com`` and API version
+``2023-06-01``. To use an Anthropic-compatible gateway or self-hosted endpoint,
+set ``ANTHROPIC_BASE_URL`` to its base URL (the Messages API path
+``/v1/messages`` is appended automatically). You can also override the API version
+with ``ANTHROPIC_API_VERSION``.
+
+.. code-block:: bash
+
+    export ANTHROPIC_BASE_URL=https://gateway.example
+    export ANTHROPIC_API_VERSION=2024-01-01
+
+Alternatively, pass ``url`` and ``apiVersion`` to ``AnthropicConfig``. Explicit
+configuration values take precedence over their environment variables.
+
+.. code-block:: php
+
+    $config = new AnthropicConfig(
+        url: 'https://gateway.example',
+        apiVersion: '2024-01-01',
+    );
+    $chat = new AnthropicChat($config);
+
 You also have to specify the model to use using the ``AnthropicConfig`` object and pass it to the ``AnthropicChat``.
 
 .. code-block:: php
