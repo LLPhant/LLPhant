@@ -17,6 +17,7 @@ use OpenAI;
 use OpenAI\Contracts\ClientContract;
 use OpenAI\Responses\Chat\CreateResponse;
 use OpenAI\Responses\Chat\CreateResponseToolCall;
+use OpenAI\Responses\Chat\CreateResponseUsage;
 use OpenAI\Responses\Chat\CreateStreamedResponseToolCall;
 use OpenAI\Responses\StreamResponse;
 use Psr\Http\Message\StreamInterface;
@@ -305,59 +306,73 @@ use Psr\Log\NullLogger;
         $stream = $this->client->chat()->createStreamed($openAiArgs);
         $generator = function (StreamResponse $stream) use ($messages) {
             $toolsToCall = [];
-            foreach ($stream as $partialResponse) {
-                if ((is_countable($partialResponse->choices) ? count($partialResponse->choices) : 0) === 0) {
-                    continue;
-                }
+            $streamedTokens = 0;
+            $finished = false;
+            try {
+                foreach ($stream as $partialResponse) {
+                    // Servers that send usage put it in a last chunk without choices, after the finish reason
+                    if ($partialResponse->usage instanceof CreateResponseUsage) {
+                        $streamedTokens = $partialResponse->usage->totalTokens ?? $streamedTokens;
+                    }
 
-                $toolCalls = $partialResponse->choices[0]->delta->toolCalls ?? [];
-                /** @var CreateStreamedResponseToolCall $toolCall */
-                foreach ($toolCalls as $toolCall) {
-                    // The first delta of a call carries its name and id, the following ones only argument fragments
-                    if ($toolCall->function->name) {
-                        $toolsToCall[$toolCall->index ?? count($toolsToCall)] = [
-                            'function' => $toolCall->function->name,
-                            'arguments' => $toolCall->function->arguments,
-                            'id' => $toolCall->id,
-                        ];
+                    if ((is_countable($partialResponse->choices) ? count($partialResponse->choices) : 0) === 0 || $finished) {
+                        continue;
+                    }
+
+                    $toolCalls = $partialResponse->choices[0]->delta->toolCalls ?? [];
+                    /** @var CreateStreamedResponseToolCall $toolCall */
+                    foreach ($toolCalls as $toolCall) {
+                        // The first delta of a call carries its name and id, the following ones only argument fragments
+                        if ($toolCall->function->name) {
+                            $toolsToCall[$toolCall->index ?? count($toolsToCall)] = [
+                                'function' => $toolCall->function->name,
+                                'arguments' => $toolCall->function->arguments,
+                                'id' => $toolCall->id,
+                            ];
+
+                            continue;
+                        }
+
+                        $index = $toolCall->index ?? array_key_last($toolsToCall);
+                        if ($index !== null && isset($toolsToCall[$index])) {
+                            $toolsToCall[$index]['arguments'] .= $toolCall->function->arguments;
+                        }
+                    }
+
+                    // $functionName should be always set if finishReason is function_call
+                    if ($this->shouldCallStreamedTools($partialResponse->choices[0]->finishReason) && $toolsToCall !== []) {
+                        foreach ($toolsToCall as $tool) {
+                            if (is_string($tool['function']) && is_string($tool['id'])) {
+                                $this->callFunction($tool['function'], $tool['arguments'], $tool['id']);
+                            }
+                        }
+                        $newMessages = $this->getNewMessagesFromTools($messages);
+                        if ($newMessages === []) {
+                            break;
+                        }
+                        // We move to a non-streamed answer here. Maybe it could be improved
+                        yield $this->generateChat($newMessages);
+                    }
+
+                    if (! is_null($partialResponse->choices[0]->finishReason)) {
+                        // Keep reading until the stream ends so that the usage chunk is not lost
+                        $finished = true;
 
                         continue;
                     }
 
-                    $index = $toolCall->index ?? array_key_last($toolsToCall);
-                    if ($index !== null && isset($toolsToCall[$index])) {
-                        $toolsToCall[$index]['arguments'] .= $toolCall->function->arguments;
+                    if ($partialResponse->choices[0]->delta->content === null) {
+                        continue;
                     }
-                }
 
-                // $functionName should be always set if finishReason is function_call
-                if ($this->shouldCallStreamedTools($partialResponse->choices[0]->finishReason) && $toolsToCall !== []) {
-                    foreach ($toolsToCall as $tool) {
-                        if (is_string($tool['function']) && is_string($tool['id'])) {
-                            $this->callFunction($tool['function'], $tool['arguments'], $tool['id']);
-                        }
+                    if ($partialResponse->choices[0]->delta->content === '') {
+                        continue;
                     }
-                    $newMessages = $this->getNewMessagesFromTools($messages);
-                    if ($newMessages === []) {
-                        break;
-                    }
-                    // We move to a non-streamed answer here. Maybe it could be improved
-                    yield $this->generateChat($newMessages);
-                }
 
-                if (! is_null($partialResponse->choices[0]->finishReason)) {
-                    break;
+                    yield $partialResponse->choices[0]->delta->content;
                 }
-
-                if ($partialResponse->choices[0]->delta->content === null) {
-                    continue;
-                }
-
-                if ($partialResponse->choices[0]->delta->content === '') {
-                    continue;
-                }
-
-                yield $partialResponse->choices[0]->delta->content;
+            } finally {
+                $this->totalTokens += $streamedTokens;
             }
         };
 
