@@ -17,6 +17,7 @@ use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 
 use function str_replace;
@@ -92,7 +93,7 @@ abstract class AbstractVoyageAIEmbeddingGenerator implements EmbeddingGeneratorI
         }
 
         $response = $this->client->sendRequest($this->createPostRequest($body));
-        $jsonResponse = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
+        $jsonResponse = $this->decodeResponse($response);
 
         $result = [];
 
@@ -168,7 +169,7 @@ abstract class AbstractVoyageAIEmbeddingGenerator implements EmbeddingGeneratorI
             }
 
             $response = $this->client->sendRequest($this->createPostRequest($body));
-            $jsonResponse = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
+            $jsonResponse = $this->decodeResponse($response);
 
             if (\array_key_exists('data', $jsonResponse)) {
                 foreach ($jsonResponse['data'] as $key => $oneEmbeddingObject) {
@@ -178,6 +179,22 @@ abstract class AbstractVoyageAIEmbeddingGenerator implements EmbeddingGeneratorI
         }
 
         return $documents;
+    }
+
+    /**
+     * @return array<array-key, mixed>
+     *
+     * @throws \JsonException
+     * @throws Exception when VoyageAI answers with an error
+     */
+    private function decodeResponse(ResponseInterface $response): array
+    {
+        $contents = $response->getBody()->getContents();
+        if ($response->getStatusCode() >= 400) {
+            throw new Exception(\sprintf('VoyageAI embedding request failed with status %d: %s', $response->getStatusCode(), $contents));
+        }
+
+        return json_decode($contents, true, 512, JSON_THROW_ON_ERROR);
     }
 
     /**
