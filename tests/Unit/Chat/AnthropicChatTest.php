@@ -315,3 +315,91 @@ it('serializes empty tool input as object in recursive anthropic calls', functio
     expect($secondRequestPayload['messages'][1]['content'][1]['input'])->toBeArray()->toBeEmpty();
     expect($secondRequestBody)->toContain('"input":{}');
 });
+
+it('counts the tokens of every round of a tool call', function () {
+    $toolAnswer = <<<'JSON'
+    {
+      "content": [
+        {
+          "id": "tool_123",
+          "input": {
+            "location": "Venice"
+          },
+          "name": "currentWeatherForLocation",
+          "type": "tool_use"
+        }
+      ],
+      "id": "msg_123",
+      "model": "claude-3",
+      "role": "assistant",
+      "stop_reason": "tool_use",
+      "type": "message",
+      "usage": {
+        "input_tokens": 10,
+        "output_tokens": 25
+      }
+    }
+    JSON;
+
+    $finalAnswer = <<<'JSON'
+    {
+      "content": [
+        {
+          "type": "text",
+          "text": "It is sunny in Venice."
+        }
+      ],
+      "id": "msg_124",
+      "model": "claude-3",
+      "role": "assistant",
+      "stop_reason": "end_turn",
+      "type": "message",
+      "usage": {
+        "input_tokens": 40,
+        "output_tokens": 5
+      }
+    }
+    JSON;
+
+    $mock = new MockHandler([
+        new Response(200, [], $toolAnswer),
+        new Response(200, [], $finalAnswer),
+    ]);
+    $chat = new AnthropicChat(new AnthropicConfig(client: new Client(['handler' => HandlerStack::create($mock)])));
+    $chat->addTool(new FunctionInfo('currentWeatherForLocation', new WeatherExample(), 'description', [new Parameter('location', 'string', 'desc')]));
+
+    expect($chat->generateChat([Message::user('weather in Venice?')]))->toBe('It is sunny in Venice.')
+        ->and($chat->getTotalTokens())->toBe(80);
+});
+
+it('counts the tokens of a response that stops at a tool call', function () {
+    $toolAnswer = <<<'JSON'
+    {
+      "content": [
+        {
+          "id": "tool_123",
+          "input": {
+            "location": "Venice"
+          },
+          "name": "currentWeatherForLocation",
+          "type": "tool_use"
+        }
+      ],
+      "id": "msg_123",
+      "model": "claude-3",
+      "role": "assistant",
+      "stop_reason": "tool_use",
+      "type": "message",
+      "usage": {
+        "input_tokens": 10,
+        "output_tokens": 25
+      }
+    }
+    JSON;
+
+    $chat = anthropicChatWithFakeHttpConnection($toolAnswer);
+    $chat->addTool(new FunctionInfo('currentWeatherForLocation', new WeatherExample(), 'description', [new Parameter('location', 'string', 'desc')]));
+
+    expect($chat->generateChatOrReturnFunctionToCall([Message::user('weather in Venice?')]))->toBeArray()
+        ->and($chat->getTotalTokens())->toBe(35);
+});

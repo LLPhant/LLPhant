@@ -100,6 +100,8 @@ class AnthropicChat implements ChatInterface
         $params = $this->createParams($messages, false);
 
         $json = $this->getJsonMessagesResponse($params);
+        // Every round is billed, including the ones that end in a tool call
+        $this->addUsedTokens($json);
 
         $responses = $json['content'];
 
@@ -127,8 +129,6 @@ class AnthropicChat implements ChatInterface
             return $this->generateChatRecursive(\array_merge($messages, [AnthropicMessage::fromAssistantAnswer($responses), AnthropicMessage::toolResultMessage($toolsOutput)]));
         }
 
-        $this->addUsedTokens($json);
-
         return $result;
     }
 
@@ -148,6 +148,7 @@ class AnthropicChat implements ChatInterface
         $params = $this->createParams($messages, false);
 
         $json = $this->getJsonMessagesResponse($params);
+        $this->addUsedTokens($json);
 
         $responses = $json['content'];
 
