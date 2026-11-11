@@ -170,8 +170,11 @@ use Psr\Log\NullLogger;
     {
         $toolsCalls = [];
         $toolsOutput = [];
+        $hasReturn = false;
         foreach ($newFunctionsCalled as $functionCalled) {
-            if ($functionCalled->return !== null) {
+            $hasReturn = $hasReturn || $functionCalled->return !== null;
+            // OpenAI rejects the follow-up if a call of the turn is left unanswered, so a tool that returned nothing gets an empty result
+            if ($functionCalled->return !== null || $functionCalled->tool_call_id) {
                 $toolsOutput[] = $this->createMessageWithToolOutput($functionCalled);
             }
             if ($functionCalled->tool_call_id) {
@@ -179,7 +182,7 @@ use Psr\Log\NullLogger;
             }
         }
 
-        if ($toolsOutput === []) {
+        if (! $hasReturn) {
             return [];
         }
 
@@ -545,27 +548,7 @@ use Psr\Log\NullLogger;
      */
     public function getNewMessagesFromTools(array $messages): array
     {
-        $toolsCalls = [];
-        $toolsOutput = [];
-        /** @var CalledFunction $functionCalled */
-        foreach ($this->functionsCalled as $functionCalled) {
-            if ($functionCalled->return !== null) {
-                $toolsOutput[] = $this->createMessageWithToolOutput($functionCalled);
-            }
-            if ($functionCalled->tool_call_id) {
-                $toolsCalls[] = new ToolCall($functionCalled->tool_call_id, $functionCalled->definition->name, json_encode($functionCalled->arguments, JSON_THROW_ON_ERROR));
-            }
-        }
-
-        if ($toolsOutput === []) {
-            return [];
-        }
-
-        if ($toolsCalls !== [] && $this->shouldAddAssistantToolCallsMessage()) {
-            $messages[] = Message::assistantAskingTools($toolsCalls);
-        }
-
-        return array_merge($messages, $toolsOutput);
+        return $this->getNewMessagesFromTurn($messages, $this->functionsCalled);
     }
 
     protected function shouldAddAssistantToolCallsMessage(): bool
