@@ -166,6 +166,36 @@ your own input provider to the constructor:
     );
 
 
+Publishing a page with deed.page
+--------------------------------
+
+``DeedPagePublisher`` lets the LLM turn its answer into a web page: it publishes a self-contained HTML document
+to a public URL on `deed.page <https://deed.page/docs>`_ and returns that URL. deed.page is a third-party hosting
+service, it needs no account or API key, and anyone with the link can open the page, so tell the model not to put
+private data in it.
+
+.. code-block:: php
+
+    use LLPhant\Chat\FunctionInfo\FunctionBuilder;
+    use LLPhant\Chat\OpenAIChat;
+    use LLPhant\Tool\DeedPagePublisher;
+
+    // ttlSeconds is optional: without it the pages are kept.
+    $publisher = new DeedPagePublisher(ttlSeconds: 3600);
+
+    $chat = new OpenAIChat();
+    $chat->addTool(FunctionBuilder::buildFunctionInfo($publisher, 'publishHtml'));
+    $chat->setSystemMessage('When the user asks for a page, write complete HTML and publish it with publishHtml. Reply with the URL.');
+    echo $chat->generateText('Make a one-page cheat sheet for PHP 8.4 property hooks.');
+
+The model only sees ``publishHtml(html, slug)`` and only gets the URL back.
+The first publish also returns an owner token, which the tool keeps in memory and sends on later publishes, so they
+all belong to the same owner. The token is never returned to the model.
+Read it with ``$publisher->getToken()`` and store it somewhere private if you want to update or delete the pages later.
+Pass it back as the first constructor argument or with the ``DEEDPAGE_TOKEN`` environment variable.
+``$publisher->deleteSite($slug)`` removes a page from your application code.
+
+
 .. role:: raw-html(raw)
    :format: html
 
