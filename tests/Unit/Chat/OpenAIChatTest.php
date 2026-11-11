@@ -417,6 +417,100 @@ it('does not serialize name on tool messages in OpenAI follow-up requests', func
         ->not->toHaveKey('name');
 });
 
+it('answers every tool call of a turn when one of the tools returns nothing', function () {
+    $openAIAnswer1 = <<<'JSON'
+    {
+      "id": "chatcmpl-1",
+      "object": "chat.completion",
+      "created": 1677652288,
+      "model": "gpt-4o-mini",
+      "choices": [{
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            { "id": "call_note", "type": "function", "function": { "name": "saveNote", "arguments": "{\"note\":\"likes rain\"}" } },
+            { "id": "call_weather", "type": "function", "function": { "name": "getWeather", "arguments": "{\"city\":\"Venice\"}" } }
+          ]
+        },
+        "finish_reason": "tool_calls"
+      }]
+    }
+    JSON;
+
+    $openAIAnswer2 = <<<'JSON'
+    {
+      "id": "chatcmpl-2",
+      "object": "chat.completion",
+      "created": 1677652289,
+      "model": "gpt-4o-mini",
+      "choices": [{
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "Noted. It is cloudy in Venice."
+        },
+        "finish_reason": "stop"
+      }]
+    }
+    JSON;
+
+    $mock = new MockHandler([
+        new Response(200, ['Content-Type' => 'application/json'], $openAIAnswer1),
+        new Response(200, ['Content-Type' => 'application/json'], $openAIAnswer2),
+    ]);
+    $openAIClient = OpenAI::factory()
+        ->withApiKey('fake-key')
+        ->withHttpClient(new GuzzleClient(['handler' => HandlerStack::create($mock)]))
+        ->make();
+
+    $config = new OpenAIConfig();
+    $config->model = 'gpt-4o-mini';
+    $config->client = $openAIClient;
+    $chat = new OpenAIChat($config);
+
+    $tool = new class
+    {
+        /** @var string[] */
+        public array $notes = [];
+
+        public function saveNote(string $note): void
+        {
+            $this->notes[] = $note;
+        }
+
+        public function getWeather(string $city): string
+        {
+            return "{$city}: cloudy";
+        }
+    };
+
+    $chat->addTool(new FunctionInfo('saveNote', $tool, 'Saves a note about the user', [new Parameter('note', 'string', 'The note')], [new Parameter('note', 'string', 'The note')]));
+    $chat->addTool(new FunctionInfo('getWeather', $tool, 'Gets the weather', [new Parameter('city', 'string', 'The city')], [new Parameter('city', 'string', 'The city')]));
+
+    $response = $chat->generateChat([Message::user('I like rain. What is the weather in Venice?')]);
+
+    expect($response)->toBe('Noted. It is cloudy in Venice.');
+    expect($tool->notes)->toBe(['likes rain']);
+
+    // OpenAI answers 400 when a tool call of the assistant message has no tool message after it
+    $followUp = json_decode(json_encode($chat->argsLog[1]['messages'], JSON_THROW_ON_ERROR), true, 512, JSON_THROW_ON_ERROR);
+    $askedIds = [];
+    $answers = [];
+    foreach ($followUp as $message) {
+        foreach ($message['tool_calls'] ?? [] as $toolCall) {
+            $askedIds[] = $toolCall['id'];
+        }
+        if ($message['role'] === 'tool') {
+            $answers[$message['tool_call_id']] = $message['content'];
+        }
+    }
+
+    expect($askedIds)->toBe(['call_note', 'call_weather']);
+    expect($answers)->toBe(['call_note' => '', 'call_weather' => 'Venice: cloudy']);
+});
+
 it('passes the arguments streamed across several tool call deltas to the function', function () {
     $chunk = fn (array $delta, ?string $finishReason = null): string => 'data: '.json_encode([
         'id' => 'chatcmpl-stream',
