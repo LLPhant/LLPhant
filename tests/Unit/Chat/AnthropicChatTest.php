@@ -102,6 +102,39 @@ it('generates a chat', function () {
     expect($response)->toBe('Hi! My name is Claude.');
 });
 
+it('uses the configured base URL and API version', function () {
+    $historyContainer = [];
+    $handlerStack = HandlerStack::create(new MockHandler([
+        new Response(200, [], ANTHROPIC_FAKE_JSON_ANSWER),
+    ]));
+    $handlerStack->push(Middleware::history($historyContainer));
+    $client = new Client(['handler' => $handlerStack]);
+    $config = new AnthropicConfig(
+        client: $client,
+        url: 'https://gateway.example/',
+        apiVersion: '2024-01-01',
+    );
+
+    (new AnthropicChat($config))->generateText('this is the prompt question');
+
+    expect((string) $historyContainer[0]['request']->getUri())->toBe('https://gateway.example/v1/messages');
+    expect($historyContainer[0]['request']->getHeaderLine('anthropic-version'))->toBe('2024-01-01');
+});
+
+it('uses the default base URL and API version', function () {
+    $historyContainer = [];
+    $handlerStack = HandlerStack::create(new MockHandler([
+        new Response(200, [], ANTHROPIC_FAKE_JSON_ANSWER),
+    ]));
+    $handlerStack->push(Middleware::history($historyContainer));
+    $client = new Client(['handler' => $handlerStack]);
+
+    (new AnthropicChat(new AnthropicConfig(client: $client)))->generateText('this is the prompt question');
+
+    expect((string) $historyContainer[0]['request']->getUri())->toBe('https://api.anthropic.com/v1/messages');
+    expect($historyContainer[0]['request']->getHeaderLine('anthropic-version'))->toBe('2023-06-01');
+});
+
 it('returns a stream response using generateStreamOfText()', function () {
     $anthropicChat = anthropicChatWithFakeHttpConnection(ANTROPIC_FAKE_STREAM_ANSWER);
     $response = $anthropicChat->generateStreamOfText('this is the prompt question');

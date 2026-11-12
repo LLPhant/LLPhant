@@ -44,6 +44,10 @@ class AnthropicChat implements ChatInterface
 
     private readonly string $apiKey;
 
+    private readonly string $baseUrl;
+
+    private readonly string $apiVersion;
+
     /** @var FunctionInfo[] */
     private array $tools = [];
 
@@ -62,6 +66,12 @@ class AnthropicChat implements ChatInterface
         $this->maxTokens = $config->maxTokens;
         $this->apiKey = $config->apiKey
             ?? (string) Utility::readEnvironment('ANTHROPIC_API_KEY', '');
+        $this->baseUrl = rtrim(
+            $config->url ?? (string) Utility::readEnvironment('ANTHROPIC_BASE_URL', self::DEFAULT_URL),
+            '/',
+        );
+        $this->apiVersion = $config->apiVersion
+            ?? (string) Utility::readEnvironment('ANTHROPIC_API_VERSION', self::CURRENT_VERSION);
         $this->logger = $logger ?: new NullLogger();
 
         $this->client = $config->client ?: Psr18ClientDiscovery::find();
@@ -248,12 +258,12 @@ class AnthropicChat implements ChatInterface
             'params' => $data,
         ]);
 
-        $uri = sprintf('%s/v1/messages', rtrim(self::DEFAULT_URL, '/'));
+        $uri = sprintf('%s/v1/messages', $this->baseUrl);
 
         $request = $this->factory->createRequest('POST', $uri);
         $request = $request->withAddedHeader('Content-Type', 'application/json');
         $request = $request->withAddedHeader('x-api-key', $this->apiKey);
-        $request = $request->withAddedHeader('anthropic-version', self::CURRENT_VERSION);
+        $request = $request->withAddedHeader('anthropic-version', $this->apiVersion);
         $request = $request->withBody($this->factory->createStream(json_encode($data, JSON_THROW_ON_ERROR)));
         $response = $this->client->sendRequest($request);
 
