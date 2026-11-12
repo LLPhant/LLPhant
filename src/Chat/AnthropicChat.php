@@ -48,6 +48,8 @@ class AnthropicChat implements ChatInterface
 
     private readonly string $apiVersion;
 
+    private readonly bool $promptCaching;
+
     /** @var FunctionInfo[] */
     private array $tools = [];
 
@@ -72,6 +74,7 @@ class AnthropicChat implements ChatInterface
         );
         $this->apiVersion = $config->apiVersion
             ?? (string) Utility::readEnvironment('ANTHROPIC_API_VERSION', self::CURRENT_VERSION);
+        $this->promptCaching = $config->promptCaching;
         $this->logger = $logger ?: new NullLogger();
 
         $this->client = $config->client ?: Psr18ClientDiscovery::find();
@@ -303,17 +306,30 @@ class AnthropicChat implements ChatInterface
      **/
     private function createParams(array $messages, bool $stream): array
     {
+        $tools = FunctionFormatter::formatFunctionsToAnthropic($this->tools);
+
+        if ($this->promptCaching && $tools !== []) {
+            // A breakpoint on the last tool caches the whole list of tool definitions.
+            $tools[array_key_last($tools)]['cache_control'] = ['type' => 'ephemeral'];
+        }
+
         $params = [
             ...$this->modelOptions,
             'model' => $this->model,
             'messages' => $this->createMessagesArray($messages),
-            'tools' => FunctionFormatter::formatFunctionsToAnthropic($this->tools),
+            'tools' => $tools,
             'max_tokens' => $this->maxTokens,
             'stream' => $stream,
         ];
 
         if ($this->systemMessage instanceof Message) {
-            $params['system'] = $this->systemMessage->content;
+            $params['system'] = $this->promptCaching
+                ? [[
+                    'type' => 'text',
+                    'text' => $this->systemMessage->content,
+                    'cache_control' => ['type' => 'ephemeral'],
+                ]]
+                : $this->systemMessage->content;
         }
 
         return $params;
