@@ -315,3 +315,59 @@ it('serializes empty tool input as object in recursive anthropic calls', functio
     expect($secondRequestPayload['messages'][1]['content'][1]['input'])->toBeArray()->toBeEmpty();
     expect($secondRequestBody)->toContain('"input":{}');
 });
+
+/**
+ * @return array<string, mixed>
+ */
+function anthropicRequestBody(bool $promptCaching, callable $setup): array
+{
+    $historyContainer = [];
+    $handlerStack = HandlerStack::create(new MockHandler([
+        new Response(200, [], ANTHROPIC_FAKE_JSON_ANSWER),
+    ]));
+    $handlerStack->push(Middleware::history($historyContainer));
+    $config = new AnthropicConfig(
+        client: new Client(['handler' => $handlerStack]),
+        promptCaching: $promptCaching,
+    );
+    $chat = new AnthropicChat($config);
+    $setup($chat);
+    $chat->generateText('this is the prompt question');
+
+    return json_decode((string) $historyContainer[0]['request']->getBody(), true, flags: JSON_THROW_ON_ERROR);
+}
+
+function anthropicCachingSetup(AnthropicChat $chat): void
+{
+    $chat->setSystemMessage('You are a helpful assistant.');
+    $chat->addTool(new FunctionInfo('first', new WeatherExample(), 'first tool', [new Parameter('city', 'string', 'a city')]));
+    $chat->addTool(new FunctionInfo('second', new WeatherExample(), 'second tool', [new Parameter('city', 'string', 'a city')]));
+}
+
+it('marks the system message and the last tool as cacheable when prompt caching is enabled', function () {
+    $body = anthropicRequestBody(true, anthropicCachingSetup(...));
+
+    expect($body['system'])->toBe([[
+        'type' => 'text',
+        'text' => 'You are a helpful assistant.',
+        'cache_control' => ['type' => 'ephemeral'],
+    ]]);
+    expect($body['tools'])->toHaveCount(2);
+    expect($body['tools'][0])->not->toHaveKey('cache_control');
+    expect($body['tools'][1]['cache_control'])->toBe(['type' => 'ephemeral']);
+});
+
+it('does not send cache breakpoints by default', function () {
+    $body = anthropicRequestBody(false, anthropicCachingSetup(...));
+
+    expect($body['system'])->toBe('You are a helpful assistant.');
+    expect($body['tools'][0])->not->toHaveKey('cache_control');
+    expect($body['tools'][1])->not->toHaveKey('cache_control');
+});
+
+it('keeps requests valid with prompt caching and neither system message nor tools', function () {
+    $body = anthropicRequestBody(true, fn () => null);
+
+    expect($body)->not->toHaveKey('system');
+    expect($body['tools'])->toBe([]);
+});
