@@ -3,6 +3,7 @@
 namespace Tests\Unit\Chat;
 
 use OpenAI\Contracts\ClientContract;
+use OpenAI\Contracts\Resources\AgentsContract;
 use OpenAI\Contracts\Resources\AssistantsContract;
 use OpenAI\Contracts\Resources\AudioContract;
 use OpenAI\Contracts\Resources\BatchesContract;
@@ -10,6 +11,7 @@ use OpenAI\Contracts\Resources\ChatContract;
 use OpenAI\Contracts\Resources\CompletionsContract;
 use OpenAI\Contracts\Resources\ContainersContract;
 use OpenAI\Contracts\Resources\ConversationsContract;
+use OpenAI\Contracts\Resources\DecisionsContract;
 use OpenAI\Contracts\Resources\EditsContract;
 use OpenAI\Contracts\Resources\EmbeddingsContract;
 use OpenAI\Contracts\Resources\FilesContract;
@@ -20,7 +22,9 @@ use OpenAI\Contracts\Resources\ModelsContract;
 use OpenAI\Contracts\Resources\ModerationsContract;
 use OpenAI\Contracts\Resources\RealtimeContract;
 use OpenAI\Contracts\Resources\ResponsesContract;
+use OpenAI\Contracts\Resources\SkillsContract;
 use OpenAI\Contracts\Resources\ThreadsContract;
+use OpenAI\Contracts\Resources\VaultsContract;
 use OpenAI\Contracts\Resources\VectorStoresContract;
 
 class MockOpenAIClient implements ClientContract
@@ -118,5 +122,25 @@ class MockOpenAIClient implements ClientContract
     public function containers(): ContainersContract
     {
         // TODO: Implement containers() method.
+    }
+
+    public function skills(): SkillsContract
+    {
+        // TODO: Implement skills() method.
+    }
+
+    public function agents(): AgentsContract
+    {
+        // TODO: Implement agents() method.
+    }
+
+    public function vaults(): VaultsContract
+    {
+        // TODO: Implement vaults() method.
+    }
+
+    public function decisions(): DecisionsContract
+    {
+        // TODO: Implement decisions() method.
     }
 }

@@ -47,10 +47,13 @@ class LmStudioChat implements ChatInterface
         if ($client === null) {
             $options = [
                 'base_uri' => $config->url,
-                'timeout' => $config->timeout,
-                'connect_timeout' => $config->timeout,
-                'read_timeout' => $config->timeout,
             ];
+
+            if ($config->timeout !== null) {
+                $options['timeout'] = $config->timeout;
+                $options['connect_timeout'] = $config->timeout;
+                $options['read_timeout'] = $config->timeout;
+            }
 
             if (! empty($config->apiKey)) {
                 $options['headers'] = ['Authorization' => 'Bearer '.$config->apiKey];

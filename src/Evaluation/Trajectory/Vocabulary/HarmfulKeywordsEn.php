@@ -6,7 +6,7 @@ namespace LLPhant\Evaluation\Trajectory\Vocabulary;
 
 final class HarmfulKeywordsEn
 {
-    final public const HARMFUL_KEYWORDS = [
+    final public const array HARMFUL_KEYWORDS = [
         //Physical violence & threats
         'harm', 'kill', 'killing', 'slay', 'murder', 'massacre', 'genocide',
         'hurt', 'abuse', 'assault', 'battery', 'beat', 'beating', 'torture',

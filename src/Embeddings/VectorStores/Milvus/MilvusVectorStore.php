@@ -10,9 +10,9 @@ use LLPhant\Exception\SecurityException;
 
 class MilvusVectorStore extends VectorStoreBase implements DocumentStore
 {
-    final public const MILVUS_COLLECTION_NAME = 'llphant';
+    final public const string MILVUS_COLLECTION_NAME = 'llphant';
 
-    public const OUTPUTFIELDS = ['id', 'content', 'formattedContent', 'sourceType', 'sourceName', 'hash', 'chunkNumber', 'embedding', 'metadata'];
+    public const array OUTPUTFIELDS = ['id', 'content', 'formattedContent', 'sourceType', 'sourceName', 'hash', 'chunkNumber', 'embedding', 'metadata'];
 
     public bool $collectionExists = false;
 

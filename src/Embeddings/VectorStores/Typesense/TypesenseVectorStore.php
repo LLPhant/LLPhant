@@ -9,7 +9,7 @@ use LLPhant\Exception\MissingParameterException;
 
 class TypesenseVectorStore extends VectorStoreBase
 {
-    final public const TYPESENSE_VECTOR_NAME = 'embedding';
+    final public const string TYPESENSE_VECTOR_NAME = 'embedding';
 
     public function __construct(private readonly string $collectionName, private readonly LLPhantTypesenseClient $client = new LLPhantTypesenseClient(), private readonly string $vectorName = self::TYPESENSE_VECTOR_NAME)
     {

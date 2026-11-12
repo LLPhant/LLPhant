@@ -10,7 +10,7 @@ use Psr\Http\Message\StreamFactoryInterface;
 
 class AnthropicConfig
 {
-    final public const CLAUDE_4_5_HAIKU = 'claude-haiku-4-5-20251001';
+    final public const string CLAUDE_4_5_HAIKU = 'claude-haiku-4-5-20251001';
 
     /**
      * @param  array<string, mixed>  $modelOptions

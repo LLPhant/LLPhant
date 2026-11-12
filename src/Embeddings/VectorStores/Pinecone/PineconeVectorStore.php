@@ -9,7 +9,7 @@ use LLPhant\Exception\SecurityException;
 
 class PineconeVectorStore extends VectorStoreBase implements DocumentStore
 {
-    public const DEFAULT_NAMESPACE = '';
+    public const string DEFAULT_NAMESPACE = '';
 
     public function __construct(
         public PineconeClient $client,

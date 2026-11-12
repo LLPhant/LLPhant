@@ -6,7 +6,7 @@ namespace LLPhant\Classification;
 
 class ChoiceAnswer extends Answer
 {
-    const MAX_DIFFERENCE = 0.05;
+    const float MAX_DIFFERENCE = 0.05;
 
     /**
      * @param  array<string, float>  $probabilities

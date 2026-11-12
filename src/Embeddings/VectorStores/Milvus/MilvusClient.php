@@ -11,7 +11,7 @@ use Psr\Http\Message\StreamFactoryInterface;
 
 class MilvusClient
 {
-    final public const API_VERSION = 'v1';
+    final public const string API_VERSION = 'v1';
 
     public ClientInterface $client;
 

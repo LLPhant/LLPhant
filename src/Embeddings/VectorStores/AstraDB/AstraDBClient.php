@@ -24,7 +24,7 @@ class AstraDBClient
     /**
      * @var array<string, array<string, array<string, true>>>
      */
-    private const BODY = [
+    private const array BODY = [
         'findCollections' => [
             'options' => [
                 'explain' => true,

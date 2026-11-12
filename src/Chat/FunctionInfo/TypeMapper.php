@@ -10,7 +10,7 @@ class TypeMapper
     /**
      * @var array<string, string>
      */
-    private const MAPPING = [
+    private const array MAPPING = [
         'string' => 'string',
         'int' => 'integer',
         'float' => 'number',

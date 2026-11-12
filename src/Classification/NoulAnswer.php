@@ -6,7 +6,7 @@ namespace LLPhant\Classification;
 
 class NoulAnswer extends Answer
 {
-    const MAX_DIFFERENCE = 0.05;
+    const float MAX_DIFFERENCE = 0.05;
 
     public function __construct(
         public readonly float $score,

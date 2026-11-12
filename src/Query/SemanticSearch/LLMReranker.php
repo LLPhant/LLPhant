@@ -7,10 +7,7 @@ use LLPhant\Embeddings\Document;
 
 class LLMReranker implements RetrievedDocumentsTransformer
 {
-    /**
-     * @var string
-     */
-    private const SYSTEM_MESSAGE = <<<'TEXT'
+    private const string SYSTEM_MESSAGE = <<<'TEXT'
         Your task is to sort documents by relevance in relation to a set of questions. You will receive a list of questions and a list of documents
         labeled with a number. You must return a list of such numbers sorted from the most relevant document to the least one.
 

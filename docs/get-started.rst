@@ -2,7 +2,7 @@ Get Started
 ===========
 
 .. note::
-   **Requires** `PHP 8.1+ <https://php.net/releases/>`_
+   **Requires** `PHP 8.4+ <https://php.net/releases/>`_
 
 First, install LLPhant via the `Composer <https://getcomposer.org/>`_ package manager:
 
