@@ -10,9 +10,9 @@ use Psr\Http\Message\StreamFactoryInterface;
 
 class JevConfig
 {
-    const URL = 'https://api.typesafe.ai/v1/systemone';
+    const string URL = 'https://api.typesafe.ai/v1/systemone';
 
-    const LATEST = 'jev-latest';
+    const string LATEST = 'jev-latest';
 
     public function __construct(
         public readonly ?string $apiKey = null,

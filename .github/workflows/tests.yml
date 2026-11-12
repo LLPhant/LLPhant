@@ -19,7 +19,7 @@ jobs:
       fail-fast: true
       matrix:
         os: [ubuntu-latest]
-        php: [8.2]
+        php: [8.4]
         dependency-version: [prefer-lowest, prefer-stable]
 
     name: Tests P${{ matrix.php }} - ${{ matrix.os }} - ${{ matrix.dependency-version }}
@@ -49,4 +49,16 @@ jobs:
       run: composer test:unit
 
     - name: Composer Audit
-      run: composer audit
+      # Retry only when packagist.org is unreachable (exit code 100);
+      # vulnerable (1) or abandoned (2) packages still fail the job.
+      run: |
+        for attempt in 1 2 3; do
+          status=0
+          composer audit || status=$?
+          if [ "$status" -ne 100 ]; then
+            exit "$status"
+          fi
+          echo "::warning::Packagist unreachable (attempt $attempt/3)"
+          sleep 15
+        done
+        exit 100

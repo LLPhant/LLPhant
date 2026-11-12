@@ -6,11 +6,11 @@ use LLPhant\Evaluation\EvaluatorInterface;
 
 class GuardrailStrategy
 {
-    final public const STRATEGY_BLOCK = 'block';
+    final public const string STRATEGY_BLOCK = 'block';
 
-    final public const STRATEGY_RETRY = 'retry';
+    final public const string STRATEGY_RETRY = 'retry';
 
-    final public const STRATEGY_CALLBACK = 'callback';
+    final public const string STRATEGY_CALLBACK = 'callback';
 
     /** @var callable|null */
     private $callback;

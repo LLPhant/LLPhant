@@ -1,0 +1,10 @@
+{
+    "preset": "laravel",
+    "rules": {
+        "fully_qualified_strict_types": false,
+        "new_with_parentheses": false,
+        "php_unit_method_casing": false,
+        "single_line_comment_spacing": false,
+        "single_line_empty_body": false
+    }
+}

@@ -20,8 +20,9 @@ class LmStudioConfig
      */
     public function __construct(
         public string $model = '',
-        public string $url = 'http://localhost:1234',
+        public string $url = 'http://localhost:1234/api/v0/',
         public bool $stream = false,
+        public bool $formatJson = false,
         public ?float $timeout = null,
         public ?string $apiKey = null,
         public array $modelOptions = []

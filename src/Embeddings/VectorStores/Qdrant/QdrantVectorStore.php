@@ -23,7 +23,7 @@ use Qdrant\Response;
 
 class QdrantVectorStore extends VectorStoreBase
 {
-    final public const QDRANT_OPENAI_VECTOR_NAME = 'openai';
+    final public const string QDRANT_OPENAI_VECTOR_NAME = 'openai';
 
     public Qdrant $client;
 

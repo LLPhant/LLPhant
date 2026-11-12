@@ -11,7 +11,7 @@ use RuntimeException;
 
 class OpenSearchVectorStore extends VectorStoreBase
 {
-    final public const OS_INDEX = 'llphant';
+    final public const string OS_INDEX = 'llphant';
 
     public bool $vectorDimSet = false;
 

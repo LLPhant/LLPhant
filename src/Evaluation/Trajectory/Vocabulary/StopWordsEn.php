@@ -6,7 +6,7 @@ namespace LLPhant\Evaluation\Trajectory\Vocabulary;
 
 final class StopWordsEn
 {
-    final public const STOP_WORDS = [
+    final public const array STOP_WORDS = [
         // articles & basic conjunctions
         'a', 'an', 'the', 'and', 'or', 'but',
 

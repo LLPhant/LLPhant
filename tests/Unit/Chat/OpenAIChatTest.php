@@ -105,7 +105,7 @@ it('returns a stream response using generateChatStream()', function () {
 
 it('returns last response using generateText()', function () {
     $response = TransporterResponse::from(
-        fixture('OpenAI/chat-response'),
+        jsonFixture('OpenAI/chat-response'),
         ['x-request-id' => '1']
     );
     $transport = Mockery::mock(TransporterContract::class);
@@ -128,7 +128,7 @@ it('returns last response using generateText()', function () {
 
 it('returns last response using generateTextOrReturnFunctionToCall()', function () {
     $response = TransporterResponse::from(
-        fixture('OpenAI/chat-response'),
+        jsonFixture('OpenAI/chat-response'),
         ['x-request-id' => '1']
     );
     $transport = Mockery::mock(TransporterContract::class);
@@ -157,7 +157,7 @@ it('returns empty (null) last response if no usage', function () {
 
 it('returns total token usage generate() or generateTextOrReturnFunctionToCall()', function () {
     $response = TransporterResponse::from(
-        fixture('OpenAI/chat-response'),
+        jsonFixture('OpenAI/chat-response'),
         ['x-request-id' => '1']
     );
     $transport = Mockery::mock(TransporterContract::class);

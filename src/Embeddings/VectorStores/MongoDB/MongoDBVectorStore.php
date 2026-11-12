@@ -14,7 +14,7 @@ use MongoDB\Model\BSONDocument;
 
 class MongoDBVectorStore extends VectorStoreBase
 {
-    final public const MONGODB_EMBEDDING_FIELD = 'embedding';
+    final public const string MONGODB_EMBEDDING_FIELD = 'embedding';
 
     private readonly Collection $collection;
 

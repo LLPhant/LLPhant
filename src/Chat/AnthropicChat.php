@@ -22,9 +22,9 @@ use Psr\Log\NullLogger;
 
 class AnthropicChat implements ChatInterface
 {
-    private const DEFAULT_URL = 'https://api.anthropic.com';
+    private const string DEFAULT_URL = 'https://api.anthropic.com';
 
-    private const CURRENT_VERSION = '2023-06-01';
+    private const string CURRENT_VERSION = '2023-06-01';
 
     private readonly LoggerInterface $logger;
 

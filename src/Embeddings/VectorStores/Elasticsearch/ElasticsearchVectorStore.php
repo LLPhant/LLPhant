@@ -10,7 +10,7 @@ use LLPhant\Embeddings\VectorStores\VectorStoreBase;
 
 class ElasticsearchVectorStore extends VectorStoreBase
 {
-    final public const ES_INDEX = 'llphant';
+    final public const string ES_INDEX = 'llphant';
 
     public bool $vectorDimSet = false;
 

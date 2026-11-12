@@ -1,6 +1,6 @@
 <?php
 
-function fixture(string $name): array
+function jsonFixture(string $name): array
 {
     $content = file_get_contents(__DIR__."/Fixtures/$name.json");
 

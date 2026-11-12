@@ -52,7 +52,7 @@ We can find great external resource on LLPhant (ping us to add yours):
 # Get Started
 
 > **Note**  
-> **Requires** [PHP 8.1+](https://php.net/releases/)
+> **Requires** [PHP 8.4+](https://php.net/releases/)
 
 First, install LLPhant via the [Composer](https://getcomposer.org/) package manager:
 

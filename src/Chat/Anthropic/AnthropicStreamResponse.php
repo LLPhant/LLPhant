@@ -10,7 +10,7 @@ use Psr\Http\Message\StreamInterface;
 
 class AnthropicStreamResponse
 {
-    final public const DATA_PREFIX = 'data: ';
+    final public const string DATA_PREFIX = 'data: ';
 
     use AnthropicTotalTokensTrait;
 
