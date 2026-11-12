@@ -180,6 +180,17 @@ Creating a chat with no configuration will use a CLAUDE_3_HAIKU model.
 
     $chat = new AnthropicChat();
 
+To use `Anthropic prompt caching <https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching>`_,
+set ``promptCaching`` to ``true``. The system message and the tool definitions
+are then sent with an ephemeral cache breakpoint, so repeated requests that
+share them are cheaper and faster. Note that Anthropic only caches prefixes
+longer than a model-specific minimum number of tokens.
+
+.. code-block:: php
+
+    $chat = new AnthropicChat(new AnthropicConfig(promptCaching: true));
+    $chat->setSystemMessage($longInstructions);
+
 OpenAI compatible APIs like LocalAI
 ------------------------------------
 
