@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Chat;
 
+use LLPhant\AnthropicConfig;
 use LLPhant\Chat\Anthropic\AnthropicImage;
 use LLPhant\Chat\Anthropic\AnthropicImageType;
 use LLPhant\Chat\Anthropic\AnthropicVisionMessage;
@@ -23,6 +24,23 @@ it('can generate some stuff with a system prompt', function () {
     $chat->setSystemMessage('My questions will be in English. Please answer with a word in Italian');
     $response = $chat->generateText('what is one + one?');
     expect(strtolower($response))->toStartWith('due');
+});
+
+it('can generate some stuff with a system prompt and prompt caching', function () {
+    $chat = new AnthropicChat(new AnthropicConfig(promptCaching: true));
+    // Anthropic caches a prefix only above a minimum length (4096 tokens for Haiku 4.5), so the system prompt must be long.
+    $padding = '';
+    for ($i = 1; $i <= 600; $i++) {
+        $padding .= "Background note number {$i}: this paragraph is only filler and has no influence on the answer. ";
+    }
+    $chat->setSystemMessage($padding.'My questions will be in English. Please answer with a word in Italian');
+    $response = $chat->generateText('what is one + one?');
+    expect(strtolower($response))->toStartWith('due');
+    $response = $chat->generateText('what is two + one?');
+    expect(strtolower($response))->toStartWith('tre');
+    expect($chat->getTotalTokens())->toBeGreaterThan(0);
+    expect($chat->getTotalTokens())->toBeGreaterThan($chat->getCacheTotalTokens());
+    expect($chat->getCacheTotalTokens())->toBeGreaterThan(0);
 });
 
 it('can generate some stuff using a stream', function () {

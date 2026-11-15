@@ -382,4 +382,9 @@ class AnthropicChat implements ChatInterface
     {
         return $this->totalTokens + $this->streamResponse?->getTotalTokens();
     }
+
+    public function getCacheTotalTokens(): int
+    {
+        return $this->totalCacheTokens + $this->streamResponse?->getCacheTotalTokens();
+    }
 }
