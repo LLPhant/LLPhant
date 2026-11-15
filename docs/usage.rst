@@ -191,6 +191,23 @@ longer than a model-specific minimum number of tokens.
     $chat = new AnthropicChat(new AnthropicConfig(promptCaching: true));
     $chat->setSystemMessage($longInstructions);
 
+You can check whether the cache is actually used with ``AnthropicChat::getCacheTotalTokens()``.
+It returns the cumulative number of tokens that were written to the cache
+(``cache_creation_input_tokens``) or read from it (``cache_read_input_tokens``)
+by all the calls made so far. These tokens are also included in ``getTotalTokens()``,
+so ``getTotalTokens()`` minus ``getCacheTotalTokens()`` is the number of tokens
+that were not involved in caching.
+
+.. code-block:: php
+
+    $chat->generateText('what is one + one ?');   // writes the system message to the cache
+    $chat->generateText('what is two + one ?');   // reads the system message from the cache
+    printf("Total tokens: %d\n", $chat->getTotalTokens());
+    printf("Cache tokens: %d\n", $chat->getCacheTotalTokens());
+
+If ``getCacheTotalTokens()`` stays at ``0``, the prompt is probably shorter than
+the minimum cacheable length of the model, so Anthropic silently ignores the cache breakpoint.
+
 OpenAI compatible APIs like LocalAI
 ------------------------------------
 
