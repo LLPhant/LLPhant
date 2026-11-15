@@ -249,7 +249,7 @@ class LmStudioChat implements ChatInterface
                     if ($toolsToCall !== [] && $this->shouldCallStreamedTools($json['choices'][0]['finish_reason'] ?? null)) {
                         $functionsToCall = [];
                         foreach ($toolsToCall as $tool) {
-                            $functionInfo = $this->getFunctionInfoFromName($tool['name']);
+                            $functionInfo = clone $this->getFunctionInfoFromName($tool['name']);
                             $functionInfo->jsonArgs = $tool['arguments'];
                             $functionInfo->setToolCallId($tool['id']);
                             $functionsToCall[] = $functionInfo;
