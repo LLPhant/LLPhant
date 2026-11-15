@@ -323,7 +323,7 @@ class AnthropicChat implements ChatInterface
         ];
 
         if ($this->systemMessage instanceof Message) {
-            $params['system'] = $this->promptCaching
+            $params['system'] = $this->promptCaching && $this->systemMessage->content !== ''
                 ? [[
                     'type' => 'text',
                     'text' => $this->systemMessage->content,
