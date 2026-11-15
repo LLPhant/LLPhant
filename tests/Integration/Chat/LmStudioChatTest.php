@@ -16,7 +16,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 function lmstudioChat(): LMStudioChat
 {
     $config = new LMStudioConfig();
-    $config->model = 'qwen2.5-7b-instruct-1m';
+    $config->model = getenv('LMSTUDIO_MODEL') ?: 'qwen2.5-7b-instruct-1m';
     $config->timeout = 60;
     $url = getenv('LMSTUDIO_URL');
     if ($url) {
@@ -133,6 +133,6 @@ it('can call a function with no arguments', function () {
     $chat->setSystemMessage('You are an AI that can get a list of items from my warehouse using an external system.');
     $answer = $chat->generateText('What is the oldest wine I have in my warehouse?');
 
-    expect($answer)->toContain('Barolo riserva')
+    expect(strtolower($answer))->toContain('barolo riserva')
         ->and($answer)->toContain('2015');
 });

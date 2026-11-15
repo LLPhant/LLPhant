@@ -10,8 +10,8 @@ use LLPhant\LmStudioConfig;
 
 it('can embed some stuff', function () {
     $config = new LmStudioConfig();
-    $config->model = 'text-embedding-nomic-embed-text-v2-moe';
-    $config->url = getenv('LMSTUDIO_URL');
+    $config->model = getenv('LMSTUDIO_EMBEDDING_MODEL') ?: 'text-embedding-nomic-embed-text-v2-moe';
+    $config->url = getenv('LMSTUDIO_URL') ?: $config->url;
 
     $embeddingGenerator = new LmStudioEmbeddingGenerator($config);
     $embedding = $embeddingGenerator->embedText('I love food');
@@ -20,8 +20,8 @@ it('can embed some stuff', function () {
 
 it('can embed batch stuff', function () {
     $config = new LmStudioConfig();
-    $config->model = 'text-embedding-nomic-embed-text-v2-moe';
-    $config->url = getenv('LMSTUDIO_URL');
+    $config->model = getenv('LMSTUDIO_EMBEDDING_MODEL') ?: 'text-embedding-nomic-embed-text-v2-moe';
+    $config->url = getenv('LMSTUDIO_URL') ?: $config->url;
 
     $embeddingGenerator = new LmStudioEmbeddingGenerator($config);
 

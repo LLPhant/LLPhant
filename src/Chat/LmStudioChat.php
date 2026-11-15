@@ -9,7 +9,6 @@ use GuzzleHttp\Psr7\Utils;
 use LLPhant\Chat\CalledFunction\CalledFunction;
 use LLPhant\Chat\Enums\ChatRole;
 use LLPhant\Chat\FunctionInfo\FunctionInfo;
-use LLPhant\Chat\FunctionInfo\ToolCall;
 use LLPhant\Chat\FunctionInfo\ToolFormatter;
 use LLPhant\Chat\Vision\VisionMessage;
 use LLPhant\Exception\HttpException;
@@ -28,13 +27,13 @@ class LmStudioChat implements ChatInterface
     /** @var array<string, mixed> */
     private array $modelOptions = [];
 
+    public Client $client;
+
     /** @var FunctionInfo[] */
     private array $tools = [];
 
     /** @var CalledFunction[] */
     public array $functionsCalled = [];
-
-    private Client $client;
 
     public function __construct(
         protected LmStudioConfig $config,
@@ -45,7 +44,7 @@ class LmStudioChat implements ChatInterface
             throw new MissingParameterException('You need to specify a model for LMStudio');
         }
 
-        if (! $client instanceof \GuzzleHttp\Client) {
+        if ($client === null) {
             $options = [
                 'base_uri' => $config->url,
                 'timeout' => $config->timeout,
@@ -57,11 +56,10 @@ class LmStudioChat implements ChatInterface
                 $options['headers'] = ['Authorization' => 'Bearer '.$config->apiKey];
             }
 
-            $this->client = new Client($options);
-        } else {
-            $this->client = $client;
+            $client = new Client($options);
         }
 
+        $this->client = $client;
         $this->modelOptions = $config->modelOptions;
     }
 
@@ -74,7 +72,10 @@ class LmStudioChat implements ChatInterface
         return $this->generateChat([Message::user($prompt)]);
     }
 
-    public function generateTextOrReturnFunctionToCall(string $prompt): array|string
+    /**
+     * @return string|FunctionInfo[]
+     */
+    public function generateTextOrReturnFunctionToCall(string $prompt): string|array
     {
         return $this->generateChatOrReturnFunctionToCall([Message::user($prompt)]);
     }
@@ -91,74 +92,22 @@ class LmStudioChat implements ChatInterface
 
     /**
      * @param  Message[]  $messages
-     */
-    private function generateChatRecursive(array $messages): string
-    {
-        $result = $this->generateResponse($messages);
-
-        if (is_array($result)) {
-            $messages[] = $this->assistantAskingFunctions($result);
-            foreach ($result as $functionToCall) {
-                $toolResult = $functionToCall->call();
-                $normalizedToolResult = $toolResult === null ? null : Message::normalizeContent($toolResult);
-                $this->functionsCalled[] = new CalledFunction(
-                    $functionToCall,
-                    json_decode($functionToCall->jsonArgs, true, 512, JSON_THROW_ON_ERROR),
-                    $normalizedToolResult,
-                    $functionToCall->getToolCallId()
-                );
-                $toolResultMessage = Message::toolResult($toolResult, $functionToCall->getToolCallId());
-                $messages[] = $toolResultMessage;
-            }
-
-            return $this->generateChatRecursive($messages);
-        }
-
-        return $result;
-    }
-
-    /**
-     * @param  Message[]  $messages
      * @return string|FunctionInfo[]
      */
-    public function generateChatOrReturnFunctionToCall(array $messages): array|string
+    public function generateChatOrReturnFunctionToCall(array $messages): string|array
     {
         $this->functionsCalled = [];
 
-        return $this->generateResponse($messages);
-    }
-
-    /**
-     * @param  Message[]  $messages
-     * @return string|FunctionInfo[]
-     */
-    private function generateResponse(array $messages): array|string
-    {
-        $stream = false;
-
-        $params = $this->createParameters($messages, $stream);
-
-        $response = $this->sendRequest('POST', 'v1/chat/completions', $params, $stream);
-
-        $contents = $response->getBody()->getContents();
-        $this->logger->debug($contents);
-        $json = Utility::decodeJson($contents);
-
-        if (! isset($json['choices']) || empty($json['choices'])) {
-            $this->logger->error('❌ LM Studio response missing choices array');
-            $this->logger->error('   Response: '.$contents);
-            throw new \Exception('Invalid LM Studio response: no choices returned');
-        }
-
-        $message = $json['choices'][0]['message'] ?? ['content' => ''];
+        $message = $this->requestChatCompletion($messages);
 
         if (\array_key_exists('tool_calls', $message) && ! empty($message['tool_calls'])) {
             $result = [];
             foreach ($message['tool_calls'] as $toolCall) {
-                $functionName = $toolCall['function']['name'];
-                $functionInfo = $this->getFunctionInfoFromName($functionName);
+                $functionInfo = $this->getFunctionInfoFromName($toolCall['function']['name']);
+                if (isset($toolCall['id'])) {
+                    $functionInfo = $functionInfo->cloneWithId($toolCall['id']);
+                }
                 $functionInfo->jsonArgs = $toolCall['function']['arguments'];
-                $functionInfo->setToolCallId($toolCall['id'] ?? null);
                 $result[] = $functionInfo;
             }
 
@@ -174,7 +123,19 @@ class LmStudioChat implements ChatInterface
 
     public function generateStreamOfText(string $prompt): StreamInterface
     {
-        return $this->generateChatStream([Message::user($prompt)]);
+        $result = $this->generateText($prompt);
+
+        return Utils::streamFor($result);
+    }
+
+    /**
+     * @param  Message[]  $messages
+     */
+    public function generateStreamOfChat(array $messages): StreamInterface
+    {
+        $result = $this->generateChat($messages);
+
+        return Utils::streamFor($result);
     }
 
     /**
@@ -182,45 +143,44 @@ class LmStudioChat implements ChatInterface
      */
     public function generateChatStream(array $messages): StreamInterface
     {
-        $stream = true;
+        $result = $this->generateChat($messages);
 
-        $params = $this->createParameters($messages, $stream);
+        return Utils::streamFor($result);
+    }
 
-        $response = $this->sendRequest('POST', 'v1/chat/completions', $params, $stream);
+    /**
+     * @param  Message[]  $messages
+     * @return StreamInterface|FunctionInfo[]
+     */
+    public function generateStreamOfChatOrReturnFunctionToCall(array $messages): StreamInterface|array
+    {
+        $result = $this->generateChatOrReturnFunctionToCall($messages);
 
-        $generator = function (StreamInterface $stream) {
-            $buffer = '';
-            while (! $stream->eof()) {
-                $buffer .= $stream->read(1024);
+        if (is_array($result)) {
+            return $result;
+        }
 
-                while (($pos = \strpos($buffer, "\n")) !== false) {
-                    $line = \trim(substr($buffer, 0, $pos));
-                    $buffer = \substr($buffer, $pos + 1);
+        return Utils::streamFor($result);
+    }
 
-                    if ($line === '' || ! \str_starts_with($line, 'data:')) {
-                        continue;
-                    }
+    // =================================================================================================================
+    // EMBEDDING METHOD
+    // =================================================================================================================
 
-                    $data = \trim(\substr($line, 5));
+    /**
+     * @return float[]
+     */
+    public function getEmbedding(string $text, string $model = 'default-embed'): array
+    {
+        $params = [
+            'model' => $model,
+            'input' => $text,
+        ];
 
-                    if ($data === '[DONE]') {
-                        return;
-                    }
+        $response = $this->sendRequest('POST', 'v1/embeddings', $params);
+        $json = Utility::decodeJson($response->getBody()->getContents());
 
-                    $json = \json_decode($data, true, 512, JSON_THROW_ON_ERROR);
-                    if (! $json) {
-                        continue;
-                    }
-
-                    $delta = $json['choices'][0]['delta']['content'] ?? null;
-                    if ($delta !== null && $delta !== '') {
-                        yield $delta;
-                    }
-                }
-            }
-        };
-
-        return Utils::streamFor($generator($response->getBody()));
+        return $json['data'][0]['embedding'] ?? [];
     }
 
     // =================================================================================================================
@@ -232,6 +192,9 @@ class LmStudioChat implements ChatInterface
         $this->systemMessage = Message::system($message);
     }
 
+    /**
+     * @param  FunctionInfo[]  $tools
+     */
     public function setTools(array $tools): void
     {
         $this->tools = $tools;
@@ -272,18 +235,18 @@ class LmStudioChat implements ChatInterface
     // =================================================================================================================
     // PROTECTED METHODS
     // =================================================================================================================
+
     /**
-     * @param  array<string|mixed>  $json
-     *
-     * @throws HttpException
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @param  mixed[]  $json
      */
-    protected function sendRequest(string $method, string $path, array $json, bool $stream): ResponseInterface
+    protected function sendRequest(string $method, string $path, array $json): ResponseInterface
     {
         $this->logger->debug('Calling '.$method.' '.$path, ['chat' => self::class, 'params' => $json]);
 
         $requestOptions = ['json' => $json];
-        $requestOptions['stream'] = $stream;
+        if (isset($json['stream']) && $json['stream']) {
+            $requestOptions['stream'] = true;
+        }
 
         $response = $this->client->request($method, $path, $requestOptions);
         $status = $response->getStatusCode();
@@ -300,11 +263,10 @@ class LmStudioChat implements ChatInterface
 
     /**
      * @param  Message[]  $messages
-     * @return array<int|string, mixed>
+     * @return mixed[]
      */
     protected function prepareMessages(array $messages): array
     {
-        /** @var array<int|string, mixed> $responseMessages */
         $responseMessages = [];
         if (isset($this->systemMessage->role)) {
             $responseMessages[] = [
@@ -323,7 +285,7 @@ class LmStudioChat implements ChatInterface
                 $responseMessage['tool_calls'] = $msg->tool_calls;
             }
 
-            if ($msg->role === ChatRole::Tool) {
+            if ($msg->role === ChatRole::Tool && isset($msg->tool_call_id)) {
                 $responseMessage['tool_call_id'] = $msg->tool_call_id;
             }
 
@@ -340,6 +302,76 @@ class LmStudioChat implements ChatInterface
         return $responseMessages;
     }
 
+    /**
+     * @param  Message[]  $messages
+     */
+    private function generateChatRecursive(array $messages): string
+    {
+        $message = $this->requestChatCompletion($messages);
+
+        if (\array_key_exists('tool_calls', $message) && ! empty($message['tool_calls'])) {
+            /** @var Message[] $toolsOutput */
+            $toolsOutput = [];
+            foreach ($message['tool_calls'] as $toolCall) {
+                $arguments = Utility::decodeJson($toolCall['function']['arguments']);
+                $toolResult = $this->callFunction($toolCall['function']['name'], $arguments, $toolCall['id'] ?? null);
+                $toolsOutput[] = Message::toolResult($toolResult, $toolCall['id'] ?? null);
+            }
+
+            $assistantMessage = Message::assistant($message['content'] ?? null);
+            $assistantMessage->tool_calls = $message['tool_calls'];
+
+            return $this->generateChatRecursive(\array_merge($messages, [$assistantMessage], $toolsOutput));
+        }
+
+        return $message['content'] ?? '';
+    }
+
+    /**
+     * @param  Message[]  $messages
+     * @return array<string, mixed>
+     */
+    private function requestChatCompletion(array $messages): array
+    {
+        $params = [
+            ...$this->modelOptions,
+            'model' => $this->config->model,
+            'messages' => $this->prepareMessages($messages),
+            'stream' => false,
+        ];
+
+        if (! empty($this->tools)) {
+            $params['tools'] = ToolFormatter::formatFunctionsToOpenAITools($this->tools);
+        }
+
+        $response = $this->sendRequest('POST', 'v1/chat/completions', $params);
+        $contents = $response->getBody()->getContents();
+        $this->logger->debug($contents);
+        $json = Utility::decodeJson($contents);
+
+        if (! isset($json['choices']) || empty($json['choices'])) {
+            $this->logger->error('❌ LM Studio response missing choices array');
+            $this->logger->error('   Response: '.$contents);
+            throw new \Exception('Invalid LM Studio response: no choices returned');
+        }
+
+        return $json['choices'][0]['message'] ?? ['content' => ''];
+    }
+
+    /**
+     * @param  array<string, mixed>  $arguments
+     */
+    private function callFunction(string $functionName, array $arguments, ?string $toolCallId): mixed
+    {
+        $functionToCall = $this->getFunctionInfoFromName($functionName);
+        $return = $functionToCall->callWithArguments($arguments);
+
+        $normalizedReturn = $return === null ? null : Message::normalizeContent($return);
+        $this->functionsCalled[] = new CalledFunction($functionToCall, $arguments, $normalizedReturn, $toolCallId);
+
+        return $return;
+    }
+
     private function getFunctionInfoFromName(string $functionName): FunctionInfo
     {
         foreach ($this->tools as $function) {
@@ -349,37 +381,5 @@ class LmStudioChat implements ChatInterface
         }
 
         throw new \Exception("AI tried to call $functionName which doesn't exist");
-    }
-
-    /**
-     * @param  FunctionInfo[]  $functionInfos
-     */
-    private function assistantAskingFunctions(array $functionInfos): Message
-    {
-        $message = Message::assistant(null);
-
-        $message->tool_calls = ToolCall::fromFunctionInfos($functionInfos);
-
-        return $message;
-    }
-
-    /**
-     * @param  Message[]  $messages
-     * @return array<string, mixed>
-     **/
-    public function createParameters(array $messages, bool $stream): array
-    {
-        $params = [
-            ...$this->modelOptions,
-            'model' => $this->config->model,
-            'messages' => $this->prepareMessages($messages),
-            'stream' => $stream,
-        ];
-
-        if (! empty($this->tools)) {
-            $params['tools'] = ToolFormatter::formatFunctionsToOpenAITools($this->tools);
-        }
-
-        return $params;
     }
 }
