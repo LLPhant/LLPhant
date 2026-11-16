@@ -4,7 +4,9 @@ namespace LLPhant\Chat;
 
 use GuzzleHttp\Psr7\Utils;
 use LLPhant\Chat\CalledFunction\CalledFunction;
+use LLPhant\Exception\MissingParameterException;
 use LLPhant\GeminiOpenAIConfig;
+use OpenAI\Contracts\ClientContract;
 use OpenAI\Responses\Chat\CreateStreamedResponse;
 use OpenAI\Responses\StreamResponse;
 use Psr\Http\Message\ResponseInterface;
@@ -16,6 +18,9 @@ class GeminiAIChat extends OpenAIChat
 {
     public function __construct(GeminiOpenAIConfig $config = new GeminiOpenAIConfig(), LoggerInterface $logger = new NullLogger())
     {
+        if (! $config->client instanceof ClientContract && ! $config->apiKey) {
+            throw new MissingParameterException('You have to provide a GEMINI_API_KEY env var to request Gemini.');
+        }
         parent::__construct($config, $logger);
     }
 

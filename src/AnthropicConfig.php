@@ -14,6 +14,10 @@ class AnthropicConfig
 
     /**
      * @param  array<string, mixed>  $modelOptions
+     * @param  bool  $promptCaching  When true, the system message and the tool definitions are marked with an
+     *                               ephemeral cache breakpoint, so Anthropic can reuse them across requests.
+     *
+     * @see https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
      */
     public function __construct(
         public readonly string $model = self::CLAUDE_4_5_HAIKU,
@@ -23,6 +27,9 @@ class AnthropicConfig
         public readonly ?ClientInterface $client = null,
         public readonly ?RequestFactoryInterface $requestFactory = null,
         public readonly ?StreamFactoryInterface $streamFactory = null,
+        public readonly ?string $url = null,
+        public readonly ?string $apiVersion = null,
+        public readonly bool $promptCaching = false,
     ) {
     }
 }
