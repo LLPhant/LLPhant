@@ -340,3 +340,27 @@ it('does not serialize a legacy name field on tool result messages for OpenAI ch
         ->toHaveKey('tool_call_id')
         ->not->toHaveKey('name');
 });
+
+it('works when calling two tools and one of them does not return anything', function () {
+    $chat = new OpenAIChat();
+
+    $notifier = new NotificationExample();
+    $functionSendNotification = FunctionBuilder::buildFunctionInfo($notifier, 'sendNotificationToSlack');
+    $chat->addTool($functionSendNotification);
+
+    $location = new Parameter('location', 'string', 'the city');
+    $weatherExample = new WeatherExample();
+    $weatherTool = new FunctionInfo(
+        'currentWeatherForLocation',
+        $weatherExample,
+        'returns the current weather in the given location',
+        [$location]
+    );
+    $chat->addTool($weatherTool);
+
+    $chat->setSystemMessage('You MUST call currentWeatherForLocation before answering any user question.');
+
+    $answer = $chat->generateText('Tell me what is the weather in Venice and also send a notification to Slack using sendNotificationToSlack tool.');
+
+    expect($answer)->toContain('sunny');
+});
