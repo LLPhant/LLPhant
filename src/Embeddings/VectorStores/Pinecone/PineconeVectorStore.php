@@ -63,18 +63,27 @@ class PineconeVectorStore extends VectorStoreBase implements DocumentStore
         }
 
         $vectors = array_map(
-            fn (Document $document): array => [
-                'id' => $document->hash !== '' ? $document->hash : hash('sha256', $document->formattedContent ?? $document->content),
-                'values' => $document->embedding,
-                'metadata' => [
+            function (Document $document): array {
+                $metadata = [
                     'content' => $document->content,
                     'formattedContent' => $document->formattedContent ?? $document->content,
                     'sourceType' => $document->sourceType,
                     'sourceName' => $document->sourceName,
                     'hash' => $document->hash,
                     'chunkNumber' => $document->chunkNumber,
-                ],
-            ],
+                ];
+
+                // Pinecone metadata only accepts flat values, so the free-form array is kept as a JSON string.
+                if ($document->metadata !== []) {
+                    $metadata['metadata'] = json_encode($document->metadata, JSON_THROW_ON_ERROR);
+                }
+
+                return [
+                    'id' => $document->hash !== '' ? $document->hash : hash('sha256', $document->formattedContent ?? $document->content),
+                    'values' => $document->embedding,
+                    'metadata' => $metadata,
+                ];
+            },
             $documents
         );
 
@@ -160,6 +169,11 @@ class PineconeVectorStore extends VectorStoreBase implements DocumentStore
             $doc->sourceName = $metadata['sourceName'] ?? '';
             $doc->hash = $match['id'];
             $doc->chunkNumber = isset($metadata['chunkNumber']) ? (int) $metadata['chunkNumber'] : 0;
+
+            if (isset($metadata['metadata']) && is_string($metadata['metadata'])) {
+                $decoded = json_decode($metadata['metadata'], true);
+                $doc->metadata = is_array($decoded) ? $decoded : [];
+            }
 
             $documents[] = $doc;
         }
