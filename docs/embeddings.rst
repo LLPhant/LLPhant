@@ -61,7 +61,7 @@ They are kept on every chunk created by the ``DocumentSplitter`` and returned by
    // ... after a similarity search
    $results[0]->metadata; // ['itemId' => 42, 'tags' => ['geo']]
 
-Metadata is stored by the AstraDB, Elasticsearch, FileSystem, Memory, Milvus, MongoDB, OpenSearch, Qdrant, Redis and Typesense vector stores.
+Metadata is stored by the AstraDB, Elasticsearch, FileSystem, Meilisearch, Memory, Milvus, MongoDB, OpenSearch, Qdrant, Redis and Typesense vector stores.
 
 Document Splitter
 -----------------
@@ -177,6 +177,7 @@ There are currently these vectorStore classes:
 -   AstraDBVectorStore stores the embeddings in a `AstraDBB <https://docs.datastax.com/en/astra-db-serverless/index.html>`_ database.
 -   OpenSearchVectorStore stores the embeddings in a `OpenSearch <https://opensearch.org/>`_ database, which is a fork of Elasticsearch.
 -   TypesenseVectorStore stores the embeddings in a `Typesense <https://typesense.org/>`_ database.
+-   MeilisearchVectorStore stores the embeddings in a `Meilisearch <https://www.meilisearch.com/>`_ database. Call ``createCollection($embeddingLength)`` once to create the index and declare its user-provided embedder.
 -   MongoDBVectorStore stores the embeddings in `MongoDB Atlas <https://www.mongodb.com/products/platform>`_. (require mongodb/mongodb and ext-mongodb)
 
 Example of usage with the ``DoctrineVectorStore`` class to store the embeddings in a database:
