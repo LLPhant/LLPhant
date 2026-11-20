@@ -115,6 +115,7 @@ class MeilisearchVectorStore extends VectorStoreBase
     private function toDocument(array $hit): Document
     {
         $document = new Document();
+        $document->id = $hit['id'] ?? null;
         $document->content = $this->readString($hit, 'content');
         $formattedContent = $hit['formattedContent'] ?? null;
         $document->formattedContent = is_string($formattedContent) ? $formattedContent : null;

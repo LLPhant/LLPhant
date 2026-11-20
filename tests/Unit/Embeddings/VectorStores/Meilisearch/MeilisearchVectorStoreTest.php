@@ -5,25 +5,38 @@ namespace Tests\Unit\Embeddings\VectorStores\Meilisearch;
 use GuzzleHttp\Psr7\Response;
 use LLPhant\Embeddings\DocumentUtils;
 use LLPhant\Embeddings\VectorStores\Meilisearch\MeilisearchVectorStore;
+use LLPhant\Exception\HttpException;
 use LLPhant\Exception\MissingParameterException;
 
 it('creates the index and declares a user-provided embedder', function () {
     $fakeClient = FakeMeilisearchClient::withResponses([
         new Response(404, [], '{"message":"Index `llphant` not found."}'),
         new Response(202, [], '{"taskUid":0}'),
+        new Response(200, [], '{"uid":0,"status":"succeeded"}'),
         new Response(202, [], '{"taskUid":1}'),
+        new Response(200, [], '{"uid":1,"status":"succeeded"}'),
     ]);
 
     $vectorStore = new MeilisearchVectorStore(client: $fakeClient->client);
     $vectorStore->createCollection(1536);
 
-    expect($fakeClient->lastRequestBody())
+    expect($fakeClient->requestBody('/indexes/llphant/settings'))
         ->toContain('"source":"userProvided"')
-        ->toContain('"dimensions":1536');
+        ->toContain('"dimensions":1536')
+        ->and($fakeClient->requestedPaths())->toBe([
+            '/indexes/llphant',
+            '/indexes',
+            '/tasks/0',
+            '/indexes/llphant/settings',
+            '/tasks/1',
+        ]);
 });
 
 it('can insert documents', function () {
-    $fakeClient = FakeMeilisearchClient::withResponses([new Response(202, [], '{"taskUid":2}')]);
+    $fakeClient = FakeMeilisearchClient::withResponses([
+        new Response(202, [], '{"taskUid":2}'),
+        new Response(200, [], '{"uid":2,"status":"succeeded"}'),
+    ]);
 
     $vectorStore = new MeilisearchVectorStore(client: $fakeClient->client);
 
@@ -50,7 +63,7 @@ it('can insert documents', function () {
 
     $vectorStore->addDocuments($documents);
 
-    $requestBody = json_decode($fakeClient->lastRequestBody(), true);
+    $requestBody = json_decode($fakeClient->requestBody('/indexes/llphant/documents'), true);
 
     expect($requestBody)->toHaveCount(2)
         ->and($requestBody[0]['content'])->toBe('Hello World!')
@@ -96,6 +109,13 @@ it('can perform similarity search', function () {
 
     $similarDocuments = $vectorStore->similaritySearch([0.9, 0.1], 2);
 
+    $ids = [];
+    foreach ($similarDocuments as $document) {
+        $ids[] = $document->id;
+    }
+
+    expect($ids)->toBe(['e0f1', 'a2b3']);
+
     expect($similarDocuments)->toHaveCount(2)
         ->and($similarDocuments[0]->content)->toBe('France is a country in Europe')
         ->and($similarDocuments[0]->metadata)->toBe(['lang' => 'en'])
@@ -111,6 +131,55 @@ it('can perform similarity search', function () {
         ->and($requestBody['limit'])->toBe(2)
         ->and($requestBody['hybrid'])->toBe(['semanticRatio' => 1, 'embedder' => 'default']);
 });
+
+it('waits for a queued write task before returning', function () {
+    $fakeClient = FakeMeilisearchClient::withResponses([
+        new Response(202, [], '{"taskUid":7,"status":"enqueued"}'),
+        new Response(200, [], '{"uid":7,"status":"enqueued"}'),
+        new Response(200, [], '{"uid":7,"status":"processing"}'),
+        new Response(200, [], '{"uid":7,"status":"succeeded"}'),
+    ]);
+
+    $vectorStore = new MeilisearchVectorStore(client: $fakeClient->client);
+    $vectorStore->addDocuments(DocumentUtils::createDocumentsFromArray([
+        [
+            'content' => 'Hello World!',
+            'formattedContent' => 'Hello World!',
+            'embedding' => [0.1, 0.3],
+            'sourceType' => 'txt',
+            'sourceName' => 'hello',
+            'hash' => 'abc',
+            'chunkNumber' => 0,
+        ],
+    ]));
+
+    expect($fakeClient->requestedPaths())->toBe([
+        '/indexes/llphant/documents',
+        '/tasks/7',
+        '/tasks/7',
+        '/tasks/7',
+    ]);
+});
+
+it('raises the error of a failed write task', function () {
+    $fakeClient = FakeMeilisearchClient::withResponses([
+        new Response(202, [], '{"taskUid":9,"status":"enqueued"}'),
+        new Response(200, [], '{"uid":9,"status":"failed","error":{"message":"The provided vectors should have 2 dimensions, but got 3","code":"invalid_vector_dimensions"}}'),
+    ]);
+
+    $vectorStore = new MeilisearchVectorStore(client: $fakeClient->client);
+    $vectorStore->addDocuments(DocumentUtils::createDocumentsFromArray([
+        [
+            'content' => 'Hello World!',
+            'formattedContent' => 'Hello World!',
+            'embedding' => [0.1, 0.3],
+            'sourceType' => 'txt',
+            'sourceName' => 'hello',
+            'hash' => 'abc',
+            'chunkNumber' => 0,
+        ],
+    ]));
+})->throws(HttpException::class, 'The provided vectors should have 2 dimensions, but got 3');
 
 it('refuses a document without vectors', function () {
     $fakeClient = FakeMeilisearchClient::withResponses([]);
