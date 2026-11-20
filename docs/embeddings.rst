@@ -46,6 +46,21 @@ If it's OK for you to use the default ``Document`` class, you can go this way:
 
 To create your own data reader you need to create a class that implements the ``DataReader`` interface.
 
+Reading PDF content
+-------------------
+
+When reading PDF documents with the `FileDataReader`, you can choose what library to use to extract content.
+The default is currently `SmalotTextReader`, which uses `smalot/pdfparser`. You can switch to `prinsfrank/pdfparser` by using `PrinsFrankTextReader`.
+
+Embeddings can capture more meaning if the content that's being embedded is enriched with markdown.
+We can read the content of PDFs as markdown with the `MarkdownReader`, which uses `prinsfrank/pdfparser`:
+
+.. code-block:: php
+
+   $filePath = __DIR__.'/PlacesTextFiles';
+   $reader = new FileDataReader($filePath, pdfReader: MarkdownReader::class);
+   $documents = $reader->getDocuments();
+
 Custom metadata
 ---------------
 

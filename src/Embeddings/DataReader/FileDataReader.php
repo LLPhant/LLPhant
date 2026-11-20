@@ -2,8 +2,9 @@
 
 namespace LLPhant\Embeddings\DataReader;
 
+use LLPhant\Embeddings\DataReader\PDF\PDFReader;
+use LLPhant\Embeddings\DataReader\PDF\SmalotTextReader;
 use LLPhant\Embeddings\Document;
-use Smalot\PdfParser\Parser;
 
 final class FileDataReader implements DataReader
 {
@@ -13,9 +14,10 @@ final class FileDataReader implements DataReader
      * @template T of Document
      *
      * @param  class-string<T>  $documentClassName
+     * @param  class-string<PDFReader>  $pdfReader
      * @param  string[]  $extensions
      */
-    public function __construct(public string $filePath, public readonly string $documentClassName = Document::class, private readonly array $extensions = [])
+    public function __construct(public string $filePath, public readonly string $documentClassName = Document::class, private readonly array $extensions = [], private readonly string $pdfReader = SmalotTextReader::class)
     {
     }
 
@@ -80,10 +82,7 @@ final class FileDataReader implements DataReader
         }
 
         if ($fileExtension === 'pdf') {
-            $parser = new Parser();
-            $pdf = $parser->parseFile($path);
-
-            return $pdf->getText();
+            return $this->pdfReader::getContent($path);
         }
 
         if ($fileExtension === 'docx') {
