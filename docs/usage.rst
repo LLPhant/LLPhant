@@ -97,6 +97,27 @@ The default base URL is ``https://gisoo.pro/api/v1`` and the default model is
 ``gpt-5-mini``, which you can change with the ``GISOO_MODEL`` environment variable or replace with
 any model id from the `Gisoo model catalog <https://gisoo.pro/docs/models>`_.
 
+cheapaimodel
+------------
+
+`cheapaimodel <https://cheapaimodel.ai/>`_ serves open-weight models through an OpenAI-compatible LLM API,
+so you can use it through ``OpenAIChat`` with the dedicated ``CheapaimodelConfig`` helper.
+
+.. code-block:: php
+
+    $config = new CheapaimodelConfig();
+    $config->apiKey = 'your_cheapaimodel_api_key';
+    $config->model = 'deepseek-v4-1-flash';
+    $chat = new OpenAIChat($config);
+    $response = $chat->generateText('what is one + one ?');
+
+If you do not specify an api key, the ``CheapaimodelConfig`` tries to read it from the
+``CHEAPAIMODEL_API_KEY`` environment variable; it never falls back to ``OPENAI_API_KEY``.
+The default base URL is ``https://api.cheapaimodel.ai/v1`` and the default model is
+``deepseek-v4-1-flash``, which you can change with the ``CHEAPAIMODEL_MODEL`` environment variable or
+replace with any model id from the `cheapaimodel model catalog <https://cheapaimodel.ai/models>`_.
+cheapaimodel does not provide an embeddings endpoint.
+
 Mistral
 -------
 
