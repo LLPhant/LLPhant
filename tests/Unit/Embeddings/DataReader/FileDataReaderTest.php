@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Unit\Embeddings\DataReader;
 
 use LLPhant\Embeddings\DataReader\FileDataReader;
+use LLPhant\Embeddings\DataReader\PDF\MarkdownReader;
+use LLPhant\Embeddings\DataReader\PDF\PrinsFrankTextReader;
 use LLPhant\Embeddings\Document;
 
 it('can read various types of documents', function (string $docName, string $startingContent) {
@@ -49,6 +51,27 @@ it('can read pdf and texts ', function () {
 
     expect($foundPDF)->toBeTrue();
     expect($foundText)->toBeTrue();
+});
+
+it('can read pdf with alternative library', function () {
+    $filePath = __DIR__.'/FilesTestDirectory/data-pdf.pdf';
+    $reader = new FileDataReader($filePath, pdfReader: PrinsFrankTextReader::class);
+    $documents = $reader->getDocuments();
+    expect($documents)->toHaveCount(1)
+        ->and($documents[0]->content)->toEqual('This data is from a pdf');
+});
+
+it('can read pdf as markdown', function () {
+    $filePath = __DIR__.'/FilesTestDirectory/simplemarkdown.pdf';
+    $reader = new FileDataReader($filePath, pdfReader: MarkdownReader::class);
+    if (! method_exists(\PrinsFrank\PdfParser\Document\Document::class, 'getMarkdown')) {
+        expect(fn () => $reader->getDocuments())
+            ->toThrow(new \Exception('To extract markdown content you need to have v3 or newer of "prinsfrank/pdfparser", which requires PHP 8.2 or higher. Please run "composer require prinsfrank/pdfparser:^4" or use plain text extraction'));
+    } else {
+        $documents = $reader->getDocuments();
+        expect($documents)->toHaveCount(1)
+            ->and($documents[0]->content)->toEqual("**Bold text**\n*Italic text*\n***Bold and italic text***\n[Link](http://Example.com/)");
+    }
 });
 
 it('can filter files based on extensions', function () {
