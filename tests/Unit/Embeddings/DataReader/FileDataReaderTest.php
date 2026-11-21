@@ -64,9 +64,14 @@ it('can read pdf with alternative library', function () {
 it('can read pdf as markdown', function () {
     $filePath = __DIR__.'/FilesTestDirectory/simplemarkdown.pdf';
     $reader = new FileDataReader($filePath, pdfReader: MarkdownReader::class);
-    $documents = $reader->getDocuments();
-    expect($documents)->toHaveCount(1)
-        ->and($documents[0]->content)->toEqual("**Bold text**\n*Italic text*\n***Bold and italic text***\n[Link](http://Example.com/)");
+    if (! method_exists(\PrinsFrank\PdfParser\Document\Document::class, 'getMarkdown')) {
+        expect(fn () => $reader->getDocuments())
+            ->toThrow(new \Exception('To extract markdown content you need to have v3 or newer of "prinsfrank/pdfparser", which requires PHP 8.2 or higher. Please run "composer require prinsfrank/pdfparser:^4" or use plain text extraction'));
+    } else {
+        $documents = $reader->getDocuments();
+        expect($documents)->toHaveCount(1)
+            ->and($documents[0]->content)->toEqual("**Bold text**\n*Italic text*\n***Bold and italic text***\n[Link](http://Example.com/)");
+    }
 });
 
 it('can filter files based on extensions', function () {
