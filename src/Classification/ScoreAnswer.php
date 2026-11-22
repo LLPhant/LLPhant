@@ -6,7 +6,7 @@ namespace LLPhant\Classification;
 
 class ScoreAnswer extends Answer
 {
-    const float MAX_DIFFERENCE = 0.05;
+    const MAX_DIFFERENCE = 0.05;
 
     /**
      * @param  array<string, string>  $legend

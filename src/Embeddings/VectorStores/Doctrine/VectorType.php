@@ -8,7 +8,7 @@ use Doctrine\DBAL\Types\Type;
 
 class VectorType extends Type
 {
-    final public const string VECTOR = 'vector';
+    final public const VECTOR = 'vector';
 
     /**
      * @param  mixed[]  $column

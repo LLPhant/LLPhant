@@ -8,7 +8,7 @@ use LLPhant\Evaluation\EvaluationResults;
 class NoFallbackAnswerEvaluator extends AbstractEvaluator
 {
     /** @const string[] */
-    private const array FALLBACK_INDICATORS = [
+    private const FALLBACK_INDICATORS = [
         'I\'m sorry',
         'I cannot help',
         'I have no information',
