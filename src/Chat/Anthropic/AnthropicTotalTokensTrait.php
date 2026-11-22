@@ -6,6 +6,8 @@ trait AnthropicTotalTokensTrait
 {
     private int $totalTokens = 0;
 
+    private int $totalCacheTokens = 0;
+
     /**
      * @param  array<string, mixed>  $json
      */
@@ -17,6 +19,14 @@ trait AnthropicTotalTokensTrait
             }
             if (\array_key_exists('output_tokens', $json['usage'])) {
                 $this->totalTokens += $json['usage']['output_tokens'];
+            }
+            if (\array_key_exists('cache_read_input_tokens', $json['usage'])) {
+                $this->totalTokens += $json['usage']['cache_read_input_tokens'];
+                $this->totalCacheTokens += $json['usage']['cache_read_input_tokens'];
+            }
+            if (\array_key_exists('cache_creation_input_tokens', $json['usage'])) {
+                $this->totalTokens += $json['usage']['cache_creation_input_tokens'];
+                $this->totalCacheTokens += $json['usage']['cache_creation_input_tokens'];
             }
         }
     }

@@ -180,6 +180,34 @@ Creating a chat with no configuration will use a CLAUDE_3_HAIKU model.
 
     $chat = new AnthropicChat();
 
+To use `Anthropic prompt caching <https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching>`_,
+set ``promptCaching`` to ``true``. The system message and the tool definitions
+are then sent with an ephemeral cache breakpoint, so repeated requests that
+share them are cheaper and faster. Note that Anthropic only caches prefixes
+longer than a model-specific minimum number of tokens.
+
+.. code-block:: php
+
+    $chat = new AnthropicChat(new AnthropicConfig(promptCaching: true));
+    $chat->setSystemMessage($longInstructions);
+
+You can check whether the cache is actually used with ``AnthropicChat::getCacheTotalTokens()``.
+It returns the cumulative number of tokens that were written to the cache
+(``cache_creation_input_tokens``) or read from it (``cache_read_input_tokens``)
+by all the calls made so far. These tokens are also included in ``getTotalTokens()``,
+so ``getTotalTokens()`` minus ``getCacheTotalTokens()`` is the number of tokens
+that were not involved in caching.
+
+.. code-block:: php
+
+    $chat->generateText('what is one + one ?');   // writes the system message to the cache
+    $chat->generateText('what is two + one ?');   // reads the system message from the cache
+    printf("Total tokens: %d\n", $chat->getTotalTokens());
+    printf("Cache tokens: %d\n", $chat->getCacheTotalTokens());
+
+If ``getCacheTotalTokens()`` stays at ``0``, the prompt is probably shorter than
+the minimum cacheable length of the model, so Anthropic silently ignores the cache breakpoint.
+
 OpenAI compatible APIs like LocalAI
 ------------------------------------
 
