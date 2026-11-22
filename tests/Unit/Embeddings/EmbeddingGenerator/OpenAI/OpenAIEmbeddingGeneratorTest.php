@@ -102,3 +102,11 @@ it('can embed text in non UTF8 encodings', function () {
 
     expect($generator->embedText($japanese))->toBeArray();
 });
+
+it('counts the tokens reported by the batch endpoint', function () {
+    $generator = getEmbeddingGenerator(FAKE_EMBEDDING_ANSWER);
+
+    $generator->embedDocuments(DocumentUtils::documents('Sample document'));
+
+    expect($generator->getTotalTokens())->toBe(5);
+});
