@@ -84,4 +84,9 @@ class AnthropicStreamResponse
     {
         return $this->totalTokens;
     }
+
+    public function getCacheTotalTokens(): int
+    {
+        return $this->totalCacheTokens;
+    }
 }

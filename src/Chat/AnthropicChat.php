@@ -44,6 +44,12 @@ class AnthropicChat implements ChatInterface
 
     private readonly string $apiKey;
 
+    private readonly string $baseUrl;
+
+    private readonly string $apiVersion;
+
+    private readonly bool $promptCaching;
+
     /** @var FunctionInfo[] */
     private array $tools = [];
 
@@ -62,6 +68,13 @@ class AnthropicChat implements ChatInterface
         $this->maxTokens = $config->maxTokens;
         $this->apiKey = $config->apiKey
             ?? (string) Utility::readEnvironment('ANTHROPIC_API_KEY', '');
+        $this->baseUrl = rtrim(
+            $config->url ?? (string) Utility::readEnvironment('ANTHROPIC_BASE_URL', self::DEFAULT_URL),
+            '/',
+        );
+        $this->apiVersion = $config->apiVersion
+            ?? (string) Utility::readEnvironment('ANTHROPIC_API_VERSION', self::CURRENT_VERSION);
+        $this->promptCaching = $config->promptCaching;
         $this->logger = $logger ?: new NullLogger();
 
         $this->client = $config->client ?: Psr18ClientDiscovery::find();
@@ -248,12 +261,12 @@ class AnthropicChat implements ChatInterface
             'params' => $data,
         ]);
 
-        $uri = sprintf('%s/v1/messages', rtrim(self::DEFAULT_URL, '/'));
+        $uri = sprintf('%s/v1/messages', $this->baseUrl);
 
         $request = $this->factory->createRequest('POST', $uri);
         $request = $request->withAddedHeader('Content-Type', 'application/json');
         $request = $request->withAddedHeader('x-api-key', $this->apiKey);
-        $request = $request->withAddedHeader('anthropic-version', self::CURRENT_VERSION);
+        $request = $request->withAddedHeader('anthropic-version', $this->apiVersion);
         $request = $request->withBody($this->factory->createStream(json_encode($data, JSON_THROW_ON_ERROR)));
         $response = $this->client->sendRequest($request);
 
@@ -293,17 +306,30 @@ class AnthropicChat implements ChatInterface
      **/
     private function createParams(array $messages, bool $stream): array
     {
+        $tools = FunctionFormatter::formatFunctionsToAnthropic($this->tools);
+
+        if ($this->promptCaching && $tools !== []) {
+            // A breakpoint on the last tool caches the whole list of tool definitions.
+            $tools[array_key_last($tools)]['cache_control'] = ['type' => 'ephemeral'];
+        }
+
         $params = [
             ...$this->modelOptions,
             'model' => $this->model,
             'messages' => $this->createMessagesArray($messages),
-            'tools' => FunctionFormatter::formatFunctionsToAnthropic($this->tools),
+            'tools' => $tools,
             'max_tokens' => $this->maxTokens,
             'stream' => $stream,
         ];
 
         if ($this->systemMessage instanceof Message) {
-            $params['system'] = $this->systemMessage->content;
+            $params['system'] = $this->promptCaching && $this->systemMessage->content !== ''
+                ? [[
+                    'type' => 'text',
+                    'text' => $this->systemMessage->content,
+                    'cache_control' => ['type' => 'ephemeral'],
+                ]]
+                : $this->systemMessage->content;
         }
 
         return $params;
@@ -355,5 +381,10 @@ class AnthropicChat implements ChatInterface
     public function getTotalTokens(): int
     {
         return $this->totalTokens + $this->streamResponse?->getTotalTokens();
+    }
+
+    public function getCacheTotalTokens(): int
+    {
+        return $this->totalCacheTokens + $this->streamResponse?->getCacheTotalTokens();
     }
 }
