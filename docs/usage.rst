@@ -97,6 +97,27 @@ The default base URL is ``https://gisoo.pro/api/v1`` and the default model is
 ``gpt-5-mini``, which you can change with the ``GISOO_MODEL`` environment variable or replace with
 any model id from the `Gisoo model catalog <https://gisoo.pro/docs/models>`_.
 
+Cheaper Inference
+-----------------
+
+`Cheaper Inference <https://cheaperinference.com/docs>`_ is an OpenAI-compatible LLM gateway,
+so you can use it through ``OpenAIChat`` and an OpenAI embedding generator such as
+``OpenAI3SmallEmbeddingGenerator`` with the dedicated ``CheaperInferenceConfig`` helper.
+
+.. code-block:: php
+
+    $config = new CheaperInferenceConfig();
+    $config->apiKey = 'your_cheaper_inference_api_key';
+    $config->model = 'gpt-5.4-mini';
+    $chat = new OpenAIChat($config);
+    $response = $chat->generateText('what is one + one ?');
+
+If you do not specify an api key, the ``CheaperInferenceConfig`` tries to read it from the
+``CHEAPER_INFERENCE_API_KEY`` environment variable; it never falls back to ``OPENAI_API_KEY``.
+The default base URL is ``https://api.cheaperinference.com/v1`` and the default model is
+``gpt-5.4-mini``, which you can change with the ``CHEAPER_INFERENCE_MODEL`` environment variable or replace with
+any model id from the `Cheaper Inference documentation <https://cheaperinference.com/docs>`_.
+
 Mistral
 -------
 
